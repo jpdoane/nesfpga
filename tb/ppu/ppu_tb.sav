@@ -1,0 +1,133 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Sun Jul 30 12:01:44 2023
+[*]
+[dumpfile] "(null)"
+[savefile] "/home/jpdoane/dev/2c02/tb/ppu/ppu_tb.sav"
+[timestart] 15263550000000
+[size] 1920 1015
+[pos] -1 -1
+*-31.186707 15272437250140 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] ppu_tb.
+[treeopen] ppu_tb.u_ppu.
+[sst_width] 211
+[signals_width] 180
+[sst_expanded] 1
+[sst_vpaned_height] 288
+@24
+ppu_tb.u_ppu.u_render.cycle[8:0]
+ppu_tb.u_ppu.u_render.y[8:0]
+@800200
+-ppu addr reg
+@22
+ppu_tb.u_ppu.ppu_addr_o[13:0]
+ppu_tb.u_ppu.t[14:0]
+ppu_tb.u_ppu.v[14:0]
+@24
+ppu_tb.u_ppu.xscroll_v[7:0]
+ppu_tb.u_ppu.yscroll_v[7:0]
+@28
+ppu_tb.u_ppu.inc_v
+ppu_tb.u_ppu.render_incx
+ppu_tb.u_ppu.resetx
+ppu_tb.u_ppu.render_incy
+ppu_tb.u_ppu.resety
+@1000200
+-ppu addr reg
+@800200
+-tile fetching
+@24
+ppu_tb.u_ppu.u_render.cycle8[2:0]
+@28
+ppu_tb.u_ppu.u_render.save_nt
+ppu_tb.u_ppu.u_render.fetch_attr
+ppu_tb.u_ppu.u_render.save_attr
+ppu_tb.u_ppu.u_render.fetch_chr
+ppu_tb.u_ppu.u_render.save_pat0
+ppu_tb.u_ppu.u_render.fetch_chr
+ppu_tb.u_ppu.u_render.save_pat1
+@1000200
+-tile fetching
+@24
+ppu_tb.u_ppu.u_render.state[2:0]
+@28
+ppu_tb.u_ppu.u_render.fetch_sprites
+ppu_tb.u_ppu.u_render.render_en
+ppu_tb.u_ppu.u_render.render_bg
+ppu_tb.u_ppu.u_render.render_sp
+ppu_tb.u_ppu.u_render.sprite_rendering
+@c00022
+ppu_tb.u_ppu.u_render.pat0[7:0]
+@28
+(0)ppu_tb.u_ppu.u_render.pat0[7:0]
+(1)ppu_tb.u_ppu.u_render.pat0[7:0]
+(2)ppu_tb.u_ppu.u_render.pat0[7:0]
+(3)ppu_tb.u_ppu.u_render.pat0[7:0]
+(4)ppu_tb.u_ppu.u_render.pat0[7:0]
+(5)ppu_tb.u_ppu.u_render.pat0[7:0]
+(6)ppu_tb.u_ppu.u_render.pat0[7:0]
+(7)ppu_tb.u_ppu.u_render.pat0[7:0]
+@1401200
+-group_end
+@800022
+ppu_tb.u_ppu.u_render.pat1[7:0]
+@28
+(0)ppu_tb.u_ppu.u_render.pat1[7:0]
+(1)ppu_tb.u_ppu.u_render.pat1[7:0]
+(2)ppu_tb.u_ppu.u_render.pat1[7:0]
+(3)ppu_tb.u_ppu.u_render.pat1[7:0]
+(4)ppu_tb.u_ppu.u_render.pat1[7:0]
+(5)ppu_tb.u_ppu.u_render.pat1[7:0]
+(6)ppu_tb.u_ppu.u_render.pat1[7:0]
+(7)ppu_tb.u_ppu.u_render.pat1[7:0]
+@1001200
+-group_end
+@28
+ppu_tb.u_ppu.u_render.load_sr
+@c00022
+ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+@28
+(0)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(1)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(2)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(3)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(4)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(5)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(6)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(7)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(8)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(9)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(10)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(11)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(12)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(13)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(14)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+(15)ppu_tb.u_ppu.u_render.tile_sr0[15:0]
+@1401200
+-group_end
+@800023
+ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+@29
+(0)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(1)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(2)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(3)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(4)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(5)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(6)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(7)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(8)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(9)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(10)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(11)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(12)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(13)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(14)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+(15)ppu_tb.u_ppu.u_render.tile_sr1[15:0]
+@1001201
+-group_end
+@28
+ppu_tb.u_ppu.u_render.bg_px[1:0]
+ppu_tb.u_ppu.u_render.px_en
+[pattern_trace] 1
+[pattern_trace] 0

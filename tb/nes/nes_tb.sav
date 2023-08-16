@@ -1,0 +1,96 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Tue Aug 15 02:36:07 2023
+[*]
+[dumpfile] "/home/jpdoane/dev/nesfpga/tb/nes/sim/nes_tb.fst"
+[dumpfile_mtime] "Tue Aug 15 02:32:55 2023"
+[dumpfile_size] 10241370
+[savefile] "/home/jpdoane/dev/nesfpga/tb/nes/nes_tb.sav"
+[timestart] 83447291000000
+[size] 1920 1015
+[pos] -1 -1
+*-29.471016 83450081000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] nes_tb.
+[treeopen] nes_tb.u_nes.
+[treeopen] nes_tb.u_nes.u_apu.
+[treeopen] nes_tb.u_nes.u_ppu.
+[sst_width] 211
+[signals_width] 288
+[sst_expanded] 1
+[sst_vpaned_height] 287
+@800200
+-cpu
+@22
+nes_tb.u_nes.u_apu.u_core_6502.ip[15:0]
+nes_tb.u_nes.u_apu.u_core_6502.pc[15:0]
+@c00022
+nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+@28
+(0)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(1)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(2)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(3)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(4)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(5)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(6)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+(7)nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+@1401200
+-group_end
+@22
+nes_tb.u_nes.u_apu.u_core_6502.state[5:0]
+nes_tb.u_nes.u_apu.addr_o[15:0]
+nes_tb.u_nes.u_apu.data_i[7:0]
+nes_tb.u_nes.u_apu.data_o[7:0]
+@28
+nes_tb.u_nes.u_apu.rw
+nes_tb.u_nes.u_apu.u_core_6502.nmi_inst
+@1000200
+-cpu
+@800200
+-ppu
+@22
+nes_tb.u_nes.u_ppu.ppu_data_o[7:0]
+nes_tb.u_nes.u_ppu.ppu_addr_o[13:0]
+@28
+nes_tb.u_nes.u_ppu.fetch_chr
+nes_tb.u_nes.u_ppu.fetch_attr
+@22
+nes_tb.u_nes.u_ppu.ppu_data_i[7:0]
+@28
+nes_tb.u_nes.u_ppu.ppu_wr
+nes_tb.u_nes.u_ppu.u_render.new_frame
+@1000200
+-ppu
+@800200
+-ppu_render
+@24
+nes_tb.u_nes.u_ppu.u_render.y[8:0]
+nes_tb.u_nes.u_ppu.u_render.cycle[8:0]
+@22
+nes_tb.u_nes.u_ppu.u_render.nt[7:0]
+@c00022
+nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+@28
+(0)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(1)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(2)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(3)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(4)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(5)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(6)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(7)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(8)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(9)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(10)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(11)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+(12)nes_tb.u_nes.u_ppu.u_render.pattern_idx[12:0]
+@1401200
+-group_end
+@22
+nes_tb.u_nes.pixel[7:0]
+@28
+nes_tb.u_nes.u_ppu.u_render.px_en
+@1000200
+-ppu_render
+[pattern_trace] 1
+[pattern_trace] 0
