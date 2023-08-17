@@ -14,7 +14,7 @@ SIM=iverilog
 SIM_PATH=$(abspath sim)
 SIMFILE=$(SIM_PATH)/$(TOP).vvp
 WAVEFILE=$(SIM_PATH)/$(TOP).vcd
-BIGWAVEFILE=$(SIM_PATH)/$(TOP).fst
+FSTWAVEFILE=$(SIM_PATH)/$(TOP).fst
 WAVESAVEFILE=$(abspath .)/$(TOP).sav
 
 
@@ -22,7 +22,7 @@ WAVESAVEFILE=$(abspath .)/$(TOP).sav
 all: $(WAVEFILE)
 
 
-$(SIMFILE):  $(abspath $(HDL_SOURCE))
+$(SIMFILE):  $(abspath $(HDL_SOURCE)) Makefile
 	@mkdir -p $(SIM_PATH);
 	cd $(SIM_PATH) && \
 	$(SIM) $(SIMARGS) -o $@ -s $(TOP) \
@@ -36,14 +36,14 @@ view: $(WAVEFILE)
 	gtkwave $^ -a $(WAVESAVEFILE) &
 
 
-.PHONY: bigwave
-bigwave: $(BIGWAVEFILE)
+.PHONY: fst
+fst: $(FSTWAVEFILE)
 
-$(BIGWAVEFILE): $(WAVEFILE)
-	vcd2fst $(WAVEFILE) $(BIGWAVEFILE)
+$(FSTWAVEFILE): $(WAVEFILE)
+	vcd2fst $(WAVEFILE) $(FSTWAVEFILE)
 
-.PHONY: viewbig
-viewbig: $(BIGWAVEFILE)
+.PHONY: viewfst
+viewfst: $(FSTWAVEFILE)
 	gtkwave $(FSTFILE) -a $(WAVESAVEFILE) &
 
 %.vcd: %.vvp

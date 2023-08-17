@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+`include "ppudefs.vh"
 
 module oam #(
         parameter OAM_INIT="" //{`ROM_PATH,"oam.mem"}
@@ -55,7 +57,9 @@ module oam #(
 
     logic ysrc;
     //y index into sprite pattern
-    wire [8:0] sp_yi = scan_r - (ysrc ? oam_dout : y);    // on copy use y coord from oam, otherwise use registered y coord
+    wire [7:0] sp_yy = ysrc ? oam_dout : y;    // on copy use y coord from oam, otherwise use registered y coord
+    wire [8:0] sp_yi = scan_r - {1'b0, sp_yy};
+
     wire sp_inscan = ~(ppuctrl[PPUCTRL_H] ? |sp_yi[8:4] : |sp_yi[8:3]); //is this sprite in the current scan line?
 
     // flip sprite y pattern index if needed

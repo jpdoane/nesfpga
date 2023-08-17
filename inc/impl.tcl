@@ -155,6 +155,7 @@ set rc [catch {
   create_report "impl_1_route_report_incremental_reuse_0" "report_incremental_reuse -file ${TOPMODULE}_incremental_reuse_routed.rpt"
   create_report "impl_1_route_report_clock_utilization_0" "report_clock_utilization -file ${TOPMODULE}_clock_utilization_routed.rpt"
   create_report "impl_1_route_report_bus_skew_0" "report_bus_skew -warn_on_violation -file ${TOPMODULE}_bus_skew_routed.rpt -pb ${TOPMODULE}_bus_skew_routed.pb -rpx ${TOPMODULE}_bus_skew_routed.rpx"
+
   close_msg_db -file route_design.pb
 } RESULT]
 if {$rc} {

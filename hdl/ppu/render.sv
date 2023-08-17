@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     (
@@ -16,7 +17,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     input logic       oam_data_wr,
     output logic [7:0] oam_data_o,
 
-    output logic fetch_attr, fetch_chr,
+    output logic fetch_tile, fetch_attr, fetch_chr,
     output logic [12:0] pattern_idx,
     output logic [4:0] palette_idx,
 
@@ -196,7 +197,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
             end
         endcase
 
-
+        fetch_tile = render_en && !(fetch_attr || fetch_chr);
 
     end
 
@@ -209,7 +210,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     // assign pattern_idx = pattern_sp | pattern_bg;
 
     // background shift registers
-    logic [2:0]  pal_dat;          //palette
+    logic [1:0]  pal_dat;          //palette
     logic [7:0]  pal_sr1, pal_sr0;          //palette
     logic [15:0] tile_sr1, tile_sr0;        //tile data
     always @(posedge clk) begin
@@ -241,10 +242,20 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     end
 
     // fine_x=0 selects MSB, 7 selects LSB, so flip bit order for SR output
-    wire [0:7] tile_sr0_flip = tile_sr0[15:8];
-    wire [0:7] tile_sr1_flip = tile_sr1[15:8];
-    wire [0:7] pal_sr0_flip = pal_sr0[7:0];
-    wire [0:7] pal_sr1_flip = pal_sr1[7:0];
+    // wire [0:7] tile_sr0_flip = tile_sr0[15:8];
+    // wire [0:7] tile_sr1_flip = tile_sr1[15:8];
+    // wire [0:7] pal_sr0_flip = pal_sr0[7:0];
+    // wire [0:7] pal_sr1_flip = pal_sr1[7:0];
+
+    wire [7:0] tile_sr0_flip, tile_sr1_flip, pal_sr0_flip, pal_sr1_flip;
+    generate for(genvar i=0; i<8; i++) begin
+        assign tile_sr0_flip[i]=tile_sr0[15-i];
+        assign tile_sr1_flip[i]=tile_sr1[15-i];
+        assign pal_sr0_flip[i]=pal_sr0[7-i];
+        assign pal_sr1_flip[i]=pal_sr1[7-i];
+        end
+    endgenerate
+
     wire [1:0] bg_px = {tile_sr1_flip[fine_x], tile_sr0_flip[fine_x]};
     wire [1:0] bg_pal = {pal_sr1_flip[fine_x], pal_sr0_flip[fine_x]};
 
@@ -262,7 +273,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
         .rst         (rst         ),
         .rend        (sprite_rendering),
         .cycle       (cycle        ),
-        .scan        (y_next),
+        .scan        (y),
         .oam_addr_i  (oam_addr_i  ),
         .oam_addr_wr (oam_addr_wr ),
         .oam_din     (oam_data_i     ),

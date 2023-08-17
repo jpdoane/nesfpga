@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module cpu_bus #(
         parameter PRG_ROM={`ROM_PATH,"PRG.mem"}

@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module ppu_bus #(
         parameter MIRRORV=1,
@@ -22,15 +23,17 @@ module ppu_bus #(
 `endif
 
     integer file, cnt;
+    // string chr_file = string(CHR_INIT);
+    // string vram_file = string(VRAM_INIT);
     initial begin
-        if (CHR_INIT != "") begin
+        // if (chr_file.len() > 0) begin
             $display("Loading CHR memory: %s ", CHR_INIT);
             $readmemh(CHR_INIT, CHR);
-        end
-        if (VRAM_INIT != "") begin
-            $display("Loading VRAM memory: %s ", VRAM_INIT);
-            $readmemh(VRAM_INIT, VRAM);
-        end
+        // end
+        // if (vram_file.len() > 0) begin
+        //     $display("Loading VRAM memory: %s ", vram_file);
+        //     $readmemh(VRAM_INIT, VRAM);
+        // end
     end
 
     logic [7:0] v_data, c_data;

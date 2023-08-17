@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 // 0 - A
 // 1 - B
 // 2 - Select

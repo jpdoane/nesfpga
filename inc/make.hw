@@ -16,6 +16,7 @@ endif
 # common tcl scripts
 SYNTH_TCL=$(SCRIPTS)/synth.tcl
 IMPL_TCL=$(SCRIPTS)/impl.tcl
+MEM_TCL=$(SCRIPTS)/mem.tcl
 BITFILE_TCL=$(SCRIPTS)/bitfile.tcl
 PROGRAM_TCL=$(SCRIPTS)/program.tcl
 
@@ -86,6 +87,13 @@ $(IMPL): $(IMPL_ENV) $(SYNTH)
 	|| $(call FAIL, IMPLEMENTATION, true)
 	$(call SUCCEED, IMPLEMENTATION, true)
 
+mem: $(IMPL_ENV) $(IMPL) 
+	cd $(IMPL_PATH) && \
+	vivado -m64 -mode batch -notrace -source $(MEM_TCL) -tclargs $(TOP) $(DEVICE) $(IMPL) $(BUILD_PATH) \
+	|| $(call FAIL, WRITE_MEM, true)
+	$(call SUCCEED, WRITE_MEM, true)
+
+
 # bitfile
 BITFILE=$(IMPL_PATH)/$(TOP).bit
 bitfile: $(BITFILE)
@@ -95,7 +103,7 @@ $(BITFILE):	$(IMPL)
 	vivado -m64 -mode batch -notrace -log bitfile.log -source $(BITFILE_TCL) -tclargs $(TOP)
 
 .PHONY: program
-program: $(BITFILE)
+program:
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -log program.log -source $(PROGRAM_TCL) -tclargs $(BITFILE) $(DEVICE_SHORT)
 

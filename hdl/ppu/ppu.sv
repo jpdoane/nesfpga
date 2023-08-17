@@ -1,3 +1,6 @@
+`timescale 1ns/1ps
+`include "ppudefs.vh"
+
 
 module ppu  #(
     parameter EXTERNAL_FRAME_TRIGGER=0,
@@ -53,7 +56,7 @@ module ppu  #(
     assign cpu_data_o = cpu_data_io;
 
     // signals from render...
-    logic fetch_attr, fetch_chr;
+    logic fetch_tile, fetch_attr, fetch_chr;
     logic [12:0] pattern_idx;
     logic [4:0] palette_idx;
     logic vblank_r;
@@ -141,7 +144,9 @@ module ppu  #(
                     PPUDATA_ADDR:   begin
                                     cpu_data_io <= vpal ? pal_data : cpu_readbuf;
                                     cpu_ppu_read <= 1;  // update cpu_readbuf with incoming data
+                                    inc_v <= 1;
                                     end
+                    default:        begin end
                 endcase
             end
 
@@ -180,6 +185,7 @@ module ppu  #(
                                     ppu_wr <= ~vpal;
                                     inc_v <= 1;
                                     end
+                    default:        begin end
                 endcase
             end
 
@@ -238,7 +244,9 @@ module ppu  #(
     assign attr_addr = {2'h2, v[11:10], 4'b1111, v[9:7], v[4:2]};
     assign ppu_addr_o = fetch_attr ? attr_addr :
                         fetch_chr ? chr_addr :
-                        {2'h2, v[11:0]};
+                        fetch_tile ? {2'h2, v[11:0]}:
+                        v[13:0];
+
 
     wire lower_tile = v[6];
     wire left_tile = v[1];
@@ -264,6 +272,7 @@ module ppu  #(
         .oam_data_i    (cpu_data_i),
         .oam_data_wr   (oam_data_wr),
         .oam_data_o    (oam_data_o),
+        .fetch_tile     (fetch_tile     ),
         .fetch_attr    (fetch_attr    ),
         .fetch_chr     (fetch_chr     ),
         .pattern_idx   (pattern_idx   ),

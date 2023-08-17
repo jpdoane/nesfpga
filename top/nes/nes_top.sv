@@ -7,13 +7,16 @@ module nes_top #(
     parameter OSCREEN_HEIGHT =  10'd480,
     parameter OFRAME_WIDTH =  10'd858,
     parameter OFRAME_HEIGHT =  10'd525,
-    parameter PPU_LATENCY = 3
+    parameter PPU_LATENCY = 4
 )
 (
   input CLK_125MHZ,
 
   input [1:0] SW,
   input [3:0] btn,
+  input [1:0] ctrl_data,
+  output [1:0] ctrl_out,
+  output [1:0] ctrl_strobe,
   output [3:0] LED,
 
   // HDMI output
@@ -51,9 +54,7 @@ clocks  u_clocks(
 
     logic [7:0] pixel;
     logic frame_trigger, vblank, pixel_en;
-    logic [2:0] ctrl_strobe;
-    logic [1:0] ctrl_rd, ctrl_data;
-
+    logic [2:0] strobe;
     nes 
     #(
         .EXTERNAL_FRAME_TRIGGER (1 )
@@ -68,30 +69,32 @@ clocks  u_clocks(
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
         .vblank    (vblank    ),
-        .ctrl_strobe   (ctrl_strobe),
-        .ctrl_rd       (ctrl_rd),
-        .ctrl_data       (ctrl_data)
+        .ctrl_strobe   (strobe),
+        .ctrl_out       (ctrl_out),
+        .ctrl_data       (~ctrl_data)
     );
 
+    assign ctrl_strobe = {strobe[0],strobe[0]};
+    assign LED[1] = ctrl_data[0];
 
-    wire btn_select = btn[1] && SW[0];
-    wire btn_start = btn[1] && !SW[0];
-    wire btn_u = btn[2] && (SW==2'h0);
-    wire btn_d = btn[2] && (SW==2'h1);
-    wire btn_l = btn[2] && (SW==2'h2);
-    wire btn_r = btn[2] && (SW==2'h3);
-    wire btn_A = btn[3] && SW[1];
-    wire btn_B = btn[3] && !SW[1];
-    wire [7:0] controller1 = {btn_r, btn_l, btn_d, btn_u, btn_start, btn_select, btn_B, btn_A};
+    // wire btn_select = btn[1] && SW[0];
+    // wire btn_start = btn[1] && !SW[0];
+    // wire btn_u = btn[2] && (SW==2'h0);
+    // wire btn_d = btn[2] && (SW==2'h1);
+    // wire btn_l = btn[2] && (SW==2'h2);
+    // wire btn_r = btn[2] && (SW==2'h3);
+    // wire btn_A = btn[3] && SW[1];
+    // wire btn_B = btn[3] && !SW[1];
+    // wire [7:0] controller1 = {btn_r, btn_l, btn_d, btn_u, btn_start, btn_select, btn_B, btn_A};
 
-    controller_sim u_controller_sim(
-        .clk    (clk_cpu    ),
-        .rst    (rst_cpu    ),
-        .strobe (ctrl_strobe[0] ),
-        .rd     (ctrl_rd[0]     ),
-        .btns   (controller1   ),
-        .data   (ctrl_data[0]   )
-    );
+    // controller_sim u_controller_sim(
+    //     .clk    (clk_cpu    ),
+    //     .rst    (rst_cpu    ),
+    //     .strobe (ctrl_strobe[0] ),
+    //     .rd     (ctrl_out[0]     ),
+    //     .btns   (controller1   ),
+    //     .data   (ctrl_data[0]   )
+    // );
 
 
 

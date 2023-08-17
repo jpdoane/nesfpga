@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module palette #(
         parameter PAL_INIT=""

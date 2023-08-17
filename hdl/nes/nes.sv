@@ -11,7 +11,7 @@ module nes #(
     output logic pixel_en,
     output logic vblank,
     output logic [2:0] ctrl_strobe,
-    output logic [1:0] ctrl_rd,
+    output logic [1:0] ctrl_out,
     input logic [1:0] ctrl_data
 );
 
@@ -33,7 +33,7 @@ module nes #(
         .data_o (data_from_cpu ),
         .rw     (cpu_rw     ),
         .ctrl_strobe    (ctrl_strobe),
-        .ctrl_rd    (ctrl_rd),
+        .ctrl_out    (ctrl_out),
         .ctrl_data    (ctrl_data)
     );
 

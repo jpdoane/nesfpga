@@ -1,8 +1,6 @@
+`timescale 1ns/1ps
 
-module oam_dma #(
-    parameter OAMDMA_ADDR=16'h4014,
-    parameter OAMDATA_ADDR=16'h2004
-    )(
+module oam_dma (
     input logic clk, rst,
     input logic rw_i,
     input logic [15:0] cpu_addr_i,
@@ -13,6 +11,10 @@ module oam_dma #(
     output logic rw_o,
     output logic dma_en
     );
+
+    localparam OAMDMA=16'h4014;
+    localparam OAMDATA=16'h2004;
+ 
 
     logic [7:0] dma_page;
     logic [7:0] dma_cnt;
@@ -47,7 +49,7 @@ module oam_dma #(
         dma_en = 0;
         case(state)
             DMA_WAIT:   begin
-                        if (cpu_addr_i == OAMDMA_ADDR && !rw_i) begin 
+                        if (cpu_addr_i == OAMDMA && !rw_i) begin 
                             init_dma = 1;
                             next_state = DMA_READ;
                             dma_en=1;
@@ -62,12 +64,13 @@ module oam_dma #(
             DMA_WRITE:  begin
                         dma_en=1;
                         next_state = DMA_READ;
-                        cpu_addr_o = OAMDATA_ADDR;
+                        cpu_addr_o = OAMDATA;
                         cpu_data_o = bus_data_i;    // read byte from mem, write to oam 
                         rw_o = 0;
                         inc_cnt = 1;
                         next_state = dma_cnt==8'hff ? DMA_WAIT : DMA_READ;
                         end
+            default:    begin end
         endcase
     end
 

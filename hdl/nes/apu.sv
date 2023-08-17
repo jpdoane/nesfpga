@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module apu
     (
@@ -8,7 +9,7 @@ module apu
     output logic [7:0] data_o,
     output logic rw,
     output logic [2:0] ctrl_strobe,
-    output logic [1:0] ctrl_rd,
+    output logic [1:0] ctrl_out,
     input logic [1:0] ctrl_data
     );
 
@@ -33,6 +34,7 @@ module apu
     );
 
     wire cpu_rdy = rdy & !dma_en;
+    logic sync, jam;
     core_6502 u_core_6502(
         .i_clk  (clk  ),
         .i_rst  (rst  ),
@@ -43,9 +45,9 @@ module apu
         .IRQ    (irq    ),
         .addr   (addr_from_cpu   ),
         .dor    (data_from_cpu    ),
-        .RW     (cpu_rw     )
-        // .sync   (sync   ),
-        // .jam    (jam    )
+        .RW     (cpu_rw     ),
+        .sync   (sync   ),
+        .jam    (jam    )
     );
 
     // APU register space 0x4000-0x401f
@@ -77,14 +79,14 @@ module apu
     always @(posedge clk) begin
         if (rst) begin
             ctrl_strobe <= 0;
-            ctrl_rd <= 0;
+            ctrl_out <= 0;
             apu_data_rd <= 0;
             apu_cs_r <= 0;
         end else begin
 
             apu_cs_r <= apu_cs;
             ctrl_strobe <= ctrl_strobe;
-            ctrl_rd <= 0;
+            ctrl_out <= 0;
             apu_data_rd <= 0;
 
             // write to controller
@@ -93,12 +95,12 @@ module apu
 
             // read from controller1
             if (cpu_rw && apu_cs && apu_addr==5'h16) begin
-                ctrl_rd[0] <= 1;
+                ctrl_out[0] <= 1;
                 apu_data_rd <= {7'h0, ctrl_data[0]};
             end
             // read from controller2
             if (cpu_rw && apu_cs && apu_addr==5'h17) begin
-                ctrl_rd[1] <= 1;
+                ctrl_out[1] <= 1;
                 apu_data_rd <= {7'h0, ctrl_data[1]};
             end
         end
