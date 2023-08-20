@@ -6,7 +6,7 @@ module hdmi_upscaler #(
     parameter  OSCREEN_WIDTH = 720,
     parameter  OSCREEN_HEIGHT = ISCREEN_HEIGHT*SUB_Y,
     parameter  OFRAME_WIDTH = 858,
-    parameter  OFRAME_HEIGHT = ISCREEN_HEIGHT*SUB_Y,
+    parameter  OFRAME_HEIGHT = 525,
     parameter  SUB_X = 2,
     parameter  SUB_Y = 2,
     parameter  OSCREEN_SHIFT = (OSCREEN_WIDTH - ISCREEN_WIDTH*SUB_X) >> 1,

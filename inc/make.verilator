@@ -85,10 +85,12 @@ run:
 	@echo "-- RUN ---------------------"
 	@rm -rf logs
 	@mkdir -p logs
-	obj_dir/V$(TOP)
-	
-view:
-	@gtkwave logs/$(TOP).fst &
+	obj_dir/V$(TOP) $(VERILATE_ARGS)
+
+WAVESAVEFILE=$(abspath .)/$(TOP).sav
+
+view: 
+	@gtkwave logs/$(TOP).fst -a $(WAVESAVEFILE) &
 ######################################################################
 # Other targets
 

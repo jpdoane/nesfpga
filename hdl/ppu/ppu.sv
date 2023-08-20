@@ -99,7 +99,7 @@ module ppu  #(
     always @(posedge clk) begin
         if (rst) begin
             ppuctrl <= 0;
-            ppumask <= 8'h1e;
+            ppumask <= 0;
             rst_delay <= 1;
 
             cpu_data_io <= 0;

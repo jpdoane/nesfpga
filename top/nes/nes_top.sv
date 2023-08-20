@@ -30,13 +30,15 @@ module nes_top #(
 
     wire clk_ppu, clk_cpu;
     wire clk_hdmi_x5, clk_hdmi;
-    wire rst_ppu, rst_cpu, rst_tdms, rst_hdmi;
     wire locked;
     wire [1:0] cpu_phase;
+
+    wire rst_global = btn[1];
 
 clocks  u_clocks(
     .CLK_125MHZ  (CLK_125MHZ  ),
     .rst_clocks  (rst_clocks  ),
+    .rst_global  (rst_global),
     .clk_hdmi_x5 (clk_hdmi_x5 ),
     .clk_hdmi    (clk_hdmi    ),
     .clk_ppu     (clk_ppu     ),
@@ -102,19 +104,10 @@ clocks  u_clocks(
     initial $readmemh(`PALFILE, pal);
 
     logic [23:0] rgb_p;
-    wire override_video = btn[3] && btn[1];
-    logic [23:0] rgb_pattern = 0; 
-    always @(posedge clk_ppu) begin
-        if (rst_ppu) rgb_pattern <= 24'hff00ff;
-        else rgb_pattern <= ~rgb_pattern;
-    end
-
-    always @(posedge clk_ppu) rgb_p <= override_video ? rgb_pattern : pal[pixel[5:0]];
-
+    always @(posedge clk_ppu) rgb_p <= pal[pixel[5:0]];
 
     logic [9:0] hx, hy;
-    logic [23:0] rgb_h;
-    
+    logic [23:0] rgb_h;    
     hdmi_upscaler
     #(
         .ISCREEN_WIDTH (ISCREEN_WIDTH),
@@ -138,7 +131,6 @@ clocks  u_clocks(
         .hy        (hy        ),
         .rgb_h     (rgb_h     )
     );
-
 
     ///
     /// hmdi

@@ -1,10 +1,6 @@
 `timescale 1ns/1ps
 
-parameter real FRAME_TIME = 1e9/60.0;
-
-module nes_tb #(
-    parameter EXTERNAL_FRAME_TRIGGER=0
-)
+module nes_tb
 (
     input clk_ppu, rst_ppu,
     output logic [7:0] pixel,
@@ -13,32 +9,7 @@ module nes_tb #(
 );
     logic [15:0] pc_init = 16'hc004;
 
-    `ifndef START_FRAME
-    initial $display("START_FRAME not defined");
-    `define START_FRAME 1
-    `endif
-
-    `ifndef STOP_FRAME
-    initial $display("STOP_FRAME not defined");
-    `define STOP_FRAME 5
-    `endif
-
-    // `ifndef MAX_SIM_TIME
-    // initial $display("MAX_SIM_TIME not defined");
-    // `define MAX_SIM_TIME 0
-    // `endif
-
-    // initial begin
-    //     if (`MAX_SIM_TIME>0) begin
-    //         #`MAX_SIM_TIME;
-    //         $finish;
-    //     end
-    // end
-
-    logic record_en;
-
     initial begin
-        // @(posedge record_en);
         $dumpfile("logs/nes_tb.fst");
         $dumpvars(0, nes_tb);
     end
@@ -67,16 +38,20 @@ module nes_tb #(
 
     logic [2:0] strobe;
     logic [1:0] ctrl_out, ctrl_data, ctrl_strobe;
-    nes 
-    #(
-        .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER )
-    )
-    u_nes(
+
+    logic frame_trigger;
+    hdmi_trigger  u_hdmi_trigger(
+        .clk_p     (clk_ppu     ),
+        .rst_p     (rst_ppu     ),
+        .new_frame (frame_trigger )
+    );
+
+    nes  u_nes(
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .frame_trigger (1'b0 ),
+        .frame_trigger (frame_trigger ),
         .cpu_phase     (cpu_phase     ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
@@ -86,27 +61,32 @@ module nes_tb #(
         .ctrl_data       (ctrl_data)
     );
     assign ctrl_strobe = {strobe[0], strobe[0]};
-    // assign pixel = 0;
-    // assign pixel_en = 0;
-    // assign ctrl_out = 0;
-    // assign ctrl_strobe = 0;
-    // assign strobe = 0;
-    // assign vblank = 0;
-    
-    // frame_record #(
-    //     .START_FRAME (`START_FRAME),
-    //     .STOP_FRAME (`STOP_FRAME)
-    // )
-    // u_frame_record(
-    //     .clk      (clk_ppu      ),
-    //     .rst      (rst_ppu ),
-    //     .pixel    (pixel  ),
-    //     .pixel_en (pixel_en ),
-    //     .frame    (vblank),
-    //     .record_en (record_en)
-    // );
 
-    wire [7:0] btns = 8'b00000100; //select
+    // always u_nes.u_cpu_bus.PRG[15'h0fdd] = 0; // no demo wait
+
+    int cycle;
+    always_ff @(posedge clk_cpu) begin
+        if(rst_cpu) cycle <= 0;
+        else cycle <= cycle+1;
+    end
+
+    logic [7:0] btns = 0;
+            // 0 - A
+            // 1 - B
+            // 2 - Select
+            // 3 - Start
+            // 4 - Up
+            // 5 - Down
+            // 6 - Left
+            // 7 - Right
+    
+    // always_comb begin
+    //     if(cycle < 800_000) btns = 0;
+    //     else if(cycle < 2_000_000) btns = 8'b00001000; //start
+    //     else if(cycle < 2_200_000) btns = 8'b00000001; //A
+    //     else btns = 8'b10000000; //right
+    // end
+
 
     controller_sim u_controller_sim(
         .clk    (clk_cpu    ),

@@ -15,10 +15,13 @@ module nes #(
     input logic [1:0] ctrl_data
 );
 
-    logic [7:0] data_from_cpu, data_to_cpu, data_from_ppu;
-    logic [15:0] cpu_addr;
-    logic cpu_rw;
-    logic nmi, irq, rdy;
+    (* mark_debug = "true" *)  logic [7:0] data_from_cpu;
+    (* mark_debug = "true" *)  logic [7:0] data_to_cpu;
+    (* mark_debug = "true" *)  logic [7:0] data_from_ppu;
+    (* mark_debug = "true" *)  logic [15:0] cpu_addr;
+    (* mark_debug = "true" *)  logic cpu_rw;
+    (* mark_debug = "true" *)  logic nmi;
+    logic irq, rdy;
     assign rdy=1;
     assign irq=0;
 
@@ -37,7 +40,6 @@ module nes #(
         .ctrl_data    (ctrl_data)
     );
 
-    logic [15:0] cpu_bus_addr;
     logic ppu_cs;
     cpu_bus u_cpu_bus(
         .clk        (clk_cpu        ),
@@ -50,10 +52,11 @@ module nes #(
         .ppu_cs     (ppu_cs     )
     );
 
-    logic [13:0] ppu_addr;
-    logic [7:0] ppu_data_i, ppu_data_o;
+    (* mark_debug = "true" *)  logic [13:0] ppu_addr;
+    (* mark_debug = "true" *)  logic [7:0] ppu_data_i;
+    (* mark_debug = "true" *)  logic [7:0] ppu_data_o;
+    (* mark_debug = "true" *)  logic ppu_rw;
     logic [7:0] px_data;
-    logic ppu_rw;
     
     logic px_out;
     wire ppu_cs_m2 = ppu_cs & cpu_phase==2;

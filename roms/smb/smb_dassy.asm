@@ -976,13 +976,13 @@ GameMenuRoutine:
               beq StartGame
               cmp #A_Button+Start_Button  ;check to see if A + start was pressed
               bne ChkSelect               ;if not, branch to check select button
-StartGame:    jmp ChkContinue             ;if either start or A + start, execute here
-ChkSelect:    cmp #Select_Button          ;check to see if the select button was pressed
+[8255]StartGame:    jmp ChkContinue             ;if either start or A + start, execute here
+[8258] ChkSelect:    cmp #Select_Button          ;check to see if the select button was pressed
               beq SelectBLogic            ;if so, branch reset demo timer
               ldx DemoTimer               ;otherwise check demo timer
               bne ChkWorldSel             ;if demo timer not expired, branch to check world selection
               sta SelectTimer             ;set controller bits here if running demo
-              jsr DemoEngine              ;run through the demo actions
+[8264]              jsr DemoEngine              ;run through the demo actions
               bcs ResetTitle              ;if carry flag set, demo over, thus branch
               jmp RunDemo                 ;otherwise, run game engine for demo
 ChkWorldSel:  ldx WorldSelectEnableFlag   ;check to see if world selection has been enabled
@@ -1091,7 +1091,7 @@ DemoTimingData:
       .db $15, $5a, $10, $20, $28, $30, $20, $10
       .db $80, $20, $30, $30, $01, $ff, $00
 
-DemoEngine:
+[836B] DemoEngine :
           ldx DemoAction         ;load current demo action
           lda DemoActionTimer    ;load current action timer
           bne DoAction           ;if timer still counting down, skip

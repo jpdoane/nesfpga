@@ -1,3 +1,4 @@
 [submodule "modules/6502"]
 	path = modules/6502
-	url = https://github.com/jpdoane/6502.git
+	url = git@github.com:jpdoane/6502.git
+	

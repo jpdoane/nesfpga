@@ -32,7 +32,6 @@ $(SIMFILE):  $(abspath $(HDL_SOURCE)) Makefile
 
 .PHONY: view
 view: $(WAVEFILE)
-	cd $(SIM_PATH) && \
 	gtkwave $^ -a $(WAVESAVEFILE) &
 
 

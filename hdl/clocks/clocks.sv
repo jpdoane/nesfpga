@@ -11,6 +11,7 @@ module clocks
     (
     input         CLK_125MHZ,
     input         rst_clocks,
+    input         rst_global,
     output        clk_hdmi_x5,    
     output        clk_hdmi,    
     output        clk_ppu,     
@@ -128,9 +129,9 @@ end
 `endif
 
 
-	assign rst_tdms = ~locked1;
-	assign rst_hdmi = ~locked1;
-	assign rst_ppu = ~locked;
+	assign rst_tdms = ~locked1 | rst_global;
+	assign rst_hdmi = ~locked1 | rst_global;
+	assign rst_ppu = ~locked | rst_global;
 
     logic [7:0] rst_cpu_sr;
 	always_ff @(posedge clk_ppu) begin
