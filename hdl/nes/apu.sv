@@ -10,14 +10,15 @@ module apu
     output logic rw,
     output logic [2:0] ctrl_strobe,
     output logic [1:0] ctrl_out,
-    input logic [1:0] ctrl_data
+    input logic [1:0] ctrl_data,
+    output logic [7:0] audio
     );
 
     logic [7:0] data_from_cpu, data_to_cpu;
     logic [15:0] addr_from_cpu;
 
     logic dma_en, cpu_rw;
-
+    
     // OAM dma
     // once enabled, this temporarily disables cpu and takes over the bus
     oam_dma u_oam_dma(
@@ -108,5 +109,7 @@ module apu
 
     assign data_to_cpu = apu_cs_r ? apu_data_rd : data_i;
 
+    logic [7:0] audio;
+    assign audio = 0;
 
 endmodule

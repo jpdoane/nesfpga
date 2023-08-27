@@ -131,12 +131,12 @@ int main(int argc, char** argv) {
 
     FrameRecorder framerec(max_frames, skip_frames);
     
-    top->clk_ppu = 0;
+    top->clk = 0;
     bool stillgoing = true;
     while (!Verilated::gotFinish() && stillgoing) {
         ++ppu_cycle;
-        top->clk_ppu = !top->clk_ppu;
-        top->rst_ppu = (ppu_cycle < 10) ? 1 : 0;
+        top->clk = !top->clk;
+        top->rst = (ppu_cycle < 10) ? 1 : 0;
         // if (ppu_cycle < 5) {
         //     // Zero coverage if still early in reset, otherwise toggles there may
         //     // falsely indicate a signal is covered
@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
         // }
         top->eval();
 
-        if(top->clk_ppu)
+        if(top->clk)
         {
             stillgoing = stillgoing && framerec.process(top->vblank, top->pixel_en, top->pixel);
             stillgoing = stillgoing && (max_cycles==0 || ppu_cycle<=max_cycles);

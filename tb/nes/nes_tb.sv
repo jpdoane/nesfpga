@@ -2,7 +2,7 @@
 
 module nes_tb
 (
-    input clk_ppu, rst_ppu,
+    input clk, rst,
     output logic [7:0] pixel,
     output logic pixel_en,
     output logic vblank
@@ -15,26 +15,18 @@ module nes_tb
     end
 
     logic clk_cpu, rst_cpu;
+    logic clk_ppu, rst_ppu;
+    logic [4:0] clk_phase;
 
-    logic [1:0] cpu_cnt3, cpu_phase;
-    wire cpu_en = (cpu_cnt3 == 2'd2 );
-    assign cpu_phase = cpu_cnt3;
-	always_ff @(posedge clk_ppu)
-	begin
-        if (rst_ppu) cpu_cnt3 <= 0;
-        else cpu_cnt3 <= cpu_en ? 0 : cpu_cnt3 + 1;
-        clk_cpu <= cpu_en;
-	end
-
-    logic [7:0] rst_cpu_sr;
-	always_ff @(posedge clk_ppu) begin
-        if (rst_ppu) rst_cpu_sr <= 8'hff;
-        else rst_cpu_sr <= rst_cpu_sr << 1;
-    end
-    wire rst_cpu = rst_cpu_sr[7];
-
-    // logic [7:0] pixel;
-    // logic vblank, pixel_en;
+    clocks_sim u_clocks_sim(
+    	.clk_ppu8  (clk  ),
+        .rst       (rst       ),
+        .clk_ppu   (clk_ppu   ),
+        .clk_cpu   (clk_cpu   ),
+        .clk_phase (clk_phase ),
+        .rst_ppu   (rst_ppu   ),
+        .rst_cpu   (rst_cpu   )
+    );
 
     logic [2:0] strobe;
     logic [1:0] ctrl_out, ctrl_data, ctrl_strobe;
@@ -52,7 +44,7 @@ module nes_tb
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
         .frame_trigger (frame_trigger ),
-        .cpu_phase     (cpu_phase     ),
+        .clk_phase     (clk_phase     ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
         .vblank    (vblank    ),

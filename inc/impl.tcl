@@ -91,6 +91,7 @@ set rc [catch {
   }
   close $fh
 
+
   link_design -top $TOPMODULE -part $DEVICE
   close_msg_db -file init_design.pb
 } RESULT]

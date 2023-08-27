@@ -1,3 +1,5 @@
+// ratio of hdmi to ppu clock must be:  858*2 / 341 = 5.03225806452
+
 module hdmi_upscaler #(
     parameter  ISCREEN_WIDTH = 256,
     parameter  ISCREEN_HEIGHT = 240,

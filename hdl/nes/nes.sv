@@ -6,13 +6,14 @@ module nes #(
     input logic clk_cpu, rst_cpu,
     input logic clk_ppu, rst_ppu,
     input logic frame_trigger,
-    input logic [1:0] cpu_phase,
+    input logic [4:0] clk_phase,
     output logic [7:0] pixel,
     output logic pixel_en,
     output logic vblank,
     output logic [2:0] ctrl_strobe,
     output logic [1:0] ctrl_out,
-    input logic [1:0] ctrl_data
+    input logic [1:0] ctrl_data,
+    output logic [7:0] audio
 );
 
     (* mark_debug = "true" *)  logic [7:0] data_from_cpu;
@@ -21,6 +22,9 @@ module nes #(
     (* mark_debug = "true" *)  logic [15:0] cpu_addr;
     (* mark_debug = "true" *)  logic cpu_rw;
     (* mark_debug = "true" *)  logic nmi;
+    (* mark_debug = "true" *)  logic [4:0] ppu8_phase;
+    assign ppu8_phase = clk_phase;
+    
     logic irq, rdy;
     assign rdy=1;
     assign irq=0;
@@ -37,7 +41,8 @@ module nes #(
         .rw     (cpu_rw     ),
         .ctrl_strobe    (ctrl_strobe),
         .ctrl_out    (ctrl_out),
-        .ctrl_data    (ctrl_data)
+        .ctrl_data    (ctrl_data),
+        .audio          (audio)
     );
 
     logic ppu_cs;
@@ -56,10 +61,8 @@ module nes #(
     (* mark_debug = "true" *)  logic [7:0] ppu_data_i;
     (* mark_debug = "true" *)  logic [7:0] ppu_data_o;
     (* mark_debug = "true" *)  logic ppu_rw;
-    logic [7:0] px_data;
     
-    logic px_out;
-    wire ppu_cs_m2 = ppu_cs & cpu_phase==2;
+    wire ppu_cs_m2 = ppu_cs & clk_phase==5'h10;
     ppu #(
         .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER)
         )

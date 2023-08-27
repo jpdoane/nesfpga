@@ -1,0 +1,17 @@
+APU:
+
+square wave
+tri wave
+delta mod
+
+registers
+$4000 / $4004 	DDLC VVVV 	Duty (D), envelope loop / length counter halt (L), constant volume (C), volume/envelope (V)
+$4001 / $4005 	EPPP NSSS 	Sweep unit: enabled (E), period (P), negate (N), shift (S)
+$4002 / $4006 	TTTT TTTT 	Timer low (T)
+$4003 / $4007 	LLLL LTTT 	Length counter load (L), timer high (T)
+
+
+frame counter:
+$4017 	MI-- ---- 	Mode (M, 0 = 4-step, 1 = 5-step), IRQ inhibit flag (I) 
+
+approc 4x ticks / frame

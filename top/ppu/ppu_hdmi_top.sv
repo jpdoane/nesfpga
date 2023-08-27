@@ -26,7 +26,7 @@ module ppu_hdmi_top #(
     wire rst_clocks = btn[0];
 
     wire clk_ppu, clk_cpu;
-    wire clk_hdmi_x5, clk_hdmi;
+    wire clk_tmds, clk_hdmi;
     wire rst_ppu, rst_cpu, rst_tdms, rst_hdmi;
     wire locked;
     wire [1:0] cpu_phase;
@@ -34,7 +34,7 @@ module ppu_hdmi_top #(
 clocks  u_clocks(
     .CLK_125MHZ  (CLK_125MHZ  ),
     .rst_clocks  (rst_clocks  ),
-    .clk_hdmi_x5 (clk_hdmi_x5 ),
+    .clk_tmds (clk_tmds ),
     .clk_hdmi    (clk_hdmi    ),
     .clk_ppu     (clk_ppu     ),
     .clk_cpu     (clk_cpu     ),
@@ -167,7 +167,7 @@ clocks  u_clocks(
         .VIDEO_REFRESH_RATE ( 59.94 )
     )
     u_hdmi(
-        .clk_pixel_x5      (clk_hdmi_x5      ),
+        .clk_pixel_x5      (clk_tmds      ),
         .clk_pixel         (clk_hdmi         ),
         .reset             (rst_hdmi             ),
         .rgb               (rgb_h               ),

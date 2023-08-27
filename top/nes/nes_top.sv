@@ -23,15 +23,24 @@ module nes_top #(
   output [2:0] HDMI_TX,
   output [2:0] HDMI_TX_N,
   output HDMI_CLK,
-  output HDMI_CLK_N
+  output HDMI_CLK_N,
+
+  //audio
+  output aud_sd,
+  output aud_pwm
 );
 
     wire rst_clocks = btn[0];
 
     wire clk_ppu, clk_cpu;
-    wire clk_hdmi_x5, clk_hdmi;
+    wire clk_tmds, clk_hdmi;
     wire locked;
-    wire [1:0] cpu_phase;
+    wire [4:0] clk_phase;
+
+    wire rst_tdms;
+    wire rst_hdmi;
+    wire rst_ppu;
+    wire rst_cpu;
 
     wire rst_global = btn[1];
 
@@ -39,11 +48,12 @@ clocks  u_clocks(
     .CLK_125MHZ  (CLK_125MHZ  ),
     .rst_clocks  (rst_clocks  ),
     .rst_global  (rst_global),
-    .clk_hdmi_x5 (clk_hdmi_x5 ),
+    .clk_tmds (clk_tmds ),
     .clk_hdmi    (clk_hdmi    ),
     .clk_ppu     (clk_ppu     ),
+    .clk_ppu8     (clk_ppu8     ),
     .clk_cpu     (clk_cpu     ),
-    .cpu_phase    (cpu_phase    ),
+    .clk_phase    (clk_phase    ),
     .locked      (locked      ),
     .rst_tdms    (rst_tdms    ),
     .rst_hdmi    (rst_hdmi    ),
@@ -67,7 +77,7 @@ clocks  u_clocks(
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
         .frame_trigger (frame_trigger),
-        .cpu_phase     (cpu_phase     ),
+        .clk_phase     (clk_phase     ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
         .vblank    (vblank    ),
@@ -146,7 +156,7 @@ clocks  u_clocks(
         .VIDEO_REFRESH_RATE ( 59.94 )
     )
     u_hdmi(
-        .clk_pixel_x5      (clk_hdmi_x5      ),
+        .clk_pixel_x5      (clk_tmds      ),
         .clk_pixel         (clk_hdmi         ),
         .reset             (rst_hdmi             ),
         .rgb               (rgb_h               ),
@@ -165,5 +175,20 @@ clocks  u_clocks(
         OBUFDS #(.IOSTANDARD("TMDS_33")) obufds_clock(.I(tmds_clock), .O(HDMI_CLK), .OB(HDMI_CLK_N));
     endgenerate
 
+    wire audio_en = 1;
+
+    pdm 
+    #(
+        .DEPTH (DEPTH )
+    )
+    u_pdm(
+        .clk    (clk_ppu8    ),
+        .rst    (rst_ppu    ),
+        .en     (audio_en     ),
+        .sample (sample ),
+        .pdm    (aud_pwm    )
+    );
+
+    assign aud_sd = audio_en;
 
 endmodule

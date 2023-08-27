@@ -7,6 +7,7 @@ CPU_SOURCE = $(wildcard $(PROJ_ROOT)/modules/6502/hdl/*.sv)
 CLK_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/clocks/*.sv)
 PPU_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/ppu/*.sv)
 HDMI_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/hdmi/*.sv)
+AUDIO_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/audio/*.sv)
 NES_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/nes/*.sv)
 
 CPU_INC = $(PROJ_ROOT)/modules/6502/hdl/  $(PROJ_ROOT)/modules/6502/hdl/debug/
@@ -15,6 +16,7 @@ CPU_INC = $(PROJ_ROOT)/modules/6502/hdl/  $(PROJ_ROOT)/modules/6502/hdl/debug/
 CLOCK_XDC = $(wildcard $(MODULES)/clocks/*.xdc)
 HDMI_XDC = $(wildcard $(MODULES)/hdmi/*.xdc)
 PPU_XDC = $(wildcard $(MODULES)/ppu/*.xdc)
+NES_XDC = $(wildcard $(MODULES)/nes/*.xdc)
 
 BEEP_GOOD=/usr/share/sounds/Oxygen-Sys-App-Positive.ogg
 BEEP_BAD=/usr/share/sounds/Oxygen-Sys-App-Error-Serious-Very.ogg
