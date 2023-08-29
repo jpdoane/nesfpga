@@ -5,11 +5,9 @@
 -y ../../modules/6502/hdl/debug
 -y ../../hdl/ppu
 -y ../../hdl/nes
+-y ../../hdl/carts
 --top-module nes_tb
 -DPALFILE='"../../roms/nes.mem"'
 -DROM_PATH='"../../roms/smb/"'
 -DRESET_RAM=1
 -DDEBUG_CPU=1
--DSTART_FRAME=30
--DSTOP_FRAME=35
--DMAX_SIM_TIME=0
