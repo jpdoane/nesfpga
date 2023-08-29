@@ -3,39 +3,57 @@
 module nes #(
     parameter EXTERNAL_FRAME_TRIGGER=1
     )(
-    input logic clk_cpu, rst_cpu,
+    // clocks
+    input logic clk_cpu, rst_cpu, m2,
     input logic clk_ppu, rst_ppu,
+
+    // video
     input logic frame_trigger,
-    input logic [4:0] clk_phase,
     output logic [7:0] pixel,
     output logic pixel_en,
     output logic vblank,
+
+    // audio
+    output logic [7:0] audio,
+
+    // controller
     output logic [2:0] ctrl_strobe,
     output logic [1:0] ctrl_out,
     input logic [1:0] ctrl_data,
-    output logic [7:0] audio
+
+    //cartridge
+    output logic cart_m2,
+    output logic [14:0] cart_cpu_addr,
+    output logic [7:0] cart_cpu_data_i,
+    input logic [7:0] cart_cpu_data_o,
+    output logic cart_cpu_rw,
+    output logic cart_romsel,
+    input logic cart_ciram_ce,
+    input logic cart_ciram_a10,
+    output logic [13:0] cart_ppu_addr,
+    output logic [7:0] cart_ppu_data_i,
+    input logic [7:0] cart_ppu_data_o,
+    output logic cart_ppu_rd,
+    output logic cart_ppu_wr,
+    input logic cart_irq
 );
 
     (* mark_debug = "true" *)  logic [7:0] data_from_cpu;
-    (* mark_debug = "true" *)  logic [7:0] data_to_cpu;
+    (* mark_debug = "true" *)  logic [7:0] cpu_bus_data;
     (* mark_debug = "true" *)  logic [7:0] data_from_ppu;
     (* mark_debug = "true" *)  logic [15:0] cpu_addr;
     (* mark_debug = "true" *)  logic cpu_rw;
     (* mark_debug = "true" *)  logic nmi;
-    (* mark_debug = "true" *)  logic [4:0] ppu8_phase;
-    assign ppu8_phase = clk_phase;
-    
-    logic irq, rdy;
-    assign rdy=1;
-    assign irq=0;
+
+    assign cart_m2 = m2;
 
     apu u_apu(
     	.clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
-        .data_i (data_to_cpu ),
-        .rdy    (rdy    ),
+        .data_i (cpu_bus_data ),
+        .rdy    (1'b1    ),
         .nmi    (nmi    ),
-        .irq    (irq    ),
+        .irq    (cart_irq    ),
         .addr_o (cpu_addr ),
         .data_o (data_from_cpu ),
         .rw     (cpu_rw     ),
@@ -46,23 +64,32 @@ module nes #(
     );
 
     logic ppu_cs;
+    logic rom_cs;
     cpu_bus u_cpu_bus(
         .clk        (clk_cpu        ),
         .rst        (rst_cpu        ),
         .rw         (cpu_rw         ),
-        .bus_addr_i (cpu_addr ),
+        .bus_addr   (cpu_addr ),
         .cpu_data_i (data_from_cpu ),
         .ppu_data_i (data_from_ppu ),
-        .bus_data_o (data_to_cpu ),
-        .ppu_cs     (ppu_cs     )
+        .cart_data_i(cart_cpu_data_o ),
+        .data_o     (cpu_bus_data ),
+        .ppu_cs     (ppu_cs     ),
+        .rom_cs     (rom_cs)
     );
+    assign cart_cpu_rw = cpu_rw;
+    assign cart_romsel = rom_cs & m2;
+    assign cart_cpu_addr = cpu_addr[14:0];
+    assign cart_cpu_data_i = cpu_bus_data;
+
 
     (* mark_debug = "true" *)  logic [13:0] ppu_addr;
-    (* mark_debug = "true" *)  logic [7:0] ppu_data_i;
+    (* mark_debug = "true" *)  logic [7:0] ppu_bus_data;
     (* mark_debug = "true" *)  logic [7:0] ppu_data_o;
-    (* mark_debug = "true" *)  logic ppu_rw;
+    (* mark_debug = "true" *)  logic ppu_rd;
+    (* mark_debug = "true" *)  logic ppu_wr;
     
-    wire ppu_cs_m2 = ppu_cs & clk_phase==5'h10;
+    wire ppu_cs_m2 = ppu_cs & m2;
     ppu #(
         .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER)
         )
@@ -70,15 +97,16 @@ module nes #(
         .clk        (clk_ppu        ),
         .rst        (rst_ppu        ),
         .cpu_rw     (cpu_rw     ),
-        .cpu_cs     (ppu_cs_m2     ),
+        .cs         (ppu_cs_m2     ),
         .cpu_addr   (cpu_addr[2:0]   ),
         .cpu_data_i (data_from_cpu ),
-        .ppu_data_i (ppu_data_i ),
+        .ppu_data_i (ppu_bus_data ),
         .cpu_data_o (data_from_ppu ),
         .nmi        (nmi        ),
         .ppu_addr_o (ppu_addr   ),
         .ppu_data_o (ppu_data_o ),
-        .ppu_rw     (ppu_rw     ),
+        .ppu_rd     (ppu_rd     ),
+        .ppu_wr     (ppu_wr     ),
         .px_data    (pixel    ),
         .px_out    (pixel_en    ),
         .trigger_frame (frame_trigger ),
@@ -89,11 +117,18 @@ module nes #(
         .clk    (clk_ppu    ),
         .rst    (rst_ppu    ),
         .addr   (ppu_addr   ),
-        .rw     (ppu_rw     ),
-        .data_i (ppu_data_o ),
-        .data_o (ppu_data_i )
+        .rd     (ppu_rd     ),
+        .wr     (ppu_wr     ),
+        .vram_cs (cart_ciram_ce),
+        .vram_a10 (cart_ciram_a10),
+        .ppu_data_i ( ppu_data_o ),
+        .cart_data_i (cart_ppu_data_o ),
+        .data_o (ppu_bus_data )
     );
 
-
+    assign cart_ppu_addr = ppu_addr[13:0];
+    assign cart_ppu_data_i = ppu_bus_data;
+    assign cart_ppu_rd = ppu_rd;
+    assign cart_ppu_wr = ppu_wr;
 
 endmodule

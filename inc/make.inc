@@ -9,6 +9,7 @@ PPU_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/ppu/*.sv)
 HDMI_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/hdmi/*.sv)
 AUDIO_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/audio/*.sv)
 NES_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/nes/*.sv)
+CART_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/carts/*.sv)
 
 CPU_INC = $(PROJ_ROOT)/modules/6502/hdl/  $(PROJ_ROOT)/modules/6502/hdl/debug/
 

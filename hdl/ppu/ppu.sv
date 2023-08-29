@@ -3,12 +3,11 @@
 
 
 module ppu  #(
-    parameter EXTERNAL_FRAME_TRIGGER=0,
-    parameter PAL_INIT=""
+    parameter EXTERNAL_FRAME_TRIGGER=0
     )
     (
     input logic clk, rst,
-    input logic cpu_rw, cpu_cs,
+    input logic cpu_rw, cs,
     input logic [2:0] cpu_addr,
     input logic [7:0] cpu_data_i,
     input logic [7:0] ppu_data_i,
@@ -17,7 +16,7 @@ module ppu  #(
     output logic nmi,
     output logic [13:0] ppu_addr_o,
     output logic [7:0] ppu_data_o,
-    output logic ppu_rw,
+    output logic ppu_rd,ppu_wr,
 
     output logic [7:0] px_data,
     output logic px_out,
@@ -32,11 +31,11 @@ module ppu  #(
         if (rst) begin
             cs_r <= 0;
         end else begin
-            cs_r <= cpu_cs;
+            cs_r <= cs;
         end
     end
-    assign reg_re = cpu_cs & ~cs_r & cpu_rw;
-    assign reg_we = cpu_cs & ~cs_r & ~cpu_rw;
+    assign reg_re = cs & ~cs_r & cpu_rw;
+    assign reg_we = cs & ~cs_r & ~cpu_rw;
 
 
     // cpu/ppu read / write registers
@@ -50,9 +49,11 @@ module ppu  #(
         end
     end
 
-    logic ppu_wr;
-    assign ppu_rw = ~ppu_wr;
-    assign ppu_data_o = ppu_wr ? cpu_data_io : 0;
+    logic wr;
+    assign ppu_rd = ~wr;
+    assign ppu_wr = wr;
+
+    assign ppu_data_o = wr ? cpu_data_io : 0;
     assign cpu_data_o = cpu_data_io;
 
     // signals from render...
@@ -109,7 +110,7 @@ module ppu  #(
             fine_x <= 0;
             w <= 0;
             inc_v<=0;
-            ppu_wr <= 0;
+            wr <= 0;
             cpu_ppu_read <= 0;
             vblank_r <= 0;
             NMI_occured <= 0;
@@ -118,7 +119,7 @@ module ppu  #(
         end else begin
             ppuctrl <= ppuctrl;
             ppumask <= ppumask;
-            ppu_wr <= 0;
+            wr <= 0;
             pal_wr <= 0;
 
             v <= v;
@@ -182,7 +183,7 @@ module ppu  #(
                                     end
                     PPUDATA_ADDR:   begin
                                     pal_wr <= vpal;
-                                    ppu_wr <= ~vpal;
+                                    wr <= ~vpal;
                                     inc_v <= 1;
                                     end
                     default:        begin end
@@ -296,8 +297,7 @@ module ppu  #(
     assign vpal = (v[13:8] == 6'h3f);
     assign pal_addr = vpal ? v[4:0] : palette_idx;
     
-    palette #( .PAL_INIT(PAL_INIT))
-    u_palette(
+    palette u_palette(
         .clk    (clk    ),
         .rst    (rst    ),
         .addr   (pal_addr   ),

@@ -109,7 +109,6 @@ module apu
 
     assign data_to_cpu = apu_cs_r ? apu_data_rd : data_i;
 
-    logic [7:0] audio;
     assign audio = 0;
 
 endmodule
