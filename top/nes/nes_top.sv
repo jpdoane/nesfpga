@@ -41,6 +41,7 @@ module nes_top #(
     wire rst_hdmi;
     wire rst_ppu;
     wire rst_cpu;
+    wire clk_ppu8, m2;
 
     wire rst_global = btn[1];
 
@@ -53,7 +54,7 @@ clocks  u_clocks(
     .clk_ppu     (clk_ppu     ),
     .clk_ppu8     (clk_ppu8     ),
     .clk_cpu     (clk_cpu     ),
-    .clk_phase    (clk_phase    ),
+    .m2    (m2    ),
     .locked      (locked      ),
     .rst_tdms    (rst_tdms    ),
     .rst_hdmi    (rst_hdmi    ),
@@ -67,48 +68,78 @@ clocks  u_clocks(
     logic [7:0] pixel;
     logic frame_trigger, vblank, pixel_en;
     logic [2:0] strobe;
-    nes 
-    #(
-        .EXTERNAL_FRAME_TRIGGER (1 )
-    )
-    u_nes(
+    assign ctrl_strobe = {strobe[0],strobe[0]};
+
+
+    logic cart_m2;
+    logic [14:0] cart_cpu_addr;
+    logic [7:0] cart_cpu_data_i;
+    logic [7:0] cart_cpu_data_o;
+    logic cart_cpu_rw;
+    logic cart_romsel;
+    logic cart_ciram_ce;
+    logic cart_ciram_a10;
+    logic [13:0] cart_ppu_addr;
+    logic [7:0] cart_ppu_data_i;
+    logic [7:0] cart_ppu_data_o;
+    logic cart_ppu_rd;
+    logic cart_ppu_wr;
+    logic cart_irq;
+
+    nes  u_nes(
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
+        .m2       (m2       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .frame_trigger (frame_trigger),
-        .clk_phase     (clk_phase     ),
+        .frame_trigger (frame_trigger ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
+        .audio    (),
         .vblank    (vblank    ),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
-        .ctrl_data       (~ctrl_data)
+        .ctrl_data       (ctrl_data),
+        .cart_m2          (cart_m2),
+        .cart_cpu_addr    (cart_cpu_addr),
+        .cart_cpu_data_i  (cart_cpu_data_i),
+        .cart_cpu_data_o  (cart_cpu_data_o),
+        .cart_cpu_rw      (cart_cpu_rw),
+        .cart_romsel      (cart_romsel),
+        .cart_ciram_ce    (cart_ciram_ce),
+        .cart_ciram_a10   (cart_ciram_a10),
+        .cart_ppu_addr    (cart_ppu_addr),
+        .cart_ppu_data_i  (cart_ppu_data_i),
+        .cart_ppu_data_o  (cart_ppu_data_o),
+        .cart_ppu_rd      (cart_ppu_rd),
+        .cart_ppu_wr      (cart_ppu_wr),
+        .cart_irq         (cart_irq)
     );
 
-    assign ctrl_strobe = {strobe[0],strobe[0]};
+    cart_000 
+    #(
+        .MIRRORV       (1)
+    )
+    u_cart_000 (
+        .clk_cpu    (clk_cpu    ),
+        .m2         (cart_m2         ),
+        .cpu_addr   (cart_cpu_addr   ),
+        .cpu_data_i (cart_cpu_data_i ),
+        .cpu_data_o (cart_cpu_data_o ),
+        .cpu_rw     (cart_cpu_rw     ),
+        .romsel     (cart_romsel     ),
+        .ciram_ce   (cart_ciram_ce   ),
+        .ciram_a10  (cart_ciram_a10  ),
+        .clk_ppu    (clk_ppu    ),
+        .ppu_addr   (cart_ppu_addr   ),
+        .ppu_data_i (cart_ppu_data_i ),
+        .ppu_data_o (cart_ppu_data_o ),
+        .ppu_rd     (cart_ppu_rd     ),
+        .ppu_wr     (cart_ppu_wr     ),
+        .irq        (cart_irq        )
+    );
+
     assign LED[1] = ctrl_data[0];
-
-    // wire btn_select = btn[1] && SW[0];
-    // wire btn_start = btn[1] && !SW[0];
-    // wire btn_u = btn[2] && (SW==2'h0);
-    // wire btn_d = btn[2] && (SW==2'h1);
-    // wire btn_l = btn[2] && (SW==2'h2);
-    // wire btn_r = btn[2] && (SW==2'h3);
-    // wire btn_A = btn[3] && SW[1];
-    // wire btn_B = btn[3] && !SW[1];
-    // wire [7:0] controller1 = {btn_r, btn_l, btn_d, btn_u, btn_start, btn_select, btn_B, btn_A};
-
-    // controller_sim u_controller_sim(
-    //     .clk    (clk_cpu    ),
-    //     .rst    (rst_cpu    ),
-    //     .strobe (ctrl_strobe[0] ),
-    //     .rd     (ctrl_out[0]     ),
-    //     .btns   (controller1   ),
-    //     .data   (ctrl_data[0]   )
-    // );
-
-
 
     logic [23:0] pal [63:0];
     initial $readmemh(`PALFILE, pal);
@@ -175,20 +206,20 @@ clocks  u_clocks(
         OBUFDS #(.IOSTANDARD("TMDS_33")) obufds_clock(.I(tmds_clock), .O(HDMI_CLK), .OB(HDMI_CLK_N));
     endgenerate
 
-    wire audio_en = 1;
+    wire audio_en = 0;
 
-    pdm 
-    #(
-        .DEPTH (DEPTH )
-    )
-    u_pdm(
-        .clk    (clk_ppu8    ),
-        .rst    (rst_ppu    ),
-        .en     (audio_en     ),
-        .sample (sample ),
-        .pdm    (aud_pwm    )
-    );
-
+    // pdm 
+    // #(
+    //     .DEPTH (DEPTH )
+    // )
+    // u_pdm(
+    //     .clk    (clk_ppu8    ),
+    //     .rst    (rst_ppu    ),
+    //     .en     (audio_en     ),
+    //     .sample (sample ),
+    //     .pdm    (aud_pwm    )
+    // );
+    assign aud_pwm = 0;
     assign aud_sd = audio_en;
 
 endmodule

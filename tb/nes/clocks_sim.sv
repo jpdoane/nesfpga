@@ -18,10 +18,12 @@ begin
         ppu8_cnt <= 0;
         clk_ppu <= 0;
         clk_cpu <= 0;
+        m2 <= 0;
     end else begin
         ppu8_cnt <= ppu8_cnt == 5'd23 ? 0 : ppu8_cnt + 1;
         clk_ppu <= ppu8_cnt[2:0] == 3'h0;
         clk_cpu <= ppu8_cnt == 5'h0;
+        m2 <= ppu8_cnt[4];
     end
 end
 
@@ -30,18 +32,16 @@ always_ff @(posedge clk_ppu8) begin
     if (rst) rst_ppu_sr <= 16'hffff;
     else rst_ppu_sr <= rst_ppu_sr << 1;
 end
-assign rst_ppu = rst_ppu_sr[15];
+assign rst_ppu = rst_ppu_sr[14];
 
 logic [7:0] rst_cpu_sr;
 always_ff @(posedge clk_ppu) begin
     if (rst_ppu) begin
         rst_cpu_sr <= 8'hff;
-        m2 <= 0;
     end else begin
         rst_cpu_sr <= rst_cpu_sr << 1;
-        m2 <= ppu8_cnt==5'h9;
     end
 end
-assign rst_cpu = rst_cpu_sr[7];
+assign rst_cpu = rst_cpu_sr[5];
 
 endmodule

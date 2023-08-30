@@ -144,13 +144,11 @@ int main(int argc, char** argv) {
         // }
         top->eval();
 
-        if(top->clk)
+        if(top->clk && top->pixel_clk)
         {
             stillgoing = stillgoing && framerec.process(top->vblank, top->pixel_en, top->pixel);
             stillgoing = stillgoing && (max_cycles==0 || ppu_cycle<=max_cycles);
         }
-
-
     }
 
     top->final();

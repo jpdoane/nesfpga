@@ -4,6 +4,7 @@ module nes_tb
 (
     input clk, rst,
     output logic [7:0] pixel,
+    output logic pixel_clk,
     output logic pixel_en,
     output logic vblank
 );
@@ -22,7 +23,7 @@ module nes_tb
 
     logic clk_cpu, rst_cpu, m2;
     logic clk_ppu, rst_ppu;
-
+    
     clocks_sim u_clocks_sim(
     	.clk_ppu8  (clk  ),
         .rst       (rst       ),
@@ -32,6 +33,7 @@ module nes_tb
         .rst_ppu   (rst_ppu   ),
         .rst_cpu   (rst_cpu   )
     );
+    assign pixel_clk=clk_ppu;
 
     logic frame_trigger;
     hdmi_trigger  u_hdmi_trigger(

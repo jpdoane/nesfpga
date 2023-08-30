@@ -10,7 +10,7 @@ module clocks
     output        clk_ppu8,     
     output        clk_ppu,     
     output        clk_cpu,     
-    output        m2,     
+    output  reg   m2,     
     output        locked,
     output        rst_tdms,
     output        rst_hdmi,
@@ -75,14 +75,13 @@ end
 assign rst_ppu = rst_ppu_sr[15];
 
 logic [7:0] rst_cpu_sr;
-logic m2;
 always_ff @(posedge clk_ppu) begin
     if (rst_ppu) begin
         rst_cpu_sr <= 8'hff;
         m2 <= 0;
     end else begin
         rst_cpu_sr <= rst_cpu_sr << 1;
-        m2 <= ppu8_cnt==5'h9;
+        m2 <= ppu8_cnt[4];
     end
 end
 assign rst_cpu = rst_cpu_sr[7];

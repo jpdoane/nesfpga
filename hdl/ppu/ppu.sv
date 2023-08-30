@@ -87,7 +87,9 @@ module ppu  #(
     // wire [7:0] yscroll_t = {t[9:5], t[14:12]};
 
 
-    logic [7:0] ppuctrl,ppumask;
+    logic [7:0] ppuctrl,ppumask, ppustatus;
+    assign ppustatus = {NMI_occured || vblank_re, sp0, sp_of, cpu_data_io[4:0]}; //bits 4:0 maintain latched data
+
 
     logic w;          // 1st vs 2nd write toggle (for two byte registers)
     logic inc_v;                     // signal to increment v pointer
@@ -137,7 +139,7 @@ module ppu  #(
             if(reg_re) begin    // cpu read (ppu write back to cpu)
                 case(cpu_addr)
                     PPUSTATUS_ADDR: begin
-                                    cpu_data_io[7:5] <= {NMI_occured, sp0, sp_of}; //bits 4:0 maintain latched data
+                                    cpu_data_io <= ppustatus; //bits 4:0 maintain latched data
                                     NMI_occured <= 0;            // clear vblank after read
                                     w <= 0;                     // reset write toggle
                                     end

@@ -151,7 +151,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
             RENDER:
             begin
                 state_next = fetch_sprites ? V_RESETX : RENDER;
-                px_en = ~prerender;
+                px_en = ~prerender && render_en;
             end
             V_RESETX:
             begin
