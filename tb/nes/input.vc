@@ -7,7 +7,6 @@
 -y ../../hdl/nes
 -y ../../hdl/carts
 --top-module nes_tb
+-DROM_PATH='"../../roms"'
 -DPALFILE='"../../roms/nes.mem"'
--DROM_PATH='"../../roms/smb/"'
 -DRESET_RAM=1
--DDEBUG_CPU=1

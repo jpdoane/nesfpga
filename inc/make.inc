@@ -13,11 +13,7 @@ CART_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/carts/*.sv)
 
 CPU_INC = $(PROJ_ROOT)/modules/6502/hdl/  $(PROJ_ROOT)/modules/6502/hdl/debug/
 
-
-CLOCK_XDC = $(wildcard $(MODULES)/clocks/*.xdc)
-HDMI_XDC = $(wildcard $(MODULES)/hdmi/*.xdc)
-PPU_XDC = $(wildcard $(MODULES)/ppu/*.xdc)
-NES_XDC = $(wildcard $(MODULES)/nes/*.xdc)
+CONSTRAINTS = $(wildcard  $(PROJ_ROOT)/boards/artyz7/*.xdc)
 
 BEEP_GOOD=/usr/share/sounds/Oxygen-Sys-App-Positive.ogg
 BEEP_BAD=/usr/share/sounds/Oxygen-Sys-App-Error-Serious-Very.ogg

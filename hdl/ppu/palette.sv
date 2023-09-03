@@ -25,6 +25,12 @@ module palette #(
         $readmemh(PAL_FILE, PAL);
     end
 `endif
+`ifdef SAVERAMS
+        final begin
+            $display("Saving palette RAM");
+            $writememh("logs/pal.mem", PAL);
+        end
+`endif
 
     
      //Addresses $3F10/$3F14/$3F18/$3F1C are mirrors of $3F00/$3F04/$3F08/$3F0C.

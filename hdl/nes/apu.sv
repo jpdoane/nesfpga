@@ -16,7 +16,6 @@ module apu
 
     logic [7:0] data_from_cpu, data_to_cpu;
     logic [15:0] addr_from_cpu;
-
     logic dma_en, cpu_rw;
     
     // OAM dma
@@ -97,12 +96,12 @@ module apu
             // read from controller1
             if (cpu_rw && apu_cs && apu_addr==5'h16) begin
                 ctrl_out[0] <= 1;
-                apu_data_rd <= {7'h0, ctrl_data[0]};
+                apu_data_rd <= {7'b0100_000, ctrl_data[0]}; 
             end
             // read from controller2
             if (cpu_rw && apu_cs && apu_addr==5'h17) begin
                 ctrl_out[1] <= 1;
-                apu_data_rd <= {7'h0, ctrl_data[1]};
+                apu_data_rd <= {7'b0100_000, ctrl_data[1]};
             end
         end
     end

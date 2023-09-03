@@ -3,13 +3,15 @@ include ../../inc/make.inc
 TOP=nes_tb
 VERILATE_TOP=nes_main.cpp
 VERILATE_INCL=input.vc
-HDL_SOURCE = $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) clocks_sim.sv hdmi_trigger.sv $(TOP).sv
-VERILATE_ARGS= --max_frames 35 --skip_frames 32
+HDL_SOURCE = $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
+VERILATE_ARGS= --max_frames 40 --skip_frames 33
+
+GAME=smb
+
+VERILATOR_FLAGS += -DCART=$(GAME)_cart
+# VERILATOR_FLAGS += -DSAVERAMS=1
 
 include ../../inc/make.verilator
-
-show:
-	echo $(abspath .)/$(TOP).sav
 
 animate: 
 	@convert -delay 5 -loop 0 $(sort $(wildcard logs/*.ppm)) logs/animated.gif

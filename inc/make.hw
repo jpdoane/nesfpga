@@ -9,8 +9,8 @@ endif
 ifndef DEVICE
 	$(error DEVICE is not set)
 endif
-ifndef CONSTRIANTS
-	$(error CONSTRIANTS is not set)
+ifndef CONSTRAINTS
+	$(error CONSTRAINTS is not set)
 endif
 
 # common tcl scripts
@@ -28,13 +28,13 @@ XDC_FILE=$(BUILD_PATH)/constraints.tcl
 SRC_FILE=$(BUILD_PATH)/sources.tcl
 
 
-$(BUILD_ENV): $(HDL_SOURCE) $(CONSTRIANTS)
+$(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
 	@mkdir -p $(BUILD_PATH);
 	@rm -f $(XDC_FILE) $(SRC_FILE);
 	@for s in $(abspath $(HDL_SOURCE)) ; do \
 		echo "$$s" >> $(SRC_FILE); \
 	done
-	@for s in $(abspath $(CONSTRIANTS)) ; do \
+	@for s in $(abspath $(CONSTRAINTS)) ; do \
 		echo "$$s" >> $(XDC_FILE); \
 	done
 	@touch $(BUILD_ENV)
@@ -103,7 +103,10 @@ $(BITFILE):	$(IMPL)
 	vivado -m64 -mode batch -notrace -log bitfile.log -source $(BITFILE_TCL) -tclargs $(TOP)
 
 .PHONY: program
-program:
+program: $(BITFILE) force_program
+
+.PHONY: force_program
+force_program:
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -log program.log -source $(PROGRAM_TCL) -tclargs $(BITFILE) $(DEVICE_SHORT)
 

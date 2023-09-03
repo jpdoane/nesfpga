@@ -23,24 +23,27 @@ module oam_dma (
     logic [1:0] state, next_state;
     logic init_dma, inc_cnt;
 
+    logic read_cycle;
     always_ff @(posedge clk) begin
         if(rst) begin
-            state <= DMA_WAIT;
+            state <= DMA_IDLE;
             dma_page <= 0;
             dma_cnt <= 0;
+            read_cycle <= 0;
         end else begin
+            read_cycle <= ~read_cycle;
             state <= next_state;
             dma_page <= init_dma ? cpu_data_i : dma_page;
             dma_cnt <= init_dma ? 0 : inc_cnt ? dma_cnt + 1 : dma_cnt;
         end
     end
 
-    localparam DMA_WAIT=2'h0;
-    localparam DMA_READ=2'h1;
-    localparam DMA_WRITE=2'h2;
+    localparam DMA_IDLE=2'h0;
+    localparam DMA_STALL=2'h1;
+    localparam DMA_ACTIVE=2'h2;
 
     always_comb begin
-        next_state = DMA_WAIT;
+        next_state = DMA_IDLE;
         init_dma = 0;
         cpu_addr_o = cpu_addr_i;
         cpu_data_o = cpu_data_i;
@@ -48,27 +51,24 @@ module oam_dma (
         inc_cnt = 0;
         dma_en = 0;
         case(state)
-            DMA_WAIT:   begin
+            DMA_IDLE:   begin
                         if (cpu_addr_i == OAMDMA && !rw_i) begin 
                             init_dma = 1;
-                            next_state = DMA_READ;
+                            next_state = read_cycle ? DMA_STALL : DMA_ACTIVE;
                             dma_en=1;
-                        end else next_state = DMA_WAIT;
+                        end else next_state = DMA_IDLE;
                         end
-            DMA_READ:   begin
-                            next_state = DMA_WRITE;
-                            dma_en=1;
-                            cpu_addr_o = dma_addr;
-                            rw_o = 1;
-                        end
-            DMA_WRITE:  begin
+            DMA_STALL:  begin
+                        next_state = DMA_ACTIVE;    // extra cycle so we start on read
                         dma_en=1;
-                        next_state = DMA_READ;
-                        cpu_addr_o = OAMDATA;
+                        end
+            DMA_ACTIVE: begin
+                        dma_en=1;
+                        cpu_addr_o = read_cycle ? dma_addr : OAMDATA;
                         cpu_data_o = bus_data_i;    // read byte from mem, write to oam 
-                        rw_o = 0;
-                        inc_cnt = 1;
-                        next_state = dma_cnt==8'hff ? DMA_WAIT : DMA_READ;
+                        rw_o = read_cycle;
+                        inc_cnt = ~read_cycle;
+                        next_state = (dma_cnt==8'hff && ~read_cycle) ? DMA_IDLE : DMA_ACTIVE;
                         end
             default:    begin end
         endcase

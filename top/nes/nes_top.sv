@@ -31,45 +31,61 @@ module nes_top #(
 );
 
     wire rst_clocks = btn[0];
-
-    wire clk_ppu, clk_cpu;
-    wire clk_tmds, clk_hdmi;
-    wire locked;
-    wire [4:0] clk_phase;
-
-    wire rst_tdms;
-    wire rst_hdmi;
-    wire rst_ppu;
-    wire rst_cpu;
-    wire clk_ppu8, m2;
-
     wire rst_global = btn[1];
 
-clocks  u_clocks(
-    .CLK_125MHZ  (CLK_125MHZ  ),
-    .rst_clocks  (rst_clocks  ),
-    .rst_global  (rst_global),
-    .clk_tmds (clk_tmds ),
-    .clk_hdmi    (clk_hdmi    ),
-    .clk_ppu     (clk_ppu     ),
-    .clk_ppu8     (clk_ppu8     ),
-    .clk_cpu     (clk_cpu     ),
-    .m2    (m2    ),
-    .locked      (locked      ),
-    .rst_tdms    (rst_tdms    ),
-    .rst_hdmi    (rst_hdmi    ),
-    .rst_ppu     (rst_ppu     ),
-    .rst_cpu     (rst_cpu     )
-);
+    wire clk_tmds, clk_hdmi;
+    wire locked_hdmi;
+    mmcm_hdmi u_mmcm_hdmi
+    (
+    .clk_125(CLK_125MHZ),
+    .reset(rst_clocks), 
+    .clk_hdmi(clk_hdmi),
+    .clk_tmds(clk_tmds),
+    .locked(locked_hdmi)
+    );
+    logic rst_hdmi_rr, rst_hdmi_r, rst_hdmi;
+    always_ff @(posedge clk_hdmi) begin
+        if(~locked_hdmi | rst_global) begin
+            rst_hdmi_rr <= 1;
+            rst_hdmi_r <= 1;
+            rst_hdmi <= 1;
+        end else begin
+            rst_hdmi_rr <= 0;
+            rst_hdmi_r <= rst_hdmi_rr;
+            rst_hdmi <= rst_hdmi_r;
+        end
+    end
+    wire clk_nes;
+    wire locked_nes;
+    mmcm_nes_hdmi u_mmcm_nes_hdmi(
+        .clk_hdmi (clk_hdmi ),
+        .reset    (rst_hdmi ),
+        .clk_nes (clk_nes ),
+        .locked   (locked_nes   )
+    );
+    logic rst_nes_rr, rst_nes_r, rst_nes;
+    always_ff @(posedge clk_nes) begin
+        if(~locked_nes | rst_global) begin
+            rst_nes_rr <= 1;
+            rst_nes_r <= 1;
+            rst_nes <= 1;
+        end else begin
+            rst_nes_rr <= 0;
+            rst_nes_r <= rst_nes_rr;
+            rst_nes <= rst_nes_r;
+        end
+    end    
 
     assign  LED[2] = vblank; 
-    assign  LED[3] = locked; 
+    assign  LED[3] = locked_nes && locked_hdmi; 
+
+    wire clk_ppu, clk_cpu;
+    wire rst_ppu, rst_cpu;
 
     logic [7:0] pixel;
     logic frame_trigger, vblank, pixel_en;
     logic [2:0] strobe;
     assign ctrl_strobe = {strobe[0],strobe[0]};
-
 
     logic cart_m2;
     logic [14:0] cart_cpu_addr;
@@ -87,9 +103,10 @@ clocks  u_clocks(
     logic cart_irq;
 
     nes  u_nes(
+        .clk_master       (clk_nes       ),
+        .rst_master       (rst_nes       ),
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
-        .m2       (m2       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
         .frame_trigger (frame_trigger ),
@@ -99,7 +116,7 @@ clocks  u_clocks(
         .vblank    (vblank    ),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
-        .ctrl_data       (ctrl_data),
+        .ctrl_data       (~ctrl_data),
         .cart_m2          (cart_m2),
         .cart_cpu_addr    (cart_cpu_addr),
         .cart_cpu_data_i  (cart_cpu_data_i),
@@ -116,11 +133,8 @@ clocks  u_clocks(
         .cart_irq         (cart_irq)
     );
 
-    cart_000 
-    #(
-        .MIRRORV       (1)
-    )
-    u_cart_000 (
+    smb_cart u_cart (
+        .rst (rst_cpu),
         .clk_cpu    (clk_cpu    ),
         .m2         (cart_m2         ),
         .cpu_addr   (cart_cpu_addr   ),
@@ -139,7 +153,7 @@ clocks  u_clocks(
         .irq        (cart_irq        )
     );
 
-    assign LED[1] = ctrl_data[0];
+    assign LED[1] = ~ctrl_data[0];
 
     logic [23:0] pal [63:0];
     initial $readmemh(`PALFILE, pal);
@@ -213,7 +227,7 @@ clocks  u_clocks(
     //     .DEPTH (DEPTH )
     // )
     // u_pdm(
-    //     .clk    (clk_ppu8    ),
+    //     .clk    (clk_nes    ),
     //     .rst    (rst_ppu    ),
     //     .en     (audio_en     ),
     //     .sample (sample ),

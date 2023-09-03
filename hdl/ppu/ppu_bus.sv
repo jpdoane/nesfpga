@@ -25,25 +25,26 @@ module ppu_bus #(
             $readmemh(VRAM_FILE, vram);
         end
 `endif
+`ifdef SAVERAMS
+        final begin
+            $display("Saving PPU VRAM");
+            $writememh("logs/vram.mem", vram);
+        end
+`endif
 
     wire [VRAM_DEPTH-1:0] vram_addr = {vram_a10, addr[VRAM_DEPTH-2:0]};
-
+    logic [7:0] vram_data_rd;
     always @(posedge clk) begin
-        if (vram_cs && wr) vram[vram_addr] <= ppu_data_i;
-    end
-    wire [7:0] vram_data_rd = vram[vram_addr];
-
-    // output mux
-    logic [7:0] data_mux;
-    always @(posedge clk) begin
-        if (rst)
-            data_mux <= 0;
-        else begin
-            if (wr)             data_mux <= ppu_data_i;
-            else if (vram_cs)   data_mux <= vram_data_rd;
-            else                data_mux <= cart_data_i;
+        if (vram_cs) begin
+            if (wr) vram[vram_addr] <= ppu_data_i;
+            else vram_data_rd <= vram[vram_addr];
         end
     end
-    assign data_o = data_mux;
+
+    logic vram_cs_r;
+    always @(posedge clk) vram_cs_r <= vram_cs;
+
+    // output mux
+    assign data_o = vram_cs_r ? vram_data_rd : cart_data_i;
 
 endmodule

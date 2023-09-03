@@ -23,11 +23,13 @@ module cpu_bus (
 
     // internal RAM
     logic [7:0] ram [0:2047];
+    logic [7:0] ram_data_rd;
     always @(posedge clk) begin
-        if (ram_cs && !rw)
-            ram[ram_cpu_addr] <= cpu_data_i;
+        if (ram_cs) begin
+            if (!rw) ram[ram_cpu_addr] <= cpu_data_i;
+            else ram_data_rd <= ram[ram_cpu_addr];
+        end
     end
-    wire [7:0] ram_data_rd = ram[ram_cpu_addr];
 
 `ifdef RESET_RAM
         initial begin
@@ -41,19 +43,29 @@ module cpu_bus (
             $readmemh(RAM_FILE, ram);
         end
 `endif
+`ifdef SAVERAMS
+        final begin
+            $display("Saving CPU VRAM");
+            $writememh("logs/ram.mem", ram);
+        end
+`endif
+
+    logic ram_cs_r, cart_cs_r, ppu_cs_r;
+    logic [7:0] ppu_data_reg;
+    always @(posedge clk) begin
+        ram_cs_r <= ram_cs;
+        cart_cs_r <= rom_cs;
+        ppu_cs_r <= ppu_cs;
+        ppu_data_reg <= ppu_data_i;
+    end
 
     // output mux
     logic [7:0] data_mux;
-    always @(posedge clk) begin
-        if (rst)
-            data_mux <= 0;
-        else begin
-            data_mux <= 0;
-            if (!rw)            data_mux <= cpu_data_i;
-            else if (ram_cs)    data_mux <= ram_data_rd;
-            else if (rom_cs)    data_mux <= cart_data_i;
-            else if (ppu_cs)    data_mux <= ppu_data_i;
-        end
+    always_comb begin
+        if (ram_cs_r)       data_mux = ram_data_rd;
+        else if (cart_cs_r) data_mux = cart_data_i;
+        else if (ppu_cs_r)  data_mux = ppu_data_reg;
+        else                data_mux = 0;
     end
     assign data_o = data_mux;
 

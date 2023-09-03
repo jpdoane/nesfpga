@@ -110,6 +110,7 @@ set rc [catch {
   opt_design 
   write_checkpoint -force ${TOPMODULE}_opt.dcp
   create_report "impl_1_opt_report_drc_0" "report_drc -file ${TOPMODULE}_drc_opted.rpt -pb ${TOPMODULE}_drc_opted.pb -rpx ${TOPMODULE}_drc_opted.rpx"
+  create_report "impl_1_opt_report_utilization_0" "report_utilization -hierarchical -file ${TOPMODULE}_utilization_opt.rpt -pb ${TOPMODULE}_utilization_opt.pb"
   close_msg_db -file opt_design.pb
 } RESULT]
 if {$rc} {

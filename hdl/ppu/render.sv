@@ -39,8 +39,8 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
 
     wire render_bg_left = ppumask[1];
     wire render_sp_left = ppumask[2];
-    wire render_bg = ppumask[3];
-    wire render_sp = ppumask[4];
+    wire render_bg = ppumask[3] & ~vblank;
+    wire render_sp = ppumask[4] & ~vblank;
     wire render_en = render_bg | render_sp;
             
     wire new_frame;
@@ -81,9 +81,10 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
             pat0 <= 0;
             pat1 <= 0;
             vblank_r <= 0;
-            y <= -1; //prerender
+            y <= 0; //prerender
             cycle <= 0;
             state <= RENDER;
+            sp0 <= 0;
         end
         else begin
             nt <=   save_nt ? data_i : nt;

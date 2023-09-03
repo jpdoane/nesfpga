@@ -13,26 +13,60 @@ def writemem(data, memfile):
 def nes2mem(nes_file):
     with open(nes_file, 'rb') as fnes:
         header = fnes.read(16)
-        writemem(header, "NESheader.mem")
+        writemem(header, "INES.mem")
 
-        flags = header[6]
-        if flags & 0x4:
-            TRAIN = fnes.read(512)
-            writemem(TRAIN, "TRAIN.mem")            
+        f6 = header[6]
+        f7 = header[7]
+        ines2 = (f7 & 0xc) > 0
+        if ines2:
+            print("ines 2.0 format")
+        else:
+            print("ines 1.0 format")
 
         NPRG = header[4]
-        PRG = fnes.read(NPRG * 16384)
+        prg_sz = NPRG * 16384
+        PRG = fnes.read(prg_sz)
+        print(f"PRG size: {prg_sz} ({NPRG}x 16k blocks)")
         if NPRG == 1:
+            print(f"Mirroring PRG to 16kB")
             PRG = PRG+PRG #fill 16kb
-        elif NPRG != 2:
-            raise Exception("PRG size of {} B is not supported. Must be either 8kB or 16kB".format(NPRG*16384))                
         writemem(PRG, "PRG.mem")
 
         NCHR = header[5]
-        CHR = fnes.read(NCHR*8192)
-        if NCHR != 1:
-            raise Exception("CHR size of {} B is not supported. Must be 8kB".format(NCHR*8192))                
-        writemem(CHR, "CHR.mem")
+        if NCHR == 0:
+            print("uses CHR RAM...")
+        else:
+            chr_sz = NCHR * 8192
+            CHR = fnes.read(chr_sz)
+            print(f"CHR size: {chr_sz} ({NCHR}x 8k blocks)")
+            writemem(CHR, "CHR.mem")
+
+        if f6 & 0x02:
+            NRAM = header[8]
+            if NRAM == 0:
+                NRAM = 1
+            ram_sz = NRAM*8192
+            print(f"PRG-RAM size: {ram_sz} ({NRAM}x 8k blocks)")
+
+        if f6 & 0x04:
+            print("contains trainer")
+
+        if f6 & 0x08:
+            print("4-screen mirroring")
+        else:
+            if f6 & 0x01:
+                print("V mirroring")
+            else:
+                print("H mirroring")
+
+
+        mapper = (f7 & 0xf0) + (f6 >> 4)
+        if mapper == 0:
+            print("no mapper")
+        else:
+            print(f"mapper {mapper}")
+
+
 
 
 if __name__ == "__main__":

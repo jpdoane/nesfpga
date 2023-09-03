@@ -4,8 +4,9 @@ module nes #(
     parameter EXTERNAL_FRAME_TRIGGER=1
     )(
     // clocks
-    input logic clk_cpu, rst_cpu, m2,
-    input logic clk_ppu, rst_ppu,
+    input logic clk_master,rst_master,
+    output logic clk_cpu, rst_cpu,
+    output logic clk_ppu, rst_ppu,
 
     // video
     input logic frame_trigger,
@@ -38,14 +39,50 @@ module nes #(
     input logic cart_irq
 );
 
+
+    logic clk_ppu8;
+    (* mark_debug = "true" *)  logic m2;
+    nes_clocks u_nes_clocks(
+        .clk_master (clk_master ),
+        .rst_master (rst_master ),
+        .clk_ppu8    (clk_ppu8    ),
+        .clk_ppu    (clk_ppu    ),
+        .clk_cpu    (clk_cpu    ),
+        .rst_ppu    (rst_ppu    ),
+        .rst_cpu    (rst_cpu    ),
+        .m2         (m2         )
+    );
+
+
     (* mark_debug = "true" *)  logic [7:0] data_from_cpu;
     (* mark_debug = "true" *)  logic [7:0] cpu_bus_data;
     (* mark_debug = "true" *)  logic [7:0] data_from_ppu;
     (* mark_debug = "true" *)  logic [15:0] cpu_addr;
     (* mark_debug = "true" *)  logic cpu_rw;
     (* mark_debug = "true" *)  logic nmi;
+    (* mark_debug = "true" *)  logic ctrl_data_dbg;
+    (* mark_debug = "true" *)  logic ctrl_strobe_dbg;
+    (* mark_debug = "true" *)  logic ctrl_out_dbg;
 
+    assign ctrl_data_dbg = ctrl_data[0];
+    assign ctrl_strobe_dbg = ctrl_strobe[0];
+    assign ctrl_out_dbg = ctrl_out[0];
+    
     assign cart_m2 = m2;
+
+    // (* mark_debug = "true" *)  logic [31:0] cpu_cycle=0;
+    // localparam RST_CPU_DELAY = 4;
+    // logic [RST_CPU_DELAY-1:0] rst_cpu_sr;
+    // always @(posedge clk_cpu ) begin
+    //     if (rst_cpu) begin
+    //         // cpu_cycle <= 0;
+    //         rst_cpu_sr <= 1;
+    //     end else begin
+    //         cpu_cycle <= cpu_cycle+1;
+    //         rst_cpu_sr <= {1'b0, rst_cpu_sr[RST_CPU_DELAY-1:1]};
+    //     end
+    // end
+    // wire rst_cpu_delay = rst_cpu_sr[0];
 
     apu u_apu(
     	.clk    (clk_cpu    ),
@@ -63,6 +100,7 @@ module nes #(
         .audio          (audio)
     );
 
+
     logic ppu_cs;
     logic rom_cs;
     cpu_bus u_cpu_bus(
@@ -78,9 +116,9 @@ module nes #(
         .rom_cs     (rom_cs)
     );
     assign cart_cpu_rw = cpu_rw;
-    assign cart_romsel = rom_cs & m2;
+    assign cart_romsel = rom_cs; // & m2;
     assign cart_cpu_addr = cpu_addr[14:0];
-    assign cart_cpu_data_i = cpu_bus_data;
+    assign cart_cpu_data_i = data_from_cpu;
 
 
     (* mark_debug = "true" *)  logic [13:0] ppu_addr;
@@ -127,8 +165,10 @@ module nes #(
     );
 
     assign cart_ppu_addr = ppu_addr[13:0];
-    assign cart_ppu_data_i = ppu_bus_data;
+    assign cart_ppu_data_i = ppu_data_o;
     assign cart_ppu_rd = ppu_rd;
     assign cart_ppu_wr = ppu_wr;
 
+
+    `include "nes_logger.svi"
 endmodule

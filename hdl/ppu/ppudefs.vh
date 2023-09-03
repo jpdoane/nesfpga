@@ -32,7 +32,7 @@ parameter CYCLE_RESETOFF = 9'd303;
 parameter CYCLE_BADFETCH = 9'd336;
 parameter CYCLE_SPDONE = 9'd320;
 
-parameter FRAME_HEIGHT = 9'd262;
+parameter FRAME_HEIGHT = 9'd261;
 
 parameter OAM_IDLE = 2'h0;
 parameter OAM_CLEAR = 2'h1;

@@ -22,7 +22,7 @@ clocks  u_clocks(
     .clk_tmds (),
     .clk_hdmi    (    ),
     .clk_ppu     (     ),
-    .clk_ppu8     (clk     ),
+    .clk_nes     (clk     ),
     .clk_cpu     (     ),
     .clk_phase    (    ),
     .locked      (      ),
