@@ -4,12 +4,12 @@ TOP=nes_tb
 VERILATE_TOP=nes_main.cpp
 VERILATE_INCL=input.vc
 HDL_SOURCE = $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
-VERILATE_ARGS= --max_frames 40 --skip_frames 33
+VERILATE_ARGS= --max_frames 60 --skip_frames 36
 
-GAME=smb
+GAME=zelda
 
 VERILATOR_FLAGS += -DCART=$(GAME)_cart
-# VERILATOR_FLAGS += -DSAVERAMS=1
+VERILATOR_FLAGS += -DSAVERAMS=1
 
 include ../../inc/make.verilator
 

@@ -21,6 +21,9 @@ module cpu_bus (
     // PRG ROM: 0x8000-0xffff
     assign rom_cs               = (bus_addr & 16'h8000) == 16'h8000;
 
+    // CART memory goes down to 0x6000
+    wire cart_cs               = bus_addr >= 16'h6000;
+
     // internal RAM
     logic [7:0] ram [0:2047];
     logic [7:0] ram_data_rd;
@@ -54,7 +57,7 @@ module cpu_bus (
     logic [7:0] ppu_data_reg;
     always @(posedge clk) begin
         ram_cs_r <= ram_cs;
-        cart_cs_r <= rom_cs;
+        cart_cs_r <= cart_cs;
         ppu_cs_r <= ppu_cs;
         ppu_data_reg <= ppu_data_i;
     end

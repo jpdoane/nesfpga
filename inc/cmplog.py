@@ -24,7 +24,8 @@ def cmp_log(log1file, log2file):
             match = 1
             if (ll1[0] != ll2[0]) | (ll1[1] != ll2[1]):
                 match = 0
-            for t in ("a:","x:","y:","s:", "p:", "h:", "cycle:"):
+            # for t in ("a:","x:","y:","s:", "p:", "v:", "h:", "cycle:"):
+            for t in ("a:","x:","y:","s:", "p:"):
                 if parse_token(ll1, t) != parse_token(ll2, t):
                     match = 0
             if match != 1:

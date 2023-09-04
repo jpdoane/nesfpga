@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Sun Sep  3 12:47:05 2023
+[*] Mon Sep  4 02:55:40 2023
 [*]
 [dumpfile] "/home/jpdoane/dev/nesfpga/tb/nes/logs/nes_tb.fst"
-[dumpfile_mtime] "Sun Sep  3 12:44:08 2023"
-[dumpfile_size] 28265100
+[dumpfile_mtime] "Mon Sep  4 02:20:09 2023"
+[dumpfile_size] 24918380
 [savefile] "/home/jpdoane/dev/nesfpga/tb/nes/nes_tb.sav"
-[timestart] 4519286
+[timestart] 33066268
 [size] 1920 1015
 [pos] -1 -1
-*-7.693987 4519730 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-7.693987 33066832 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.nes_tb.
 [treeopen] TOP.nes_tb.u_cart.
@@ -20,10 +20,10 @@
 [treeopen] TOP.nes_tb.u_nes.u_ppu.
 [treeopen] TOP.nes_tb.u_nes.u_ppu.u_palette.
 [treeopen] TOP.nes_tb.u_nes.u_ppu_bus.
-[sst_width] 211
-[signals_width] 233
+[sst_width] 296
+[signals_width] 295
 [sst_expanded] 1
-[sst_vpaned_height] 288
+[sst_vpaned_height] 391
 @c00200
 -clocks
 @28
@@ -66,9 +66,7 @@ TOP.nes_tb.u_nes.u_apu.u_core_6502.a[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.x[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.y[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.s[7:0]
-@23
 TOP.nes_tb.u_nes.u_apu.u_core_6502.i_data[7:0]
-@22
 TOP.nes_tb.u_nes.u_apu.u_core_6502.dor[7:0]
 @1000200
 -cpu
@@ -94,7 +92,6 @@ TOP.nes_tb.u_nes.u_ppu.ppu_data_i[7:0]
 @24
 TOP.nes_tb.u_nes.u_ppu.u_render.y[8:0]
 TOP.nes_tb.u_nes.u_ppu.u_render.cycle[8:0]
-TOP.nes_tb.ppu_frame_cnt[17:0]
 @22
 TOP.nes_tb.u_nes.u_ppu.ppuctrl[7:0]
 TOP.nes_tb.u_nes.u_ppu.ppumask[7:0]
@@ -119,9 +116,16 @@ TOP.nes_tb.u_nes.u_ppu.inc_v
 TOP.nes_tb.u_nes.u_ppu.v[14:0]
 @28
 TOP.nes_tb.u_nes.u_ppu.vpal
+@1000200
+-ppu
 @800200
 -render
+@24
+TOP.nes_tb.u_nes.u_ppu.u_render.y[8:0]
+TOP.nes_tb.u_nes.u_ppu.u_render.cycle[8:0]
 @28
+TOP.nes_tb.u_nes.u_ppu.u_render.next_line
+TOP.nes_tb.u_nes.u_ppu.u_render.next_frame
 TOP.nes_tb.u_nes.u_ppu.u_render.sp0
 TOP.nes_tb.u_nes.u_ppu.u_render.save_attr
 TOP.nes_tb.u_nes.u_ppu.u_render.save_nt
@@ -132,9 +136,11 @@ TOP.nes_tb.u_nes.u_ppu.u_render.nt[7:0]
 TOP.nes_tb.u_nes.u_ppu.u_render.pat0[7:0]
 TOP.nes_tb.u_nes.u_ppu.u_render.pat1[7:0]
 TOP.nes_tb.u_nes.u_ppu.u_render.palette_idx[4:0]
+@28
+TOP.nes_tb.u_nes.u_ppu.u_render.skip_cycle0
+TOP.nes_tb.u_nes.u_ppu.u_render.odd_frame
 @1000200
 -render
--ppu
 @c00200
 -ppu_bus
 @28
@@ -165,5 +171,25 @@ TOP.nes_tb.u_nes.u_ppu_bus.cart_data_i[7:0]
 TOP.nes_tb.u_nes.u_ppu_bus.data_o[7:0]
 @1401200
 -ppu_bus
+@800200
+-cart
+@22
+TOP.nes_tb.u_nes.cart_ppu_addr[13:0]
+TOP.nes_tb.u_nes.cart_ppu_data_o[7:0]
+TOP.nes_tb.u_nes.cart_ppu_data_i[7:0]
+@28
+TOP.nes_tb.u_nes.cart_ppu_rd
+@29
+TOP.nes_tb.u_nes.cart_ppu_wr
+@28
+TOP.nes_tb.u_nes.cart_romsel
+@22
+TOP.nes_tb.u_nes.cart_cpu_addr[14:0]
+TOP.nes_tb.u_nes.cart_cpu_data_i[7:0]
+TOP.nes_tb.u_nes.cart_cpu_data_o[7:0]
+@28
+TOP.nes_tb.u_nes.cart_cpu_rw
+@1000200
+-cart
 [pattern_trace] 1
 [pattern_trace] 0

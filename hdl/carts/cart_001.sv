@@ -1,8 +1,9 @@
 `timescale 1ns/1ps
 
 module cart_001 #(
-    parameter PRG_FILE,
-    parameter CHR_FILE="",
+    parameter string PRG_FILE,
+    parameter string RAM_FILE="",
+    parameter string CHR_FILE="",
     parameter PRG_ROM_DEPTH=17,
     parameter PRG_RAM_DEPTH=13,
     parameter CHR_ROM_DEPTH=13,
@@ -58,7 +59,7 @@ module cart_001 #(
     wire chr_4k_banks = ctrl_reg[4];
 
     assign ciram_a10 = ~mirroring[1] ? mirroring[0] :
-                        mirroring[0] ? ppu_addr[10] : ppu_addr[11];
+                        mirroring[0] ? ppu_addr[11] : ppu_addr[10];
     assign ciram_ce = ppu_addr[13];
     assign irq = 0;
     wire chr_cs = ~ciram_ce;
@@ -147,14 +148,14 @@ module cart_001 #(
 
     logic [7:0] chr  [0:2**CHR_ROM_DEPTH-1];
     initial begin
-        if (!CHR_RAM) begin
+        if (CHR_FILE.len() > 0) begin
             $display("Loading CHR ROM: %s ", CHR_FILE);
             $readmemh(CHR_FILE, chr);
         end
     end
 
     logic [7:0] chr_rd;
-    wire chr_we = CHR_RAM && !cpu_rw;
+    wire chr_we = CHR_RAM && ppu_wr;
     always @(posedge clk_ppu) begin
         if (chr_cs) begin
             if (chr_we) chr[chr_addr] <= ppu_data_i;
@@ -181,6 +182,13 @@ module cart_001 #(
                 if (prg_ram_cs) begin
                     if (!cpu_rw) prg_ram[prg_ram_addr] <= cpu_data_i;
                     else prg_ram_rd <= prg_ram[prg_ram_addr];
+                end
+            end
+
+            initial begin
+                if (RAM_FILE.len() > 0) begin
+                    $display("Loading PRG RAM: %s ", RAM_FILE);
+                    $readmemh(RAM_FILE, prg_ram);
                 end
             end
 

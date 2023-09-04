@@ -102,7 +102,12 @@ module nes_top #(
     logic cart_ppu_wr;
     logic cart_irq;
 
-    nes  u_nes(
+    nes
+    #(
+    .EXTERNAL_FRAME_TRIGGER(1),
+    .SKIP_CYCLE_ODD_FRAMES(0)
+    )
+    u_nes(
         .clk_master       (clk_nes       ),
         .rst_master       (rst_nes       ),
         .clk_cpu       (clk_cpu       ),
@@ -133,7 +138,7 @@ module nes_top #(
         .cart_irq         (cart_irq)
     );
 
-    smb_cart u_cart (
+    zelda_cart u_cart (
         .rst (rst_cpu),
         .clk_cpu    (clk_cpu    ),
         .m2         (cart_m2         ),

@@ -142,12 +142,11 @@ module nes_tb
             // 6 - Left
             // 7 - Right
     
-    // always_comb begin
-    //     if(cycle < 800_000) btns = 0;
-    //     else if(cycle < 2_000_000) btns = 8'b00001000; //start
-    //     else if(cycle < 2_200_000) btns = 8'b00000001; //A
-    //     else btns = 8'b10000000; //right
-    // end
+    always_comb begin
+        if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
+        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
+        else btns0 = 8'b00000000; //right
+    end
 
 
     controller_sim u_controller_sim0(

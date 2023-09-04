@@ -26,6 +26,7 @@ module zelda_cart(
     cart_001
     #(
         .PRG_FILE({`ROM_PATH,"/zelda/PRG.mem"}),
+        .RAM_FILE({`ROM_PATH,"/zelda/RAM.mem"}),
         .PRG_ROM_DEPTH (17),
         .PRG_RAM_DEPTH (13),
         .CHR_ROM_DEPTH (13),
