@@ -59,7 +59,7 @@ module render #(
     wire fetch_nextline = (cycle == 320);
     wire fetch_garbage = (cycle == 336);
 
-    logic prerender, skip_cycle0, next_line,next_frame, next_prerender;
+    logic prerender, skip_cycle0, next_line, next_frame;
     logic [8:0] y_next;
     logic [8:0] cycle_next;
     always_comb begin
@@ -71,18 +71,16 @@ module render #(
         else             next_line = cycle == 9'd340;
 
         if (EXTERNAL_FRAME_TRIGGER) begin
-            next_prerender = trigger_frame;
+            next_frame = trigger_frame;
             cycle_next = (next_line || trigger_frame) ? 0 : cycle + 1;
         end else begin
-            next_prerender = next_line && (y==9'd260);
+            next_frame = next_line && (y==9'd260);
             cycle_next = next_line ? 0 : cycle + 1;
         end
 
-        y_next = next_prerender ? -1 :  // prerender line
+        y_next = next_frame ? -1 :  // prerender line
                  next_line ? y + 1 :    // next line
                  y;                     // same line
-
-        next_frame = prerender && next_line;
     end
 
     logic vblank_r;
@@ -115,7 +113,7 @@ module render #(
 
             sp0 <= prerender ? 0 : (sp0_opaque && bg_opaque && render_bg && render_sp) || sp0;
             vblank_r <= prerender ? 0 : set_vblank || vblank;
-            odd_frame <= set_vblank ? ~odd_frame : odd_frame;
+            odd_frame <= next_frame ? ~odd_frame : odd_frame;
         end
     end
 
@@ -210,7 +208,7 @@ module render #(
                 sr_en = 0;
                 v_incx = 0;
                 set_vblank = 1;
-                state_next = next_prerender ? PRERENDER : VBLANK;
+                state_next = next_frame ? PRERENDER : VBLANK;
             end
         endcase
 

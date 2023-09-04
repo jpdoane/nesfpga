@@ -89,7 +89,8 @@ module ppu  #(
 
 
     logic [7:0] ppuctrl,ppumask, ppustatus;
-    assign ppustatus = {NMI_occured, sp0, sp_of, cpu_data_io[4:0]}; //bits 4:0 maintain latched data
+    // assign ppustatus = {NMI_occured, sp0, sp_of, cpu_data_io[4:0]}; //bits 4:0 maintain latched data
+    assign ppustatus = {NMI_occured || vblank_re, sp0, sp_of, cpu_data_io[4:0]}; //bits 4:0 maintain latched data
 
 
     logic w;          // 1st vs 2nd write toggle (for two byte registers)
