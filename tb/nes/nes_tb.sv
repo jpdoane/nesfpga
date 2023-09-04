@@ -18,35 +18,35 @@ module nes_tb
     logic rst_cpu, rst_ppu;
     assign pixel_clk=clk_ppu;
     
-    logic odd_frame;
-    logic [17:0] ppu_frame_cnt;
-    always_ff @(posedge clk_ppu) begin
-        if (rst_ppu) begin
-            //frame_trigger initiates prescanline, but on boot we start at scanline 0, so startup 341 ticks into count...
-            ppu_frame_cnt<= 341;
-            odd_frame <= 1;
-        end else begin
-            ppu_frame_cnt <= frame_trigger ? 0 : ppu_frame_cnt + 1;
-            odd_frame <= frame_trigger ? ~odd_frame : odd_frame;
-        end
-    end
+    // logic odd_frame;
+    // logic [17:0] ppu_frame_cnt;
+    // always_ff @(posedge clk_ppu) begin
+    //     if (rst_ppu) begin
+    //         //frame_trigger initiates prescanline, but on boot we start at scanline 0, so startup 341 ticks into count...
+    //         ppu_frame_cnt<= 341;
+    //         odd_frame <= 1;
+    //     end else begin
+    //         ppu_frame_cnt <= frame_trigger ? 0 : ppu_frame_cnt + 1;
+    //         odd_frame <= frame_trigger ? ~odd_frame : odd_frame;
+    //     end
+    // end
 
-    `ifdef HDMI_TIMING
-        // hdmi frame timing (extra 1/2 scanline)
-        localparam PPU_CYCLES_FRAME_EVEN = 89513;
-        localparam PPU_CYCLES_FRAME_ODD = 89512;
-        wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
-        wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
-        wire frame_trigger = odd_frame ? frame_trigger_odd : frame_trigger_even;
+    // `ifdef HDMI_TIMING
+    //     // hdmi frame timing (extra 1/2 scanline)
+    //     localparam PPU_CYCLES_FRAME_EVEN = 89513;
+    //     localparam PPU_CYCLES_FRAME_ODD = 89512;
+    //     wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
+    //     wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
+    //     wire frame_trigger = odd_frame ? frame_trigger_odd : frame_trigger_even;
 
-    `else
-        // nes frame timing
-        localparam PPU_CYCLES_FRAME_EVEN = 89342;
-        localparam PPU_CYCLES_FRAME_ODD = 89341;
-        wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
-        wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
-        wire frame_trigger = odd_frame && |u_nes.u_ppu.ppumask[4:3] ? frame_trigger_odd : frame_trigger_even;
-    `endif 
+    // `else
+    //     // nes frame timing
+    //     localparam PPU_CYCLES_FRAME_EVEN = 89342;
+    //     localparam PPU_CYCLES_FRAME_ODD = 89341;
+    //     wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
+    //     wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
+    //     wire frame_trigger = odd_frame && |u_nes.u_ppu.ppumask[4:3] ? frame_trigger_odd : frame_trigger_even;
+    // `endif 
 
 
     logic [2:0] strobe;
@@ -69,14 +69,19 @@ module nes_tb
     logic cart_ppu_wr;
     logic cart_irq;
 
-    nes  u_nes(
+    nes
+    #(
+        .EXTERNAL_FRAME_TRIGGER (0),
+        .SKIP_CYCLE_ODD_FRAMES (1)
+    )
+    u_nes(
         .clk_master       (clk       ),
         .rst_master       (rst       ),
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .frame_trigger (frame_trigger ),
+        .frame_trigger (1'b0 ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
         .audio    (),

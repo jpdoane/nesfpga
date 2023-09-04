@@ -5,25 +5,23 @@ initial begin
     log_fd = $fopen(NES_LOG_FILE, "w");
 end
 
-logic new_inst, disp_inst;
-int v,h;
-// wire logging = sync_r && !u_apu.u_core_6502.sync;
-
-logic [8:0] ppu_cycle_r1,ppu_cycle_r2,ppu_cycle_r3,ppu_cycle_r4,ppu_cycle_r5,ppu_cycle_r6;
-always @(posedge clk_ppu ) begin
-    ppu_cycle_r1 <= u_ppu.u_render.cycle;
-    ppu_cycle_r2 <= ppu_cycle_r1;
-    ppu_cycle_r3 <= ppu_cycle_r2;
-    ppu_cycle_r4 <= ppu_cycle_r3;
-    ppu_cycle_r5 <= ppu_cycle_r4;
-    ppu_cycle_r6 <= ppu_cycle_r5;
-end
-
 int cpu_cycle_r=0;
 logic sync_r=0;
 logic sync_rr=0;
+logic [8:0] ppu_V, ppu_H;
 always @(posedge clk_cpu ) begin
-    sync_r <= (u_apu.u_core_6502.sync && u_apu.u_core_6502.cpu_cycle>1 && u_apu.u_core_6502.READY);
+
+    ppu_V <= ppu_V;
+    ppu_H <= ppu_H;
+    sync_r <= 0;
+    if(u_apu.u_core_6502.sync && u_apu.u_core_6502.cpu_cycle>1 && u_apu.u_core_6502.READY) begin
+        // grab snapshot of ppu counters at sync
+        ppu_V <= u_ppu.u_render.y;
+        ppu_H <= u_ppu.u_render.cycle;
+        sync_r <= 1;
+    end
+    
+    // display instruction after 2 clocks to allow register update from prev op
     sync_rr <= sync_r;
     cpu_cycle_r <= u_apu.u_core_6502.cpu_cycle;
     if (sync_rr && u_apu.u_core_6502.opcode != 0) begin
@@ -35,8 +33,8 @@ always @(posedge clk_cpu ) begin
                                             u_apu.u_core_6502.y,
                                             u_apu.u_core_6502.s,
                                             u_apu.u_core_6502.p&8'hdf,
-                                            u_ppu.u_render.y,
-                                            ppu_cycle_r6,
+                                            ppu_V,
+                                            ppu_H,
                                             cpu_cycle_r);
     end
 end    

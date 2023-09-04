@@ -1,6 +1,9 @@
 `timescale 1ns/1ps
 
-module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
+module render #(
+    parameter EXTERNAL_FRAME_TRIGGER=0,
+    parameter SKIP_CYCLE_ODD_FRAMES=1
+    )
     (
     input logic clk, rst,
     input logic trigger_frame,
@@ -27,7 +30,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     );
 
 
-    localparam CYCLE0           = 3'h0;
+    localparam PRERENDER           = 3'h0;
     localparam RENDER           = 3'h1;
     localparam V_RESETX         = 3'h2;
     localparam SPRITE_EVAL      = 3'h3;
@@ -36,6 +39,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     localparam POST_RENDER      = 3'h6;
     localparam VBLANK           = 3'h7;
 
+    logic odd_frame;
 
     wire render_bg_left = ppumask[1];
     wire render_sp_left = ppumask[2];
@@ -43,15 +47,6 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     wire render_sp = ppumask[4] & ~vblank;
     wire render_en = render_bg | render_sp;
             
-    wire new_frame;
-    generate 
-        if (EXTERNAL_FRAME_TRIGGER) 
-            assign new_frame = trigger_frame;
-        else
-            assign new_frame = next_scanline && (y==FRAME_HEIGHT-1);
-    endgenerate
-
-
     logic [7:0] nt, at, pat0, pat1;
     logic [8:0] y, cycle;
     logic [1:0] pal;
@@ -63,11 +58,32 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
     wire fetch_sprites = (cycle == 256);
     wire fetch_nextline = (cycle == 320);
     wire fetch_garbage = (cycle == 336);
-    wire next_scanline = (cycle == 340);
 
+    logic prerender, skip_cycle0, next_line,next_frame, next_prerender;
+    logic [8:0] y_next;
+    logic [8:0] cycle_next;
+    always_comb begin
 
-    wire [8:0] y_next = y + 1;
-    wire [8:0] cycle_next = next_scanline ? 0 : cycle + 1;
+        prerender = &y; //y==-1
+
+        skip_cycle0 = SKIP_CYCLE_ODD_FRAMES && render_en && odd_frame && prerender;
+        if (skip_cycle0) next_line = cycle == 9'd339;
+        else             next_line = cycle == 9'd340;
+
+        if (EXTERNAL_FRAME_TRIGGER) begin
+            next_prerender = trigger_frame;
+            cycle_next = (next_line || trigger_frame) ? 0 : cycle + 1;
+        end else begin
+            next_prerender = next_line && (y==9'd260);
+            cycle_next = next_line ? 0 : cycle + 1;
+        end
+
+        y_next = next_prerender ? -1 :  // prerender line
+                 next_line ? y + 1 :    // next line
+                 y;                     // same line
+
+        next_frame = prerender && next_line;
+    end
 
     logic vblank_r;
     assign vblank = vblank_r;
@@ -85,6 +101,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
             cycle <= 0;
             state <= RENDER;
             sp0 <= 0;
+            odd_frame <= 1;
         end
         else begin
             nt <=   save_nt ? data_i : nt;
@@ -92,27 +109,24 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
             pat0 <= save_pat0 ? data_i : pat0;
             pat1 <= save_pat1 ? data_i : pat1;
 
-            state <= new_frame ? RENDER : state_next;
-            cycle <= new_frame ? 0 : cycle_next; 
-            y <= new_frame ? -1 :
-                 fetch_nextline ? y_next : y;
-
+            state <= state_next;
+            y <= y_next;
+            cycle <= cycle_next;
 
             sp0 <= prerender ? 0 : (sp0_opaque && bg_opaque && render_bg && render_sp) || sp0;
             vblank_r <= prerender ? 0 : set_vblank || vblank;
+            odd_frame <= set_vblank ? ~odd_frame : odd_frame;
         end
     end
 
-    wire prerender = &y; //y==-1
     logic set_vblank, rendering, sr_en, sp_eval, load_sp_sr;
-    assign v_resety = render_en && prerender && (cycle >= 279 && cycle <= 303);
-
     logic load_sr, save_nt, save_attr, save_pat0, save_pat1;
 
     // rendering state machine
     always_comb begin
 
         v_resetx = 0;
+        v_resety = 0;
         set_vblank = 0;
         rendering = render_en;
         px_en = 0;
@@ -144,15 +158,17 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
         end
 
         case(state)
-            CYCLE0:
+            PRERENDER:
             begin
-                sr_en = 0;
-                state_next = RENDER;
+                px_en = 0;
+                v_resety = render_en && (cycle >= 279 && cycle <= 303);
+                state_next = next_line ? RENDER : PRERENDER;
             end
             RENDER:
             begin
+                sr_en = ~cycle0;
+                px_en = render_en && ~cycle0;
                 state_next = fetch_sprites ? V_RESETX : RENDER;
-                px_en = ~prerender && render_en;
             end
             V_RESETX:
             begin
@@ -177,16 +193,16 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
                 fetch_attr = 0;
                 save_nt = 0;
                 save_attr = 0;
-                state_next = !next_scanline ? GARBAGE_FETCH :
-                                (y == SCREEN_HEIGHT) ? POST_RENDER :
-                                CYCLE0;
+                state_next = !next_line ? GARBAGE_FETCH :
+                                (y == SCREEN_HEIGHT-1) ? POST_RENDER :
+                                RENDER;
             end
             POST_RENDER:
             begin
                 rendering = 0;
                 sr_en = 0;
                 v_incx = 0;
-                state_next = next_scanline ? VBLANK : POST_RENDER;
+                state_next = next_line ? VBLANK : POST_RENDER;
             end
             VBLANK:
             begin
@@ -194,7 +210,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
                 sr_en = 0;
                 v_incx = 0;
                 set_vblank = 1;
-                state_next = new_frame ? CYCLE0 : VBLANK;
+                state_next = next_prerender ? PRERENDER : VBLANK;
             end
         endcase
 
@@ -274,7 +290,7 @@ module render #( parameter EXTERNAL_FRAME_TRIGGER=0 )
         .rst         (rst         ),
         .rend        (sprite_rendering),
         .cycle       (cycle        ),
-        .scan        (y),
+        .scan        (y_next),
         .oam_addr_i  (oam_addr_i  ),
         .oam_addr_wr (oam_addr_wr ),
         .oam_din     (oam_data_i     ),

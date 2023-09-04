@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 
 module nes #(
-    parameter EXTERNAL_FRAME_TRIGGER=1
+    parameter EXTERNAL_FRAME_TRIGGER=0,
+    parameter SKIP_CYCLE_ODD_FRAMES=1
     )(
     // clocks
     input logic clk_master,rst_master,
@@ -129,7 +130,8 @@ module nes #(
     
     wire ppu_cs_m2 = ppu_cs & m2;
     ppu #(
-        .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER)
+        .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER),
+        .SKIP_CYCLE_ODD_FRAMES (SKIP_CYCLE_ODD_FRAMES)
         )
     u_ppu(
         .clk        (clk_ppu        ),

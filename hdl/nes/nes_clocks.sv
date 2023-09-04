@@ -34,7 +34,8 @@ always_ff @(posedge clk_ppu8) begin
         rst_cpu_r <= 1;
     end else begin
         cnt <= cnt == 5'd23 ? 0 : cnt + 1;
-        rst_ppu_r <= !(rst_ctr[6:5] == 0); //start ppu earlier than cpu (to match mesen counters...)
+        // rst_ppu_r <= !(rst_ctr[6:5] == 0); //start ppu earlier than cpu (to match mesen counters...)
+        rst_ppu_r <= rst_ctr > 7'h1f; //start ppu earlier than cpu (to match mesen counters...)
         if (rst_ctr == 0) begin
             rst_ctr <= 0;
             rst_cpu_r <= 0;
@@ -45,8 +46,9 @@ always_ff @(posedge clk_ppu8) begin
     end
 end
 
-always_ff @(posedge clk_cpu) rst_cpu <= rst_cpu_r;
+// always_ff @(posedge clk_cpu) rst_cpu <= rst_cpu_r;
 // always_ff @(posedge clk_ppu) rst_ppu <= rst_ppu_r;
+always_ff @(posedge clk_cpu) rst_cpu <= rst_cpu_r;
 assign rst_ppu = rst_ppu_r;
 
 logic ppu_en, cpu_en;
