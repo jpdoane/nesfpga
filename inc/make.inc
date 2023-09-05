@@ -28,3 +28,11 @@ SUCCEED = (echo $(GREEN)$(1) succeeded$(NC); $(2) && paplay $(BEEP_GOOD); exit 0
 # 	$(call SUCCEED, COMMAND_NAME, false)
 #
 # final true/false indicates whether to play a sound
+
+GAME=$(shell cat current_game)
+
+_default: default
+
+GAMES=zelda smb
+$(GAMES):
+	@echo $@ > current_game

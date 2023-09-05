@@ -73,6 +73,11 @@ while {[gets $fh line] >= 0} {
     lappend args $line
 }
 close $fh
+set fh [open "cart.tcl" r]
+while {[gets $fh line] >= 0} {
+    lappend args $line
+}
+close $fh
 set synth_command "synth_design -top $TOPMODULE -part $DEVICE"
 foreach arg $args {
     append synth_command " $arg"

@@ -20,9 +20,9 @@ MEM_TCL=$(SCRIPTS)/mem.tcl
 BITFILE_TCL=$(SCRIPTS)/bitfile.tcl
 PROGRAM_TCL=$(SCRIPTS)/program.tcl
 
-all: bitfile
+default: bitfile
 
-BUILD_PATH=$(abspath build)
+BUILD_PATH=$(abspath build_$(GAME))
 BUILD_ENV=$(BUILD_PATH)/.build
 XDC_FILE=$(BUILD_PATH)/constraints.tcl
 SRC_FILE=$(BUILD_PATH)/sources.tcl
@@ -44,16 +44,19 @@ SYNTH_PATH=$(BUILD_PATH)/synth
 SYNTH_ENV=$(SYNTH_PATH)/.synth
 SYNTH=$(SYNTH_PATH)/$(TOP).dcp
 SYNTH_ARGS_TCL=synth_args.tcl
+CART_TCL=$(SYNTH_PATH)/cart.tcl
 
 synth: $(SYNTH)
 
 $(SYNTH_ARGS_TCL):
 	touch $(SYNTH_ARGS_TCL)
+	
 
 $(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL) $(SYNTH_ARGS_TCL)
 	@mkdir -p $(SYNTH_PATH);
 	@cp $(SYNTH_TCL) $(SYNTH_PATH);
 	@cp $(SYNTH_ARGS_TCL) $(SYNTH_PATH);
+	@echo "-verilog_define CART=$(GAME)_cart" > $(CART_TCL)
 	@touch $(SYNTH_ENV)
 
 $(SYNTH): $(SYNTH_ENV)
@@ -95,20 +98,22 @@ mem: $(IMPL_ENV) $(IMPL)
 
 
 # bitfile
-BITFILE=$(IMPL_PATH)/$(TOP).bit
+BITFILE=bitfiles/$(GAME).bit
 bitfile: $(BITFILE)
 
 $(BITFILE):	$(IMPL) 
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -log bitfile.log -source $(BITFILE_TCL) -tclargs $(TOP)
+	cp $(IMPL_PATH)/$(TOP).bit $(BITFILE)
 
 .PHONY: program
 program: $(BITFILE) force_program
 
 .PHONY: force_program
 force_program:
+	@echo "programming $(GAME) on device $(DEVICE_SHORT) with bitfile $(BITFILE)..."
 	cd $(IMPL_PATH) && \
-	vivado -m64 -mode batch -notrace -log program.log -source $(PROGRAM_TCL) -tclargs $(BITFILE) $(DEVICE_SHORT)
+	vivado -m64 -mode batch -notrace -source $(PROGRAM_TCL) -tclargs $(BITFILE) $(DEVICE_SHORT)
 
 
 .PHONY: clean

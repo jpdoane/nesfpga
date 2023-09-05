@@ -1,5 +1,7 @@
 **/build
+**/build_*
 **/sim
 **/logs
 **/obj_dir
 **/bitfiles
+current_game

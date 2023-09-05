@@ -138,7 +138,7 @@ module nes_top #(
         .cart_irq         (cart_irq)
     );
 
-    zelda_cart u_cart (
+    `CART u_cart (
         .rst (rst_cpu),
         .clk_cpu    (clk_cpu    ),
         .m2         (cart_m2         ),

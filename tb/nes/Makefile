@@ -6,8 +6,6 @@ VERILATE_INCL=input.vc
 HDL_SOURCE = $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
 VERILATE_ARGS= --max_frames 60 --skip_frames 36
 
-GAME=zelda
-
 VERILATOR_FLAGS += -DCART=$(GAME)_cart
 VERILATOR_FLAGS += -DSAVERAMS=1
 
