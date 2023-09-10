@@ -98,7 +98,7 @@ mem: $(IMPL_ENV) $(IMPL)
 
 
 # bitfile
-BITFILE=bitfiles/$(GAME).bit
+BITFILE=$(abspath bitfiles/$(GAME).bit)
 bitfile: $(BITFILE)
 
 $(BITFILE):	$(IMPL) 

@@ -2,7 +2,8 @@
 
 module nes #(
     parameter EXTERNAL_FRAME_TRIGGER=0,
-    parameter SKIP_CYCLE_ODD_FRAMES=1
+    parameter SKIP_CYCLE_ODD_FRAMES=1,
+    parameter AUDIO_DEPTH=16
     )(
     // clocks
     input logic clk_master,rst_master,
@@ -16,7 +17,8 @@ module nes #(
     output logic vblank,
 
     // audio
-    output logic [7:0] audio,
+    output logic [AUDIO_DEPTH-1:0] audio,
+    output logic audio_en,
 
     // controller
     output logic [2:0] ctrl_strobe,
@@ -85,20 +87,21 @@ module nes #(
     // end
     // wire rst_cpu_delay = rst_cpu_sr[0];
 
-    apu u_apu(
+    apu #(.AUDIO_DEPTH(AUDIO_DEPTH)) u_apu(
     	.clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
         .data_i (cpu_bus_data ),
         .rdy    (1'b1    ),
         .nmi    (nmi    ),
-        .irq    (cart_irq    ),
+        .irq    (cart_irq),
         .addr_o (cpu_addr ),
         .data_o (data_from_cpu ),
         .rw     (cpu_rw     ),
         .ctrl_strobe    (ctrl_strobe),
         .ctrl_out    (ctrl_out),
         .ctrl_data    (ctrl_data),
-        .audio          (audio)
+        .audio          (audio),
+        .audio_en      (audio_en)
     );
 
 

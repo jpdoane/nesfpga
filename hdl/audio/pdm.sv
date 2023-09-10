@@ -1,3 +1,4 @@
+`timescale 1ns/1ps
 
 module pdm
 #( parameter DEPTH = 8
@@ -15,7 +16,7 @@ logic [DEPTH-1:0] error;
 logic signed [DEPTH:0] delta;
 assign delta = error - sample_r;
 
-wire _pdm = delta[DEPTH];
+wire _pdm = delta[DEPTH]; // pulse if delta<0
 
 always_ff @(posedge clk) begin
     if (rst) begin
@@ -25,7 +26,7 @@ always_ff @(posedge clk) begin
         sample_r <= sample;
         // if delta>=0, error = delta
         // if delta<0, error = MAX + delta
-        error <= delta[DEPTH-1:0] - delta[DEPTH];
+        error <= delta[DEPTH-1:0] - {{(DEPTH-1){1'b0}},_pdm};
     end
 end
 

@@ -18,6 +18,8 @@ FSTWAVEFILE=$(SIM_PATH)/$(TOP).fst
 WAVESAVEFILE=$(abspath .)/$(TOP).sav
 
 
+default: all
+
 .PHONY: all
 all: $(WAVEFILE)
 

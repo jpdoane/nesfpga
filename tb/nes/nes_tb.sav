@@ -1,20 +1,21 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Mon Sep  4 02:55:40 2023
+[*] Sat Sep  9 15:59:28 2023
 [*]
 [dumpfile] "/home/jpdoane/dev/nesfpga/tb/nes/logs/nes_tb.fst"
-[dumpfile_mtime] "Mon Sep  4 02:20:09 2023"
-[dumpfile_size] 24918380
+[dumpfile_mtime] "Sat Sep  9 15:57:02 2023"
+[dumpfile_size] 142245162
 [savefile] "/home/jpdoane/dev/nesfpga/tb/nes/nes_tb.sav"
-[timestart] 33066268
+[timestart] 1
 [size] 1920 1015
 [pos] -1 -1
-*-7.693987 33066832 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-23.679585 49980000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.nes_tb.
 [treeopen] TOP.nes_tb.u_cart.
 [treeopen] TOP.nes_tb.u_nes.
 [treeopen] TOP.nes_tb.u_nes.u_apu.
+[treeopen] TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.
 [treeopen] TOP.nes_tb.u_nes.u_apu.u_core_6502.
 [treeopen] TOP.nes_tb.u_nes.u_cpu_bus.
 [treeopen] TOP.nes_tb.u_nes.u_ppu.
@@ -24,6 +25,8 @@
 [signals_width] 295
 [sst_expanded] 1
 [sst_vpaned_height] 391
+@24
+TOP.nes_tb.u_nes.u_apu.u_core_6502.cpu_cycle[31:0]
 @c00200
 -clocks
 @28
@@ -47,18 +50,19 @@ TOP.nes_tb.u_nes.u_nes_clocks.rst_ctr[6:0]
 -group_end
 @1401200
 -clocks
-@800200
+@c00200
 -cpu
 @24
 TOP.nes_tb.u_nes.u_apu.u_core_6502.cpu_cycle[31:0]
+@2022
+^1 /home/jpdoane/dev/nesfpga/modules/6502/inc/wavefilters/6502_opcodes.txt
+TOP.nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
 @28
 TOP.nes_tb.u_nes.u_apu.u_core_6502.sync
 @22
 TOP.nes_tb.u_nes.u_apu.u_core_6502.ip[15:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.pc[15:0]
 @2022
-^1 /home/jpdoane/dev/nesfpga/modules/6502/inc/wavefilters/6502_opcodes.txt
-TOP.nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
 ^2 /home/jpdoane/dev/nesfpga/modules/6502/inc/wavefilters/states.txt
 TOP.nes_tb.u_nes.u_apu.u_core_6502.state[5:0]
 @22
@@ -68,9 +72,9 @@ TOP.nes_tb.u_nes.u_apu.u_core_6502.y[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.s[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.i_data[7:0]
 TOP.nes_tb.u_nes.u_apu.u_core_6502.dor[7:0]
-@1000200
+@1401200
 -cpu
-@800200
+@c00200
 -cpu_bus
 @22
 TOP.nes_tb.u_nes.u_cpu_bus.bus_addr[15:0]
@@ -82,9 +86,9 @@ TOP.nes_tb.u_nes.u_cpu_bus.cpu_data_i[7:0]
 TOP.nes_tb.u_nes.u_cpu_bus.cart_data_i[7:0]
 TOP.nes_tb.u_nes.u_cpu_bus.ppu_data_i[7:0]
 TOP.nes_tb.u_nes.u_cpu_bus.data_o[7:0]
-@1000200
+@1401200
 -cpu_bus
-@800200
+@c00200
 -ppu
 @22
 TOP.nes_tb.u_nes.u_ppu.ppu_addr_o[13:0]
@@ -116,9 +120,9 @@ TOP.nes_tb.u_nes.u_ppu.inc_v
 TOP.nes_tb.u_nes.u_ppu.v[14:0]
 @28
 TOP.nes_tb.u_nes.u_ppu.vpal
-@1000200
+@1401200
 -ppu
-@800200
+@c00200
 -render
 @24
 TOP.nes_tb.u_nes.u_ppu.u_render.y[8:0]
@@ -139,7 +143,7 @@ TOP.nes_tb.u_nes.u_ppu.u_render.palette_idx[4:0]
 @28
 TOP.nes_tb.u_nes.u_ppu.u_render.skip_cycle0
 TOP.nes_tb.u_nes.u_ppu.u_render.odd_frame
-@1000200
+@1401200
 -render
 @c00200
 -ppu_bus
@@ -171,7 +175,7 @@ TOP.nes_tb.u_nes.u_ppu_bus.cart_data_i[7:0]
 TOP.nes_tb.u_nes.u_ppu_bus.data_o[7:0]
 @1401200
 -ppu_bus
-@800200
+@c00200
 -cart
 @22
 TOP.nes_tb.u_nes.cart_ppu_addr[13:0]
@@ -179,9 +183,7 @@ TOP.nes_tb.u_nes.cart_ppu_data_o[7:0]
 TOP.nes_tb.u_nes.cart_ppu_data_i[7:0]
 @28
 TOP.nes_tb.u_nes.cart_ppu_rd
-@29
 TOP.nes_tb.u_nes.cart_ppu_wr
-@28
 TOP.nes_tb.u_nes.cart_romsel
 @22
 TOP.nes_tb.u_nes.cart_cpu_addr[14:0]
@@ -189,7 +191,41 @@ TOP.nes_tb.u_nes.cart_cpu_data_i[7:0]
 TOP.nes_tb.u_nes.cart_cpu_data_o[7:0]
 @28
 TOP.nes_tb.u_nes.cart_cpu_rw
-@1000200
+@1401200
 -cart
+@800200
+-apu
+@28
+TOP.nes_tb.u_nes.u_apu.apu_cycle
+TOP.nes_tb.u_nes.u_apu.qtrframe
+TOP.nes_tb.u_nes.u_apu.halfframe
+@22
+TOP.nes_tb.u_nes.u_apu.reg_apu_enable[7:0]
+@8022
+TOP.nes_tb.u_nes.u_apu.pulse0_sample[3:0]
+TOP.nes_tb.u_nes.u_apu.pulse1_sample[3:0]
+TOP.nes_tb.u_nes.u_apu.audio[15:0]
+@c00200
+-pulse0
+@28
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.en
+@22
+TOP.nes_tb.u_nes.u_apu.reg_pulse0_ctrl[7:0]
+@28
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.pulse
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.active
+@22
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.u_apu_length.cnt[7:0]
+@28
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.mute
+@22
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.u_apu_sweep.target_period[11:0]
+TOP.nes_tb.u_nes.u_apu.u_apu_pulse0.u_apu_sweep.current_period[10:0]
+@8022
+TOP.nes_tb.u_nes.u_apu.pulse0_sample[3:0]
+@1401200
+-pulse0
+@1000200
+-apu
 [pattern_trace] 1
 [pattern_trace] 0

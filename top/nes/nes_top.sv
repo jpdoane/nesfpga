@@ -102,6 +102,9 @@ module nes_top #(
     logic cart_ppu_wr;
     logic cart_irq;
 
+    logic [15:0] audio;
+    logic audio_en;
+
     nes
     #(
     .EXTERNAL_FRAME_TRIGGER(1),
@@ -117,7 +120,8 @@ module nes_top #(
         .frame_trigger (frame_trigger ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
-        .audio    (),
+        .audio    (audio),
+        .audio_en    (audio_en),
         .vblank    (vblank    ),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
@@ -157,8 +161,6 @@ module nes_top #(
         .ppu_wr     (cart_ppu_wr     ),
         .irq        (cart_irq        )
     );
-
-    assign LED[1] = ~ctrl_data[0];
 
     logic [23:0] pal [63:0];
     initial $readmemh(`PALFILE, pal);
@@ -225,20 +227,17 @@ module nes_top #(
         OBUFDS #(.IOSTANDARD("TMDS_33")) obufds_clock(.I(tmds_clock), .O(HDMI_CLK), .OB(HDMI_CLK_N));
     endgenerate
 
-    wire audio_en = 0;
-
-    // pdm 
-    // #(
-    //     .DEPTH (DEPTH )
-    // )
-    // u_pdm(
-    //     .clk    (clk_nes    ),
-    //     .rst    (rst_ppu    ),
-    //     .en     (audio_en     ),
-    //     .sample (sample ),
-    //     .pdm    (aud_pwm    )
-    // );
-    assign aud_pwm = 0;
+    pdm #(.DEPTH (16 )) u_pdm(
+        .clk    (clk_nes    ),
+        .rst    (rst_ppu    ),
+        .en     (audio_en && SW[0]),
+        .sample (audio ),
+        .pdm    (aud_pwm    )
+    );
     assign aud_sd = audio_en;
+
+    assign  LED[0] = aud_sd; 
+    assign  LED[1] = aud_pwm; 
+
 
 endmodule

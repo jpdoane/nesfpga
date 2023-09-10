@@ -6,7 +6,8 @@ module nes_tb
     output logic [7:0] pixel,
     output logic pixel_clk,
     output logic pixel_en,
-    output logic vblank
+    output logic vblank,
+    output logic audio_pwm
 );
 
     initial begin
@@ -53,6 +54,9 @@ module nes_tb
     logic [1:0] ctrl_out, ctrl_data, ctrl_strobe;
     assign ctrl_strobe = {strobe[0], strobe[0]};
 
+    logic [15:0] audio;
+    logic audio_en;
+
 
     logic cart_m2;
     logic [14:0] cart_cpu_addr;
@@ -84,7 +88,8 @@ module nes_tb
         .frame_trigger (1'b0 ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
-        .audio    (),
+        .audio    (audio),
+        .audio_en    (audio_en),
         .vblank    (vblank    ),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
@@ -142,11 +147,12 @@ module nes_tb
             // 6 - Left
             // 7 - Right
     
-    always_comb begin
-        if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
-        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
-        else btns0 = 8'b00000000; //right
-    end
+    // press start...
+    // always_comb begin
+    //     if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
+    //     else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
+    //     else btns0 = 8'b00000000; //right
+    // end
 
 
     controller_sim u_controller_sim0(
@@ -165,6 +171,14 @@ module nes_tb
         .rd     (ctrl_out[1]     ),
         .btns   (btns1   ),
         .data   (ctrl_data[1]   )
+    );
+
+    pdm #(.DEPTH (16 )) u_pdm(
+        .clk    (clk    ),
+        .rst    (rst    ),
+        .en     (audio_en     ),
+        .sample (audio ),
+        .pdm    (audio_pwm    )
     );
 
 endmodule
