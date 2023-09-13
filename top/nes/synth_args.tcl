@@ -1,2 +1,0 @@
--verilog_define ROM_PATH="/home/jpdoane/dev/nesfpga/roms/"
--verilog_define PALFILE="/home/jpdoane/dev/nesfpga/roms/nes.mem"
