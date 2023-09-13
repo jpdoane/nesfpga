@@ -1,5 +1,5 @@
 SCRIPTS = $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
-PROJ_ROOT = $(abspath $(SCRIPTS)/..)
+PROJ_ROOT =  $(abspath $(SCRIPTS)/..)
 
 ARTYZ7_XDC =  $(SCRIPTS)/artyz7.xdc
 
@@ -10,10 +10,12 @@ HDMI_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/hdmi/*.sv)
 AUDIO_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/audio/*.sv)
 NES_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/nes/*.sv)
 CART_SOURCE = $(wildcard $(PROJ_ROOT)/hdl/carts/*.sv)
-
 CPU_INC = $(PROJ_ROOT)/modules/6502/hdl/  $(PROJ_ROOT)/modules/6502/hdl/debug/
 
 CONSTRAINTS = $(wildcard  $(PROJ_ROOT)/boards/artyz7/*.xdc)
+
+ROM_PATH=$(PROJ_ROOT)/roms
+PALFILE=$(PROJ_ROOT)/roms/nes.mem
 
 BEEP_GOOD=/usr/share/sounds/Oxygen-Sys-App-Positive.ogg
 BEEP_BAD=/usr/share/sounds/Oxygen-Sys-App-Error-Serious-Very.ogg

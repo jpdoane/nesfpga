@@ -48,15 +48,13 @@ CART_TCL=$(SYNTH_PATH)/cart.tcl
 
 synth: $(SYNTH)
 
-$(SYNTH_ARGS_TCL):
-	touch $(SYNTH_ARGS_TCL)
-	
-
-$(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL) $(SYNTH_ARGS_TCL)
+$(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL)
 	@mkdir -p $(SYNTH_PATH);
 	@cp $(SYNTH_TCL) $(SYNTH_PATH);
-	@cp $(SYNTH_ARGS_TCL) $(SYNTH_PATH);
+	-@cp $(SYNTH_ARGS_TCL) $(SYNTH_PATH);
+	@echo "-verilog_define ROM_PATH=\"$(ROM_PATH)\"\n-verilog_define PALFILE=\"$(PALFILE)\"" >> $(SYNTH_PATH)/$(SYNTH_ARGS_TCL)
 	@echo "-verilog_define CART=$(GAME)_cart" > $(CART_TCL)
+
 	@touch $(SYNTH_ENV)
 
 $(SYNTH): $(SYNTH_ENV)
@@ -71,17 +69,15 @@ IMPL_ENV=$(IMPL_PATH)/.impl
 IMPL=$(IMPL_PATH)/$(TOP)_routed.dcp
 IMPL_ARGS_TCL=impl_args.tcl
 
-$(IMPL_ARGS_TCL):
-	touch $(IMPL_ARGS_TCL)
-
 impl: $(IMPL)
 
-$(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL) $(IMPL_ARGS_TCL)
+$(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL)
 	@mkdir -p $(IMPL_PATH);
 	@cp $(IMPL_TCL) $(IMPL_PATH);
 	@cp $(BITFILE_TCL) $(IMPL_PATH);
 	@cp $(PROGRAM_TCL) $(IMPL_PATH);
-	@cp $(IMPL_ARGS_TCL) $(IMPL_PATH);
+	-@cp $(IMPL_ARGS_TCL) $(IMPL_PATH);
+	@touch $(IMPL_PATH)/$(IMPL_ARGS_TCL)
 	@touch $(IMPL_ENV)
 
 $(IMPL): $(IMPL_ENV) $(SYNTH)
@@ -98,10 +94,18 @@ mem: $(IMPL_ENV) $(IMPL)
 
 
 # bitfile
+<<<<<<< HEAD
 BITFILE=$(abspath bitfiles/$(GAME).bit)
+=======
+BITFILE_PATH=$(abspath bitfiles)
+BITFILE=$(BITFILE_PATH)/$(GAME).bit
+>>>>>>> dev
 bitfile: $(BITFILE)
 
-$(BITFILE):	$(IMPL) 
+$(BITFILE_PATH):
+	-@mkdir $(BITFILE_PATH)
+
+$(BITFILE):	$(IMPL) $(BITFILE_PATH)
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -log bitfile.log -source $(BITFILE_TCL) -tclargs $(TOP)
 	cp $(IMPL_PATH)/$(TOP).bit $(BITFILE)
