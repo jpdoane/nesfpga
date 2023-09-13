@@ -43,7 +43,7 @@ $(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
 SYNTH_PATH=$(BUILD_PATH)/synth
 SYNTH_ENV=$(SYNTH_PATH)/.synth
 SYNTH=$(SYNTH_PATH)/$(TOP).dcp
-SYNTH_ARGS_TCL=synth_args.tcl
+SYNTH_ARGS_TCL=$(SYNTH_PATH)/synth_args.tcl
 CART_TCL=$(SYNTH_PATH)/cart.tcl
 
 synth: $(SYNTH)
@@ -51,10 +51,12 @@ synth: $(SYNTH)
 $(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL)
 	@mkdir -p $(SYNTH_PATH);
 	@cp $(SYNTH_TCL) $(SYNTH_PATH);
-	-@cp $(SYNTH_ARGS_TCL) $(SYNTH_PATH);
-	@echo "-verilog_define ROM_PATH=\"$(ROM_PATH)\"\n-verilog_define PALFILE=\"$(PALFILE)\"" >> $(SYNTH_PATH)/$(SYNTH_ARGS_TCL)
 	@echo "-verilog_define CART=$(GAME)_cart" > $(CART_TCL)
-
+	@-cp synth_args.tcl $(SYNTH_PATH);
+	@echo "-verilog_define ROM_PATH=\"$(ROM_PATH)\"" >> $(SYNTH_ARGS_TCL)
+	@echo "-verilog_define PALFILE=\"$(PALFILE)\"" >> $(SYNTH_ARGS_TCL)
+	@echo "-verilog_define PULSE_TABLE_FILE=\"$(ROM_PATH)/pulse_table.mem\"" >> $(SYNTH_ARGS_TCL)
+	@echo "-verilog_define TND_TABLE_FILE=\"$(ROM_PATH)/tnd_table.mem\"" >> $(SYNTH_ARGS_TCL)
 	@touch $(SYNTH_ENV)
 
 $(SYNTH): $(SYNTH_ENV)
@@ -76,7 +78,7 @@ $(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL)
 	@cp $(IMPL_TCL) $(IMPL_PATH);
 	@cp $(BITFILE_TCL) $(IMPL_PATH);
 	@cp $(PROGRAM_TCL) $(IMPL_PATH);
-	-@cp $(IMPL_ARGS_TCL) $(IMPL_PATH);
+	@-cp $(IMPL_ARGS_TCL) $(IMPL_PATH);
 	@touch $(IMPL_PATH)/$(IMPL_ARGS_TCL)
 	@touch $(IMPL_ENV)
 
@@ -118,8 +120,8 @@ force_program:
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILD_PATH)
-	rm $(BITFILE)
+	-rm -rf $(BUILD_PATH)
+	-rm $(BITFILE)
 	
 # keep intermediate files
 .SECONDARY:
