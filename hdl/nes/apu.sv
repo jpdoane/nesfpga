@@ -372,8 +372,7 @@ apu_triangle u_apu_triangle(
     .reg_ctrl        (reg_triangle_ctrl        ),
     .reg_timelow     (reg_triangle_timelow     ),
     .reg_timehigh    (reg_triangle_timehigh    ),
-    .reg_ctrl_update (triangle_ctrl_update ),
-    .reg_len_update  (triangle_length_update  ),
+    .update          (triangle_length_update ),
     .active          (triangle_active          ),
     .sample          (triangle_sample          )
 );

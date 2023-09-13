@@ -119,6 +119,7 @@ force_program:
 .PHONY: clean
 clean:
 	rm -rf $(BUILD_PATH)
-
+	rm $(BITFILE)
+	
 # keep intermediate files
 .SECONDARY:

@@ -77,6 +77,9 @@ set rc [catch {
   write_bitstream -force $TOPMODULE.bit 
   catch {write_debug_probes -quiet -force $TOPMODULE}
   catch {file copy -force $TOPMODULE.ltx debug_nets.ltx}
+
+  write_hw_platform -fixed -include_bit -force -file $TOPMODULE.xsa
+
   close_msg_db -file write_bitstream.pb
 } RESULT]
 if {$rc} {
