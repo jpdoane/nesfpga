@@ -94,12 +94,8 @@ mem: $(IMPL_ENV) $(IMPL)
 
 
 # bitfile
-<<<<<<< HEAD
-BITFILE=$(abspath bitfiles/$(GAME).bit)
-=======
 BITFILE_PATH=$(abspath bitfiles)
 BITFILE=$(BITFILE_PATH)/$(GAME).bit
->>>>>>> dev
 bitfile: $(BITFILE)
 
 $(BITFILE_PATH):
