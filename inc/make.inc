@@ -35,6 +35,6 @@ GAME=$(shell cat current_game)
 
 _default: default
 
-GAMES=zelda smb
+GAMES=zelda smb tetris metroid
 $(GAMES):
 	@echo $@ > current_game

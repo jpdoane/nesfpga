@@ -110,8 +110,11 @@ module cart_001 #(
     // PRG ROM
     localparam PRG_ROM_BANK_DEPTH = PRG_ROM_DEPTH-14;
     wire [PRG_ROM_DEPTH-1:0] prg_rom_bank16k = {prg_reg[PRG_ROM_BANK_DEPTH-1:0],cpu_addr[13:0]};
-    wire [PRG_ROM_DEPTH-1:0] prg_rom_bank32k = {prg_reg[PRG_ROM_BANK_DEPTH-1:1],cpu_addr[14:0]};
-
+    wire [PRG_ROM_DEPTH-1:0] prg_rom_bank32k;
+    generate 
+        if (PRG_ROM_DEPTH>15) assign prg_rom_bank32k = {prg_reg[PRG_ROM_BANK_DEPTH-1:1],cpu_addr[14:0]};
+        else assign prg_rom_bank32k = cpu_addr[PRG_ROM_DEPTH-1:0];
+    endgenerate
     //    mode 0/1: switch 32 KB at $8000, ignoring low bit of bank number;
     wire [PRG_ROM_DEPTH-1:0] prg_rom_addr_mode1 = prg_rom_bank32k;
     //     mode 2: fix first bank at $8000 and switch 16 KB bank at $C000;
