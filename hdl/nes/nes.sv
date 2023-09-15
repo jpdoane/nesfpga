@@ -28,15 +28,15 @@ module nes #(
     //cartridge
     output logic cart_m2,
     output logic [14:0] cart_cpu_addr,
-    output logic [7:0] cart_cpu_data_i,
-    input logic [7:0] cart_cpu_data_o,
+    input logic [7:0] cart_cpu_data_i,
+    output logic [7:0] cart_cpu_data_o,
     output logic cart_cpu_rw,
     output logic cart_romsel,
     input logic cart_ciram_ce,
     input logic cart_ciram_a10,
     output logic [13:0] cart_ppu_addr,
-    output logic [7:0] cart_ppu_data_i,
-    input logic [7:0] cart_ppu_data_o,
+    input logic [7:0] cart_ppu_data_i,
+    output logic [7:0] cart_ppu_data_o,
     output logic cart_ppu_rd,
     output logic cart_ppu_wr,
     input logic cart_irq
@@ -59,7 +59,7 @@ module nes #(
 
     (* mark_debug = "true" *)  logic [7:0] data_from_cpu;
     (* mark_debug = "true" *)  logic [7:0] cpu_bus_data;
-    (* mark_debug = "true" *)  logic [7:0] data_from_ppu;
+    (* mark_debug = "true" *)  logic [7:0] data_ppu_to_cpu;
     (* mark_debug = "true" *)  logic [15:0] cpu_addr;
     (* mark_debug = "true" *)  logic cpu_rw;
     (* mark_debug = "true" *)  logic nmi;
@@ -113,8 +113,8 @@ module nes #(
         .rw         (cpu_rw         ),
         .bus_addr   (cpu_addr ),
         .cpu_data_i (data_from_cpu ),
-        .ppu_data_i (data_from_ppu ),
-        .cart_data_i(cart_cpu_data_o ),
+        .ppu_data_i (data_ppu_to_cpu ),
+        .cart_data_i(cart_cpu_data_i ),
         .data_o     (cpu_bus_data ),
         .ppu_cs     (ppu_cs     ),
         .rom_cs     (rom_cs)
@@ -122,12 +122,12 @@ module nes #(
     assign cart_cpu_rw = cpu_rw;
     assign cart_romsel = rom_cs; // & m2;
     assign cart_cpu_addr = cpu_addr[14:0];
-    assign cart_cpu_data_i = data_from_cpu;
+    assign cart_cpu_data_o = data_from_cpu;
 
 
     (* mark_debug = "true" *)  logic [13:0] ppu_addr;
     (* mark_debug = "true" *)  logic [7:0] ppu_bus_data;
-    (* mark_debug = "true" *)  logic [7:0] ppu_data_o;
+    (* mark_debug = "true" *)  logic [7:0] data_from_ppu;
     (* mark_debug = "true" *)  logic ppu_rd;
     (* mark_debug = "true" *)  logic ppu_wr;
     
@@ -144,10 +144,10 @@ module nes #(
         .cpu_addr   (cpu_addr[2:0]   ),
         .cpu_data_i (data_from_cpu ),
         .ppu_data_i (ppu_bus_data ),
-        .cpu_data_o (data_from_ppu ),
+        .cpu_data_o (data_ppu_to_cpu ),
         .nmi        (nmi        ),
         .ppu_addr_o (ppu_addr   ),
-        .ppu_data_o (ppu_data_o ),
+        .ppu_data_o (data_from_ppu ),
         .ppu_rd     (ppu_rd     ),
         .ppu_wr     (ppu_wr     ),
         .px_data    (pixel    ),
@@ -164,13 +164,13 @@ module nes #(
         .wr     (ppu_wr     ),
         .vram_cs (cart_ciram_ce),
         .vram_a10 (cart_ciram_a10),
-        .ppu_data_i ( ppu_data_o ),
-        .cart_data_i (cart_ppu_data_o ),
+        .ppu_data_i ( data_from_ppu ),
+        .cart_data_i (cart_ppu_data_i ),
         .data_o (ppu_bus_data )
     );
 
     assign cart_ppu_addr = ppu_addr[13:0];
-    assign cart_ppu_data_i = ppu_data_o;
+    assign cart_ppu_data_o = data_from_ppu;
     assign cart_ppu_rd = ppu_rd;
     assign cart_ppu_wr = ppu_wr;
 

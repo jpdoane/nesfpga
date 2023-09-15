@@ -66,7 +66,7 @@
 
 `timescale 1ns/1ps
 
-module mmcm_hdmi 
+module hdmi_clocks 
 
  (// Clock in ports
   input         clk_125,
@@ -95,8 +95,8 @@ wire clk_in2_clk_wiz_hdmi;
   //    * Unused inputs are tied off
   //    * Unused outputs are labeled unused
 
-  wire        clk_hdmi_px_clk_wiz_hdmi;
-  wire        clk_hdmi_px5_clk_wiz_hdmi;
+  wire        clk_mmcm_hdmi;
+  wire        clk_mmcm_tmds;
   wire        clk_out3_clk_wiz_hdmi;
   wire        clk_out4_clk_wiz_hdmi;
   wire        clk_out5_clk_wiz_hdmi;
@@ -141,14 +141,14 @@ wire clk_in2_clk_wiz_hdmi;
     .CLKOUT1_DUTY_CYCLE   (0.500),
     .CLKOUT1_USE_FINE_PS  ("FALSE"),
     .CLKIN1_PERIOD        (8.000))
-  mmcm_adv_inst
+  u_mmcm_hdmi
     // Output clocks
    (
     .CLKFBOUT            (clkfbout_clk_wiz_hdmi),
     .CLKFBOUTB           (clkfboutb_unused),
-    .CLKOUT0             (clk_hdmi_px_clk_wiz_hdmi),
+    .CLKOUT0             (clk_mmcm_hdmi),
     .CLKOUT0B            (clkout0b_unused),
-    .CLKOUT1             (clk_hdmi_px5_clk_wiz_hdmi),
+    .CLKOUT1             (clk_mmcm_tmds),
     .CLKOUT1B            (clkout1b_unused),
     .CLKOUT2             (clkout2_unused),
     .CLKOUT2B            (clkout2b_unused),
@@ -201,12 +201,12 @@ wire clk_in2_clk_wiz_hdmi;
 
   BUFG clkout1_buf
    (.O   (clk_hdmi),
-    .I   (clk_hdmi_px_clk_wiz_hdmi));
+    .I   (clk_mmcm_hdmi));
 
 
   BUFG clkout2_buf
    (.O   (clk_tmds),
-    .I   (clk_hdmi_px5_clk_wiz_hdmi));
+    .I   (clk_mmcm_tmds));
 
 
 

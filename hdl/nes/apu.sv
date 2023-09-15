@@ -309,7 +309,7 @@ core_6502 u_core_6502(
 
 assign data_to_cpu = apu_cs_r ? apu_data_rd : data_i;
 
-logic apu_cycle, qtrframe, halfframe, frame_irq;
+logic apu_cycle, qtrframe, halfframe;
 apu_framecounter u_apu_framecounter(
     .clk          (clk          ),
     .rst          (rst          ),

@@ -52,7 +52,7 @@ $(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL)
 	@mkdir -p $(SYNTH_PATH);
 	@cp $(SYNTH_TCL) $(SYNTH_PATH);
 	@echo "-verilog_define CART=$(GAME)_cart" > $(CART_TCL)
-	@-cp synth_args.tcl $(SYNTH_PATH);
+	@-cp synth_args.tcl $(SYNTH_PATH) || true;
 	@echo "-verilog_define ROM_PATH=\"$(ROM_PATH)\"" >> $(SYNTH_ARGS_TCL)
 	@echo "-verilog_define PALFILE=\"$(PALFILE)\"" >> $(SYNTH_ARGS_TCL)
 	@echo "-verilog_define PULSE_TABLE_FILE=\"$(ROM_PATH)/pulse_table.mem\"" >> $(SYNTH_ARGS_TCL)
@@ -78,7 +78,7 @@ $(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL)
 	@cp $(IMPL_TCL) $(IMPL_PATH);
 	@cp $(BITFILE_TCL) $(IMPL_PATH);
 	@cp $(PROGRAM_TCL) $(IMPL_PATH);
-	@-cp $(IMPL_ARGS_TCL) $(IMPL_PATH);
+	@-cp $(IMPL_ARGS_TCL) $(IMPL_PATH) || true;
 	@touch $(IMPL_PATH)/$(IMPL_ARGS_TCL)
 	@touch $(IMPL_ENV)
 

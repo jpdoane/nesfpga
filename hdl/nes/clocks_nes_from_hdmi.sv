@@ -1,7 +1,7 @@
 
 `timescale 1ns/1ps
 
-module mmcm_nes_hdmi
+module clocks_nes_from_hdmi
 
  (// Clock in ports
   input         clk_hdmi,
@@ -29,7 +29,7 @@ wire clk_in2_clk_wiz_0;
   //    * Unused inputs are tied off
   //    * Unused outputs are labeled unused
 
-  wire        clk_ppu_clk_wiz_0;
+  wire        clk_mmcm_nes;
   wire        clk_out2_clk_wiz_0;
   wire        clk_out3_clk_wiz_0;
   wire        clk_out4_clk_wiz_0;
@@ -72,12 +72,12 @@ wire clk_in2_clk_wiz_0;
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
     .CLKIN1_PERIOD        (37.037))
-  mmcm_adv_inst
+  mmcm_nes_from_hdmi
     // Output clocks
    (
     .CLKFBOUT            (clkfbout_clk_wiz_0),
     .CLKFBOUTB           (clkfboutb_unused),
-    .CLKOUT0             (clk_ppu_clk_wiz_0),
+    .CLKOUT0             (clk_mmcm_nes),
     .CLKOUT0B            (clkout0b_unused),
     .CLKOUT1             (clkout1_unused),
     .CLKOUT1B            (clkout1b_unused),
@@ -132,7 +132,7 @@ wire clk_in2_clk_wiz_0;
 
   BUFG clkout1_buf
    (.O   (clk_nes),
-    .I   (clk_ppu_clk_wiz_0));
+    .I   (clk_mmcm_nes));
 
 
 
