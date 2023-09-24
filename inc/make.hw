@@ -13,6 +13,9 @@ ifndef CONSTRAINTS
 	$(error CONSTRAINTS is not set)
 endif
 
+VIVADO = vivado -m64 -mode batch -notrace
+#VIVADO = vivado -m64 -notrace
+
 # common tcl scripts
 SYNTH_TCL=$(SCRIPTS)/synth.tcl
 IMPL_TCL=$(SCRIPTS)/impl.tcl
@@ -26,6 +29,7 @@ BUILD_PATH=$(abspath build_$(GAME))
 BUILD_ENV=$(BUILD_PATH)/.build
 XDC_FILE=$(BUILD_PATH)/constraints.tcl
 SRC_FILE=$(BUILD_PATH)/sources.tcl
+BD_SRC_FILE=$(BUILD_PATH)/bd_sources.tcl
 
 
 $(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
@@ -34,10 +38,15 @@ $(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
 	@for s in $(abspath $(HDL_SOURCE)) ; do \
 		echo "$$s" >> $(SRC_FILE); \
 	done
+	@rm -f $(XDC_FILE) $(BD_SRC_FILE);
+	@for s in $(abspath $(BD_SOURCE)) ; do \
+		echo "$$s" >> $(BD_SRC_FILE); \
+	done
 	@for s in $(abspath $(CONSTRAINTS)) ; do \
 		echo "$$s" >> $(XDC_FILE); \
 	done
 	@touch $(BUILD_ENV)
+
 
 #synthesis
 SYNTH_PATH=$(BUILD_PATH)/synth
@@ -61,9 +70,15 @@ $(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL)
 
 $(SYNTH): $(SYNTH_ENV)
 	cd $(SYNTH_PATH) && \
-	vivado -m64 -mode batch -notrace -source $(SYNTH_TCL) -tclargs $(TOP) $(DEVICE) $(BUILD_PATH) \
+	$(VIVADO) -source $(SYNTH_TCL) -tclargs $(TOP) $(DEVICE) $(BUILD_PATH) \
 	|| $(call FAIL, SYNTHESIS, true)
 	$(call SUCCEED, SYNTHESIS, false)
+
+# open project in vivado
+gui: $(SYNTH_ENV)
+	cd $(SYNTH_PATH) && \
+	vivado -source $(SCRIPTS)/setup_proj.tcl -tclargs $(TOP) $(DEVICE) $(BUILD_PATH) &
+
 
 #place & route
 IMPL_PATH=$(BUILD_PATH)/impl
@@ -84,15 +99,19 @@ $(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL)
 
 $(IMPL): $(IMPL_ENV) $(SYNTH)
 	cd $(IMPL_PATH) && \
-	vivado -m64 -mode batch -notrace -source $(IMPL_TCL) -tclargs $(TOP) $(DEVICE) $(SYNTH) $(BUILD_PATH) \
+	$(VIVADO) -source $(IMPL_TCL) -tclargs $(TOP) $(DEVICE) $(SYNTH) $(BUILD_PATH) \
 	|| $(call FAIL, IMPLEMENTATION, true)
 	$(call SUCCEED, IMPLEMENTATION, true)
 
 mem: $(IMPL_ENV) $(IMPL) 
 	cd $(IMPL_PATH) && \
-	vivado -m64 -mode batch -notrace -source $(MEM_TCL) -tclargs $(TOP) $(DEVICE) $(IMPL) $(BUILD_PATH) \
+	$(VIVADO) -source $(MEM_TCL) -tclargs $(TOP) $(DEVICE) $(IMPL) $(BUILD_PATH) \
 	|| $(call FAIL, WRITE_MEM, true)
 	$(call SUCCEED, WRITE_MEM, true)
+
+
+vivado: $(SYNTH)
+	cd $(BUILD_PATH) && vivado -source make_proj.tcl &
 
 
 # bitfile

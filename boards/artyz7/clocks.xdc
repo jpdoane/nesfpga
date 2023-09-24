@@ -22,3 +22,14 @@ set_multicycle_path -setup -from [get_clocks clk_ppu] -to [get_clocks clk_nes] 3
 set_multicycle_path -hold -from [get_clocks clk_ppu] -to [get_clocks clk_nes] 2
 # set_multicycle_path -setup -start -from [get_clocks clk_nes] -to [get_clocks clk_ppu] 3
 # set_multicycle_path -hold -from [get_clocks clk_nes] -to [get_clocks clk_ppu] 2
+
+# ignore timing between PS and PL clocks
+# these only meet at dual port BRAM, where additional logic prevents collisions
+set_false_path -from [get_clocks clk_ppu] -to [get_clocks clk_fpga_0]
+set_false_path -from [get_clocks clk_fpga_0] -to [get_clocks clk_ppu]
+set_false_path -from [get_clocks clk_cpu] -to [get_clocks clk_fpga_0]
+set_false_path -from [get_clocks clk_fpga_0] -to [get_clocks clk_cpu]
+set_false_path -from [get_clocks clk_hdmi] -to [get_clocks clk_fpga_0]
+set_false_path -from [get_clocks clk_fpga_0] -to [get_clocks clk_hdmi]
+set_false_path -from [get_clocks clk_nes] -to [get_clocks clk_fpga_0]
+set_false_path -from [get_clocks clk_fpga_0] -to [get_clocks clk_nes]
