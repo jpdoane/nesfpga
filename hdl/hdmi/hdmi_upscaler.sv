@@ -12,17 +12,19 @@ module hdmi_upscaler #(
     parameter  SUB_X = 2,
     parameter  SUB_Y = 2,
     parameter  OSCREEN_SHIFT = (OSCREEN_WIDTH - ISCREEN_WIDTH*SUB_X) >> 1,
-    parameter  IPIXEL_LATENCY = 1                 // first pixel of new frame will be IPIXEL_LATENCY clocks after new_frame is asserted
+    parameter  IPIXEL_LATENCY = 1,                 // first pixel of new frame will be IPIXEL_LATENCY clocks after new_frame is asserted
+    parameter  PIXEL_DEPTH = 6
     )
 (
   input logic clk_p,                // ppu pixel clock
   input logic rst_p,                // clk_p domain reset
   input logic clk_h,                // hdmi pixel clock
   input logic rst_h,                // clk_h domain reset
-  input logic [23:0] rgb_p,         // rgb from ppu
+  input logic [PIXEL_DEPTH-1:0] pixel_p,         // pixel from ppu
   output logic new_frame,           // signals start of each frame, first pixel should arrive IPIXEL_LATENCY clocks later
   output logic [9:0] hx, hy,        // ouput hdmi counters
-  output logic [23:0] rgb_h        // rgb to hdmi
+  output logic [PIXEL_DEPTH-1:0] pixel_h,        // pixel to hdmi
+  output logic pixel_on             // screen is being rendered
 );
 
     // icycles per frame
@@ -32,8 +34,8 @@ module hdmi_upscaler #(
 
     // assert(OFRAME_HEIGHT >= IFRAME_HEIGHT*SUB_Y);
 
-    logic [23:0] ibuf [0:ISCREEN_WIDTH-1];     // input buffer from ppu
-    logic [23:0] obuf [0:ISCREEN_WIDTH-1];     // playback buffer to hdmi
+    logic [PIXEL_DEPTH-1:0] ibuf [0:ISCREEN_WIDTH-1];     // input buffer from ppu
+    logic [PIXEL_DEPTH-1:0] obuf [0:ISCREEN_WIDTH-1];     // playback buffer to hdmi
 
 // clk_p domain (slower)
 //
@@ -62,7 +64,7 @@ module hdmi_upscaler #(
 
         end else begin
             for (i = 0; i < ISCREEN_WIDTH; i++) ibuf[i] <= ibuf[i];
-            if (px < ISCREEN_WIDTH) ibuf[px] <= rgb_p;
+            if (px < ISCREEN_WIDTH) ibuf[px] <= pixel_p;
 
             //count x position (for filling scanline buffer)
             px <= new_pframe || (px==IFRAME_WIDTH-1) ? 0 : px + 1;
@@ -110,6 +112,7 @@ module hdmi_upscaler #(
             h_sync <= 1;
             h_sync_r <= 1;
             h_sync_rr <= 1;
+            pixel_on <= 0;
         end
         else
         begin
@@ -130,7 +133,8 @@ module hdmi_upscaler #(
                         draw_on && (sub_hx == SUB_X-1) ? hx_idx_nxt :
                         hx_idx;
 
-            rgb_h <= draw_on ? rgb_buf : 0;
+            pixel_h <= draw_on ? pixel_buf : 0;
+            pixel_on <= draw_on;
         end
     end
 
@@ -144,7 +148,7 @@ module hdmi_upscaler #(
         end
     end
 
-    wire [23:0] rgb_buf = obuf[hx_idx];
+    wire [PIXEL_DEPTH-1:0] pixel_buf = obuf[hx_idx];
 
 
 endmodule

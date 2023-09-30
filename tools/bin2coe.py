@@ -1,23 +1,21 @@
 #!/usr/bin/python3
 
 import argparse, os
-
 import argparse
+import numpy
 
 def binary_to_coe(input_file, output_file, width):
     try:
-        with open(input_file, 'rb') as f_in:
-            with open(output_file, 'w') as f_out:
-                f_out.write("memory_initialization_radix=16;\n")
-                f_out.write("memory_initialization_vector=;\n")
-                data = f_in.read(width)
-                while data:
-                    for word in data:
-                        hex_repr = "{:08x}".format(word)
-                        f_out.write(hex_repr)
-                    f_out.write(",\n")
-                    data = f_in.read(width)
-                f_out.write(";")
+        data = numpy.fromfile(input_file, dtype=numpy.uint32)
+        # with open(input_file, 'rb') as f_in:
+        with open(output_file, 'w') as f_out:
+            f_out.write("memory_initialization_radix=16;\n")
+            f_out.write("memory_initialization_vector=;\n")
+            for word in data:
+                hex_repr = "{:08x}".format(word)
+                f_out.write(hex_repr)
+            f_out.write(",\n")
+            f_out.write(";")
     except FileNotFoundError:
         print("Error: Input file not found.")
     except Exception as e:

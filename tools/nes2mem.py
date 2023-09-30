@@ -10,6 +10,10 @@ def writemem(data, memfile):
             hex_repr = "{:02x}\n".format(byte)
             f_mem.write(hex_repr)
 
+def writebin(data, binfile):
+    with open(binfile, 'wb') as f:
+        f.write(data)
+
 def nes2mem(nes_file):
     with open(nes_file, 'rb') as fnes:
         header = fnes.read(16)
@@ -31,6 +35,7 @@ def nes2mem(nes_file):
             print(f"Mirroring PRG to 16kB")
             PRG = PRG+PRG #fill 16kb
         writemem(PRG, "PRG.mem")
+        writebin(PRG, "PRG.bin")
 
         NCHR = header[5]
         if NCHR == 0:
@@ -40,6 +45,7 @@ def nes2mem(nes_file):
             CHR = fnes.read(chr_sz)
             print(f"CHR size: {chr_sz} ({NCHR}x 8k blocks)")
             writemem(CHR, "CHR.mem")
+            writebin(CHR, "CHR.bin")
 
         if f6 & 0x02:
             NRAM = header[8]

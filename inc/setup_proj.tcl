@@ -26,9 +26,9 @@ proc create_report { reportName command } {
 }
 
 
-create_project -in_memory
+create_project -part $DEVICE -force $TOPMODULE $TOPMODULE 
 
-set_part $DEVICE
+#set_part $DEVICE
 set_param project.singleFileAddWarning.threshold 0
 # set_param project.compositeFile.enableAutoGeneration 0 # <-- this line makes block diagram fail
 set_param synth.vivado.isSynthRun true
@@ -44,7 +44,8 @@ set_property ip_cache_permissions {read write} [current_project]
 set fh [open "${PROJ}/sources.tcl" r]
 while {[gets $fh filename] >= 0} {
   puts "Reading source $filename"
-  read_verilog -library xil_defaultlib -sv $filename
+  # read_verilog -library xil_defaultlib -sv $filename
+  read_verilog -sv $filename
 }
 close $fh
 
@@ -78,4 +79,4 @@ close $fh
 
 set_param ips.enableIPCacheLiteLoad 0
 
-write_project_tcl -force ${PROJ}/make_proj.tcl
+#write_project_tcl -no_copy_sources -use_bd_files -force ${PROJ}/make_proj.tcl

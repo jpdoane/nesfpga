@@ -128,11 +128,12 @@ set rc [catch {
   if { [llength [get_debug_cores -quiet] ] > 0 }  { 
     implement_debug_core 
   } 
-  place_design 
+  place_design
   write_checkpoint -force ${TOPMODULE}_placed.dcp
   create_report "impl_1_place_report_io_0" "report_io -file ${TOPMODULE}_io_placed.rpt"
-  create_report "impl_1_place_report_utilization_0" "report_utilization -file ${TOPMODULE}_utilization_placed.rpt -pb ${TOPMODULE}_utilization_placed.pb"
+  create_report "impl_1_place_report_utilization_0" "report_utilization -verbose -file ${TOPMODULE}_utilization_placed.rpt -pb ${TOPMODULE}_utilization_placed.pb"
   create_report "impl_1_place_report_control_sets_0" "report_control_sets -verbose -file ${TOPMODULE}_control_sets_placed.rpt"
+
   close_msg_db -file place_design.pb
 } RESULT]
 if {$rc} {

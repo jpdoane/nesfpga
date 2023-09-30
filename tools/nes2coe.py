@@ -6,7 +6,7 @@ import numpy as np
 
 def writecoe(data, coefile):
     try:
-        data32 = np.frombuffer(data, dtype=np.uint32)
+        data32 = np.frombuffer(data, dtype=np.dtype('<u4'))
         with open(coefile, 'w') as f_out:
             f_out.write("memory_initialization_radix=16;\n")
             f_out.write("memory_initialization_vector=\n")
@@ -15,6 +15,17 @@ def writecoe(data, coefile):
                 f_out.write(hex_repr)
                 f_out.write(",\n")
             f_out.write(";")
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+def writemem(data, memfile):
+    try:
+        data32 = np.frombuffer(data, dtype=np.dtype('<u4'))
+        with open(memfile, 'w') as f_out:
+            for word in data32:
+                hex_repr = "{:08x}\n".format(word)
+                f_out.write(hex_repr)
     except Exception as e:
         print(f"An error occurred: {e}")
 
@@ -39,6 +50,7 @@ def nes2mem(nes_file):
             print(f"Mirroring PRG to 16kB")
             PRG = PRG+PRG #fill 16kb
         writecoe(PRG, "PRG.coe")
+        writemem(PRG, "PRG32.mem")
 
         NCHR = header[5]
         if NCHR == 0:
@@ -48,6 +60,7 @@ def nes2mem(nes_file):
             CHR = fnes.read(chr_sz)
             print(f"CHR size: {chr_sz} ({NCHR}x 8k blocks)")
             writecoe(CHR, "CHR.coe")
+            writemem(CHR, "CHR32.mem")
 
         if f6 & 0x02:
             NRAM = header[8]

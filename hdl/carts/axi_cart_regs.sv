@@ -11,7 +11,12 @@
 		// Width of S_AXI data bus
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
 		// Width of S_AXI address bus
-		parameter integer C_S_AXI_ADDR_WIDTH	= 6
+		parameter integer C_S_AXI_ADDR_WIDTH	= 6,
+		parameter mapper_config_init = 32'h0,
+        parameter CHR_mask_init = 32'h0,
+        parameter PRG_mask_init = 32'h0,
+        parameter PRGRAM_mask_init = 32'h0
+
 	)
 	(
 		// Users to add ports here
@@ -108,9 +113,9 @@
 	//------------------------------------------------
 	//-- Number of Slave Registers 16
 	reg [C_S_AXI_DATA_WIDTH-1:0]	mapper_config_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	CHR_depth_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	PRG_depth_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	PRGRAM_depth_reg;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	CHR_mask_reg;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	PRG_mask_reg;
+	reg [C_S_AXI_DATA_WIDTH-1:0]	PRGRAM_mask_reg;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg4;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg5;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg6;
@@ -235,10 +240,10 @@
 	begin
 	  if ( S_AXI_ARESETN == 1'b0 )
 	    begin
-	      mapper_config_reg <= 0;
-	      CHR_depth_reg <= 0;
-	      PRG_depth_reg <= 0;
-	      PRGRAM_depth_reg <= 0;
+	      mapper_config_reg <= mapper_config_init;
+	      CHR_mask_reg <= CHR_mask_init;
+	      PRG_mask_reg <= PRG_mask_init;
+	      PRGRAM_mask_reg <= PRGRAM_mask_init;
 	    //   slv_reg4 <= 0;
 	    //   slv_reg5 <= 0;
 	    //   slv_reg6 <= 0;
@@ -268,21 +273,21 @@
 	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 1
-	                CHR_depth_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                CHR_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
 	          4'h2:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 2
-	                PRG_depth_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                PRG_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
 	          4'h3:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
 	                // Respective byte enables are asserted as per write strobes 
 	                // Slave register 3
-	                PRGRAM_depth_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                PRGRAM_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
 	        //   4'h4:
 	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
@@ -370,9 +375,9 @@
 	        //       end  
 	          default : begin
 	                      mapper_config_reg <= mapper_config_reg;
-	                      CHR_depth_reg <= CHR_depth_reg;
-	                      PRG_depth_reg <= PRG_depth_reg;
-	                      PRGRAM_depth_reg <= PRGRAM_depth_reg;
+	                      CHR_mask_reg <= CHR_mask_reg;
+	                      PRG_mask_reg <= PRG_mask_reg;
+	                      PRGRAM_mask_reg <= PRGRAM_mask_reg;
 	                    //   slv_reg4 <= slv_reg4;
 	                    //   slv_reg5 <= slv_reg5;
 	                    //   slv_reg6 <= slv_reg6;
@@ -436,7 +441,7 @@
 	  if ( S_AXI_ARESETN == 1'b0 )
 	    begin
 	      axi_arready <= 1'b0;
-	      axi_araddr  <= 32'b0;
+	      axi_araddr  <= {C_S_AXI_ADDR_WIDTH{1'b0}};
 	    end 
 	  else
 	    begin    
@@ -493,23 +498,23 @@
 	begin
 	      // Address decoding for reading registers
 	      case ( axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
-	        4'h0   : reg_data_out <= mapper_config_reg;
-	        4'h1   : reg_data_out <= CHR_depth_reg;
-	        4'h2   : reg_data_out <= PRG_depth_reg;
-	        4'h3   : reg_data_out <= PRGRAM_depth_reg;
-	        // 4'h4   : reg_data_out <= slv_reg4;
-	        // 4'h5   : reg_data_out <= slv_reg5;
-	        // 4'h6   : reg_data_out <= slv_reg6;
-	        // 4'h7   : reg_data_out <= slv_reg7;
-	        // 4'h8   : reg_data_out <= slv_reg8;
-	        // 4'h9   : reg_data_out <= slv_reg9;
-	        // 4'hA   : reg_data_out <= slv_reg10;
-	        // 4'hB   : reg_data_out <= slv_reg11;
-	        // 4'hC   : reg_data_out <= slv_reg12;
-	        // 4'hD   : reg_data_out <= slv_reg13;
-	        // 4'hE   : reg_data_out <= slv_reg14;
-	        // 4'hF   : reg_data_out <= slv_reg15;
-	        default : reg_data_out <= 0;
+	        4'h0   : reg_data_out = mapper_config_reg;
+	        4'h1   : reg_data_out = CHR_mask_reg;
+	        4'h2   : reg_data_out = PRG_mask_reg;
+	        4'h3   : reg_data_out = PRGRAM_mask_reg;
+	        // 4'h4   : reg_data_out = slv_reg4;
+	        // 4'h5   : reg_data_out = slv_reg5;
+	        // 4'h6   : reg_data_out = slv_reg6;
+	        // 4'h7   : reg_data_out = slv_reg7;
+	        // 4'h8   : reg_data_out = slv_reg8;
+	        // 4'h9   : reg_data_out = slv_reg9;
+	        // 4'hA   : reg_data_out = slv_reg10;
+	        // 4'hB   : reg_data_out = slv_reg11;
+	        // 4'hC   : reg_data_out = slv_reg12;
+	        // 4'hD   : reg_data_out = slv_reg13;
+	        // 4'hE   : reg_data_out = slv_reg14;
+	        // 4'hF   : reg_data_out = slv_reg15;
+	        default : reg_data_out = 0;
 	      endcase
 	end
 
@@ -535,9 +540,9 @@
 	// Add user logic here
 
 	assign mapper_config = mapper_config_reg;
-	assign CHR_mask = CHR_depth_reg;
-	assign PRG_mask = PRG_depth_reg;
-	assign PRGRAM_mask = PRGRAM_depth_reg;
+	assign CHR_mask = CHR_mask_reg;
+	assign PRG_mask = PRG_mask_reg;
+	assign PRGRAM_mask = PRGRAM_mask_reg;
 
 	// User logic ends
 

@@ -34,14 +34,16 @@ BD_SRC_FILE=$(BUILD_PATH)/bd_sources.tcl
 
 $(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
 	@mkdir -p $(BUILD_PATH);
-	@rm -f $(XDC_FILE) $(SRC_FILE);
+	@rm -f $(XDC_FILE) $(SRC_FILE) $(BD_SRC_FILE);
+	touch $(SRC_FILE)
 	@for s in $(abspath $(HDL_SOURCE)) ; do \
 		echo "$$s" >> $(SRC_FILE); \
 	done
-	@rm -f $(XDC_FILE) $(BD_SRC_FILE);
+	touch $(BD_SRC_FILE)
 	@for s in $(abspath $(BD_SOURCE)) ; do \
 		echo "$$s" >> $(BD_SRC_FILE); \
 	done
+	touch $(XDC_FILE)
 	@for s in $(abspath $(CONSTRAINTS)) ; do \
 		echo "$$s" >> $(XDC_FILE); \
 	done

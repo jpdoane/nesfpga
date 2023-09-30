@@ -17,22 +17,22 @@ module nes_tb();
 
   wire [31:0]BRAM_CHR_addr;
   wire BRAM_CHR_clk;
-  wire [31:0]BRAM_CHR_din;
-  wire [31:0]BRAM_CHR_dout;
+  wire [31:0]BRAM_CHR_dr;
+  wire [31:0]BRAM_CHR_dw;
   wire BRAM_CHR_en;
   wire BRAM_CHR_rst;
   wire [3:0]BRAM_CHR_we;
   wire [31:0]BRAM_PRGRAM_addr;
   wire BRAM_PRGRAM_clk;
-  wire [31:0]BRAM_PRGRAM_din;
-  wire [31:0]BRAM_PRGRAM_dout;
+  wire [31:0]BRAM_PRGRAM_dr;
+  wire [31:0]BRAM_PRGRAM_dw;
   wire BRAM_PRGRAM_en;
   wire BRAM_PRGRAM_rst;
   wire [3:0]BRAM_PRGRAM_we;
   wire [31:0]BRAM_PRG_addr;
   wire BRAM_PRG_clk;
-  wire [31:0]BRAM_PRG_din;
-  wire [31:0]BRAM_PRG_dout;
+  wire [31:0]BRAM_PRG_dr;
+  wire [31:0]BRAM_PRG_dw;
   wire BRAM_PRG_en;
   wire BRAM_PRG_rst;
   wire [3:0]BRAM_PRG_we;
@@ -60,22 +60,22 @@ module nes_tb();
   cart_mem_bd u_cart_mem_bd
        (.BRAM_CHR_addr(BRAM_CHR_addr),
         .BRAM_CHR_clk(BRAM_CHR_clk),
-        .BRAM_CHR_din(BRAM_CHR_din),
-        .BRAM_CHR_dout(BRAM_CHR_dout),
+        .BRAM_CHR_din(BRAM_CHR_dw),
+        .BRAM_CHR_dout(BRAM_CHR_dr),
         .BRAM_CHR_en(BRAM_CHR_en),
 //        .BRAM_CHR_rst(BRAM_CHR_rst),
         .BRAM_CHR_we(BRAM_CHR_we),
         .BRAM_PRGRAM_addr(BRAM_PRGRAM_addr),
         .BRAM_PRGRAM_clk(BRAM_PRGRAM_clk),
-        .BRAM_PRGRAM_din(BRAM_PRGRAM_din),
-        .BRAM_PRGRAM_dout(BRAM_PRGRAM_dout),
+        .BRAM_PRGRAM_din(BRAM_PRGRAM_dw),
+        .BRAM_PRGRAM_dout(BRAM_PRGRAM_dr),
         .BRAM_PRGRAM_en(BRAM_PRGRAM_en),
 //        .BRAM_PRGRAM_rst(BRAM_PRGRAM_rst),
         .BRAM_PRGRAM_we(BRAM_PRGRAM_we),
         .BRAM_PRG_addr(BRAM_PRG_addr),
         .BRAM_PRG_clk(BRAM_PRG_clk),
-        .BRAM_PRG_din(BRAM_PRG_din),
-        .BRAM_PRG_dout(BRAM_PRG_dout),
+        .BRAM_PRG_din(BRAM_PRG_dw),
+        .BRAM_PRG_dout(BRAM_PRG_dr),
         .BRAM_PRG_en(BRAM_PRG_en),
 //        .BRAM_PRG_rst(BRAM_PRG_rst),
         .BRAM_PRG_we(BRAM_PRG_we)
@@ -87,15 +87,15 @@ module nes_tb();
     logic cart_rst;
     logic cart_m2;
     logic [14:0] cart_cpu_addr;
-    logic [7:0] cart_cpu_data_i;
-    logic [7:0] cart_cpu_data_o;
+    logic [7:0] data_cart2cpu;
+    logic [7:0] data_cpu2cart;
     logic cart_cpu_rw;
     logic cart_romsel;
     logic cart_ciram_ce;
     logic cart_ciram_a10;
     logic [13:0] cart_ppu_addr;
-    logic [7:0] cart_ppu_data_i;
-    logic [7:0] cart_ppu_data_o;
+    logic [7:0] data_cart2ppu;
+    logic [7:0] data_ppu2cart;
     logic cart_ppu_rd;
     logic cart_ppu_wr;
     logic cart_irq;
@@ -121,15 +121,15 @@ module nes_tb();
         //.cart_rst          (cart_rst),
         .cart_m2          (cart_m2),
         .cart_cpu_addr    (cart_cpu_addr),
-        .cart_cpu_data_i  (cart_cpu_data_o),
-        .cart_cpu_data_o  (cart_cpu_data_i),
+        .cart_cpu_data_i  (data_cart2cpu),
+        .cart_cpu_data_o  (data_cpu2cart),
         .cart_cpu_rw      (cart_cpu_rw),
         .cart_romsel      (cart_romsel),
         .cart_ciram_ce    (cart_ciram_ce),
         .cart_ciram_a10   (cart_ciram_a10),
         .cart_ppu_addr    (cart_ppu_addr),
-        .cart_ppu_data_i  (cart_ppu_data_i),
-        .cart_ppu_data_o  (cart_ppu_data_o),
+        .cart_ppu_data_i  (data_cart2ppu),
+        .cart_ppu_data_o  (data_ppu2cart),
         .cart_ppu_rd      (cart_ppu_rd),
         .cart_ppu_wr      (cart_ppu_wr),
         .cart_irq         (cart_irq)
@@ -141,16 +141,16 @@ cart_top u_cart_top (
     .clk_cpu                 (clk_cpu),
     .m2                      (cart_m2),
     .cpu_addr                (cart_cpu_addr),
-    .cpu_data_i              (cart_cpu_data_i),
-    .cpu_data_o              (cart_cpu_data_o),
+    .cpu_data_i              (data_cpu2cart),
+    .cpu_data_o              (data_cart2cpu),
     .cpu_rw                  (cart_cpu_rw),
     .romsel                  (cart_romsel),
     .ciram_ce                (cart_ciram_ce),
     .ciram_a10               (cart_ciram_a10),
     .clk_ppu                 (clk_ppu),
     .ppu_addr                (cart_ppu_addr),
-    .ppu_data_i              (cart_ppu_data_i),
-    .ppu_data_o              (cart_ppu_data_o),
+    .ppu_data_i              (data_ppu2cart),
+    .ppu_data_o              (data_cart2ppu),
     .ppu_rd                  (cart_ppu_rd),
     .ppu_wr                  (cart_ppu_wr),
     .irq                     (cart_irq),
@@ -158,25 +158,25 @@ cart_top u_cart_top (
     // memory interfaces
     .BRAM_CHR_addr           (BRAM_CHR_addr),
     .BRAM_CHR_clk            (BRAM_CHR_clk),
-    .BRAM_CHR_dout           (BRAM_CHR_din),
+    .BRAM_CHR_dout           (BRAM_CHR_dw),
     .BRAM_CHR_en             (BRAM_CHR_en),
     .BRAM_CHR_rst            (BRAM_CHR_rst),
     .BRAM_CHR_we             (BRAM_CHR_we),
-    .BRAM_CHR_din            (BRAM_CHR_dout),
+    .BRAM_CHR_din            (BRAM_CHR_dr),
     .BRAM_PRG_addr           (BRAM_PRG_addr),
     .BRAM_PRG_clk            (BRAM_PRG_clk),
-    .BRAM_PRG_dout           (BRAM_PRG_din),
+    .BRAM_PRG_dout           (BRAM_PRG_dw),
     .BRAM_PRG_en             (BRAM_PRG_en),
     .BRAM_PRG_rst            (BRAM_PRG_rst),
     .BRAM_PRG_we             (BRAM_PRG_we),
-    .BRAM_PRG_din            (BRAM_PRG_dout),
+    .BRAM_PRG_din            (BRAM_PRG_dr),
     .BRAM_PRGRAM_addr        (BRAM_PRGRAM_addr),
     .BRAM_PRGRAM_clk         (BRAM_PRGRAM_clk),
-    .BRAM_PRGRAM_dout        (BRAM_PRGRAM_din),
+    .BRAM_PRGRAM_dout        (BRAM_PRGRAM_dw),
     .BRAM_PRGRAM_en          (BRAM_PRGRAM_en),
     .BRAM_PRGRAM_rst         (BRAM_PRGRAM_rst),
     .BRAM_PRGRAM_we          (BRAM_PRGRAM_we),
-    .BRAM_PRGRAM_din         (BRAM_PRGRAM_dout),
+    .BRAM_PRGRAM_din         (BRAM_PRGRAM_dr),
     .S_AXI_ACLK              (clk_master),            
     .S_AXI_ARESETN           (rst_mastern)   
 //    .S_AXI_AWADDR            (MCART_AXI_awaddr),      
