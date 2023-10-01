@@ -88,9 +88,9 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	u32 CHR_sz;
 	u32 PRG_sz;
 	u32 PRGRAM_sz;
-	u32 mirroring;
-	u32 n;
-	u32 d;
+	u32 cart_config = 0;
+	// u32 n;
+	// u32 d;
 
 	rc = f_open(&fil, FileName, FA_READ);
 	if (rc) {
@@ -115,61 +115,58 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	}
 
 	xil_printf("Loading %s...\r\n", FileName);
-	mirroring = header[6] & 0x1;
 	mapper = header[6] >> 4;
-	if ( mapper != 0 ) {
+	if ( mapper > 1 ) {
 		xil_printf(" ERROR : mapper %d not supported\r\n", mapper);
 		return XST_FAILURE;
 	}
+
+ 	// reset system while we load new data
+	cart_addr[0] = 0xffffffff;
+
+	cart_config = (0xff & mapper); // set mapper
+	if (header[6] & 0x1)
+		cart_config |= MAPPER_MIRRORV; // set mirrorv
 
 //	xil_printf("Header:\r\n");
 //	for (n=0;n<16;n++) {
 //		xil_printf("0x%x\r\n",header[n]);
 //	}
 
-	cart_addr[0] = 0xffffffff; // reset system while we load new data
-
 	PRG_sz = 16384 * header[4];
 	cart_addr[2] = PRG_sz-1;	// PRG addr mask
-	xil_printf("Loading %dB PRG ROM\r\n", PRG_sz);
-//	for(n=0;n<PRG_sz/4;n++) {
-//		rc = f_read(&fil, (void*) &d, 4, &br);
-//		if (rc) {
-//			xil_printf(" ERROR : f_read returned %d\r\n", rc);
-//			return XST_FAILURE;
-//		}
-//		PRG_addr[n] = d;
-//		xil_printf("PRG[%d] =  0x%x = 0x%x?\r\n", n, PRG_addr[n], d);
-//	}
+	xil_printf("Loading %dkB PRG ROM\r\n", header[4]*16);
 	rc = f_read(&fil, (void*) PRG_addr, PRG_sz, &br);
 	if (rc) {
 		xil_printf(" ERROR : f_read returned %d\r\n", rc);
 		return XST_FAILURE;
 	}
-	xil_printf("PRG_sz = %d, br= %d\r\n", PRG_sz, br);
-	xil_printf("PRG[%d-1] = 0x%x?\r\n", br/4, PRG_addr[br/4-1]);
+	// xil_printf("PRG_sz = %d, br= %d\r\n", PRG_sz, br);
+	// xil_printf("PRG[%d-1] = 0x%x?\r\n", br/4, PRG_addr[br/4-1]);
 
 	CHR_sz = 8192 * header[5];
 	if (CHR_sz == 0) {
 		cart_addr[1] = 0x1fff;
+		cart_config |= MAPPER_CHRRAM;
 		xil_printf("Using 8k CHR-RAM\r\n");
 	}
 	else {
 		cart_addr[1] = CHR_sz-1;
-		xil_printf("Loading %dB CHR-ROM\r\n", CHR_sz);
+		xil_printf("Loading %dkB CHR-ROM\r\n", 8*header[5]);
 		rc = f_read(&fil, (void*) CHR_addr, CHR_sz, &br);
 		if (rc) {
 			xil_printf(" ERROR : f_read returned %d\r\n", rc);
 			return XST_FAILURE;
 		}
 	}
-	xil_printf("CHR_sz = %d, br= %d\r\n", CHR_sz, br);
-	xil_printf("CHR[%d-1] = 0x%x?\r\n", br/4, CHR_addr[br/4-1]);
+	// xil_printf("CHR_sz = %d, br= %d\r\n", CHR_sz, br);
+	// xil_printf("CHR[%d-1] = 0x%x?\r\n", br/4, CHR_addr[br/4-1]);
 
 	if (header[6] & 0x4) {
 		PRGRAM_sz = 8192;
 		cart_addr[3] = PRGRAM_sz-1;
-		xil_printf("Using 8k PRG-RAM\r\n");
+		cart_config |= MAPPER_PRGRAM;
+		xil_printf("Using 8kB PRG-RAM\r\n");
 	}
 	else {
 		cart_addr[3] = 0;
@@ -185,10 +182,12 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	Xil_DCacheFlush();
 	// xil_printf("Press to boot NES...\r\n");
 	// getchar();
-	xil_printf("Booting...\r\n");
+	xil_printf("config reg 0x%x\r\n", cart_config);
 
-	// set mirroring flag and disable reset.  NES should now boot
-	cart_addr[0] = mirroring;
+	xil_printf("Booting %s...\r\n", FileName);
+
+	// set config and disable reset.  NES should now boot
+	cart_addr[0] = cart_config;
 	Xil_DCacheFlush();
 
 	return XST_SUCCESS;

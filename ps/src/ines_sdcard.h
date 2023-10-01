@@ -4,6 +4,9 @@
 #include <xstatus.h>
 #include "xil_cache.h"
 
+#define MAPPER_MIRRORV 0x100;
+#define MAPPER_CHRRAM 0x200;
+#define MAPPER_PRGRAM 0x400;
 
 int SD_Init();
 int SD_Eject();

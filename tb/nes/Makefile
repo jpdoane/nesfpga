@@ -7,7 +7,6 @@ HDL_SOURCE = $(AUDIO_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SO
 VERILATE_ARGS= --max_frames 40 --skip_frames 36
 
 VERILATOR_FLAGS += -DCART=$(GAME)_cart
-VERILATOR_FLAGS += -DSAVERAMS=1
 
 include ../../inc/make.verilator
 

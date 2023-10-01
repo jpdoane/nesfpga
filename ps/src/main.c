@@ -57,8 +57,6 @@ int main() {
 			break;
 		}
 
-		xil_printf("Loading %s\r\n", fno.fname);
-
 		ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
 	}
 

@@ -111,29 +111,73 @@ module nes_tb
 
     );
 
-    `CART u_cart (
-        .rst (rst_cpu),
-        .clk_cpu    (clk_cpu    ),
-        .m2         (cart_m2         ),
-        .cpu_addr   (cart_cpu_addr   ),
-        .cpu_data_i (data_cpu2cart ),
-        .cpu_data_o (data_cart2cpu ),
-        .cpu_rw     (cart_cpu_rw     ),
-        .romsel     (cart_romsel     ),
-        .ciram_ce   (cart_ciram_ce   ),
-        .ciram_a10  (cart_ciram_a10  ),
-        .clk_ppu    (clk_ppu    ),
-        .ppu_addr   (cart_ppu_addr   ),
-        .ppu_data_i (data_ppu2cart ),
-        .ppu_data_o (data_cart2ppu ),
-        .ppu_rd     (cart_ppu_rd     ),
-        .ppu_wr     (cart_ppu_wr     ),
-        .irq        (cart_irq        )
+    /* verilator lint_off PINMISSING */
+    cart_multimapper
+    #(
+        //SMB
+        // .CHR_FILE({`ROM_PATH,"/smb/CHR32.mem"}),
+        // .PRG_FILE({`ROM_PATH,"/smb/PRG32.mem"}),
+        // .PRGRAM_FILE(""),
+        // .DEFAULT_PRG_MASK(32'h7fff),
+        // .DEFAULT_CHR_MASK(32'h1fff),
+        // .DEFAULT_PRGRAM_MASK(0),
+        // .DEFAULT_MAPPER_CONFIG(32'h100) //map 0, mirrorV
+        //ZELDA
+        .CHR_FILE(""),
+        .PRG_FILE({`ROM_PATH,"/zelda/PRG32.mem"}),
+        .PRGRAM_FILE(""),
+        .DEFAULT_PRG_MASK(32'h1ffff),
+        .DEFAULT_CHR_MASK(32'h1fff),
+        .DEFAULT_PRGRAM_MASK(32'h1fff),
+        .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, PRGRAM
+    )
+    u_cart (
+        // cart interface to NES
+        .rst                     (rst_cpu),
+        .clk_cpu                 (clk_cpu),
+        .m2                      (cart_m2),
+        .cpu_addr                (cart_cpu_addr),
+        .cpu_data_i             (data_cpu2cart ),
+        .cpu_data_o             (data_cart2cpu ),
+        .cpu_rw                  (cart_cpu_rw),
+        .romsel                  (cart_romsel),
+        .ciram_ce                (cart_ciram_ce),
+        .ciram_a10               (cart_ciram_a10),
+        .clk_ppu                 (clk_ppu),
+        .ppu_addr                (cart_ppu_addr),
+        .ppu_data_i             (data_ppu2cart ),
+        .ppu_data_o             (data_cart2ppu ),
+        .ppu_rd                  (cart_ppu_rd),
+        .ppu_wr                  (cart_ppu_wr),
+        .irq                     (cart_irq),
+        .cart_init               (),
+        .BRAM_CHR_addr           (0),
+        .BRAM_CHR_clk            (0),
+        .BRAM_CHR_wr           (0),
+        .BRAM_CHR_en             (0),
+        .BRAM_CHR_rst            (0),
+        .BRAM_CHR_we             (0),
+        .BRAM_CHR_rd            (),
+        .BRAM_PRG_addr           (0),
+        .BRAM_PRG_clk            (0),
+        .BRAM_PRG_wr           (0),
+        .BRAM_PRG_en             (0),
+        .BRAM_PRG_rst            (0),
+        .BRAM_PRG_we             (0),
+        .BRAM_PRG_rd            (),
+        .BRAM_PRGRAM_addr        (0),
+        .BRAM_PRGRAM_clk         (0),
+        .BRAM_PRGRAM_wr        (0),
+        .BRAM_PRGRAM_en          (0),
+        .BRAM_PRGRAM_rst         (0),
+        .BRAM_PRGRAM_we          (0),
+        .BRAM_PRGRAM_rd         (),
+        .S_AXI_ACLK         (clk),
+        .S_AXI_ARESETN         (rst),
     );
-
+    /* verilator lint_on PINMISSING */
 
     // always u_nes.u_cpu_bus.PRG[15'h0fdd] = 0; // no demo wait
-
 
 
     logic [7:0] btns0 = 0;
