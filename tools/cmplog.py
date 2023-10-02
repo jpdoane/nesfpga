@@ -18,8 +18,8 @@ def cmp_log(log1file, log2file):
         log2 = open(log2file, 'r').readlines()
         ln=0
         for l1,l2 in zip(log1,log2):
-            ll1 = l1.lower().split(' ')
-            ll2 = l2.lower().split(' ')
+            ll1 = l1.lower().strip().split(' ')
+            ll2 = l2.lower().strip().split(' ')
             ln = ln+1
             match = 1
             if (ll1[0] != ll2[0]) | (ll1[1] != ll2[1]):

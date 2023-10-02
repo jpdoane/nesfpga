@@ -299,7 +299,7 @@ module ppu  #(
     logic pal_wr, vpal;
     logic [4:0] pal_addr;
     logic [7:0] pal_data;
-    assign vpal = (v[13:8] == 6'h3f);
+    assign vpal = (v[13:8] == 6'h3f) && vblank;
     assign pal_addr = vpal ? v[4:0] : palette_idx;
     
     palette u_palette(

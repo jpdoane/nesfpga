@@ -4,7 +4,7 @@ TOP=nes_tb
 VERILATE_TOP=nes_main.cpp
 VERILATE_INCL=input.vc
 HDL_SOURCE = $(AUDIO_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
-VERILATE_ARGS= --max_frames 40 --skip_frames 36
+VERILATE_ARGS= --max_frames 60 --skip_frames 17
 
 VERILATOR_FLAGS += -DCART=$(GAME)_cart
 

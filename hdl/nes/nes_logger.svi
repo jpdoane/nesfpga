@@ -8,7 +8,7 @@ end
 int cpu_cycle_r=0;
 logic sync_r=0;
 logic sync_rr=0;
-logic [8:0] ppu_V, ppu_H;
+reg signed [9:0] ppu_V, ppu_H; //extend bits so we can represent prerender line as -1 to match Mesen log format
 always @(posedge clk_cpu ) begin
 
     ppu_V <= ppu_V;
@@ -16,8 +16,8 @@ always @(posedge clk_cpu ) begin
     sync_r <= 0;
     if(u_apu.u_core_6502.sync && u_apu.u_core_6502.cpu_cycle>1 && u_apu.u_core_6502.READY) begin
         // grab snapshot of ppu counters at sync
-        ppu_V <= u_ppu.u_render.y;
-        ppu_H <= u_ppu.u_render.cycle;
+        ppu_V <= &u_ppu.u_render.y ? 10'(-1) : 10'(u_ppu.u_render.y);
+        ppu_H <= 10'(u_ppu.u_render.cycle);
         sync_r <= 1;
     end
     

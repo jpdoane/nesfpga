@@ -122,14 +122,24 @@ module nes_tb
         // .DEFAULT_CHR_MASK(32'h1fff),
         // .DEFAULT_PRGRAM_MASK(0),
         // .DEFAULT_MAPPER_CONFIG(32'h100) //map 0, mirrorV
+
         //ZELDA
+        // .CHR_FILE(""),
+        // .PRG_FILE({`ROM_PATH,"/zelda/PRG32.mem"}),
+        // .PRGRAM_FILE(""),
+        // .DEFAULT_PRG_MASK(32'h1ffff),
+        // .DEFAULT_CHR_MASK(32'h1fff),
+        // .DEFAULT_PRGRAM_MASK(32'h1fff),
+        // .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, PRGRAM
+
+        //METROID
         .CHR_FILE(""),
-        .PRG_FILE({`ROM_PATH,"/zelda/PRG32.mem"}),
+        .PRG_FILE({`ROM_PATH,"/metroid/PRG32.mem"}),
         .PRGRAM_FILE(""),
         .DEFAULT_PRG_MASK(32'h1ffff),
         .DEFAULT_CHR_MASK(32'h1fff),
         .DEFAULT_PRGRAM_MASK(32'h1fff),
-        .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, PRGRAM
+        .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, mirrorv
     )
     u_cart (
         // cart interface to NES

@@ -39,11 +39,16 @@ int main() {
 
 	FRESULT res;
 	FILINFO fno;
-	int sel;
+	int sel, sel_old;
+
+	sel_old = -1;
+
+	u32* cart_config;
+	cart_config = (u32*) CART_ADDR;
 
 	while (1) {
 		xil_printf("NESFPGA\r\nSelect ROM:\r\n\r\n");
-		res = list_dir ("");
+		res = list_nesfiles ("");
 		if (res != FR_OK) {
 			xil_printf("Error reading SD Card\r\n");
 			break;
@@ -51,11 +56,22 @@ int main() {
 
 		sel = get_user_selection(10);
 
-		res = get_file(&fno, "", sel);
+		// if (sel_old > 0 && (cart_config[0] & MAPPER_PRGRAM) )
+		// {
+		// 	//save last game
+		// 	get_nesfile(&fno, "", sel_old);
+		// 	writeSaveFile(fno.fname, (u32*) PRGRAM_ADDR, cart_config[3]+1);
+		// }
+		// sel_old = sel;
+
+
+		res = get_nesfile(&fno, "", sel);
 		if (res != FR_OK) {
 			xil_printf("Error reading file %s\r\n", fno.fname);
 			break;
 		}
+		xil_printf("Reading file %s\r\n", fno.fname);
+
 
 		ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
 	}

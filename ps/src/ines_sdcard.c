@@ -1,7 +1,41 @@
 #include "ines_sdcard.h"
 #include <stdio.h>
+#include <string.h>
 
 FATFS  fatfs;
+
+int is_nes(const char* filename)
+{
+	return strcmp(strrchr(filename, '.') , ".NES" )==0;
+}
+	
+int list_nesfiles (const char *path)
+{
+    FRESULT res;
+    DIR dir;
+    FILINFO fno;
+    int nfile, ndir;
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    if (res == FR_OK) {
+        nfile = ndir = 0;
+        for (;;) {
+            res = f_readdir(&dir, &fno);                   /* Read a directory item */
+            if (res != FR_OK || fno.fname[0] == 0) break;  /* Error or end of dir */
+            if (fno.fattrib & AM_DIR) {            /* Directory */
+            	// xil_printf("   <DIR>   %s\r\n", fno.fname);
+                // ndir++;
+            } else if (is_nes(fno.fname)) {                               /* NES File */
+            	xil_printf("%3u: %s\r\n", ++nfile, fno.fname);
+            }
+        }
+        f_closedir(&dir);
+        xil_printf("%d dirs, %d NES files.\r\n", ndir, nfile);
+    } else {
+    	xil_printf("Failed to open \"%s\". (%u)\r\n", path, res);
+    }
+    return res;
+}
 
 int list_dir (const char *path)
 {
@@ -27,6 +61,27 @@ int list_dir (const char *path)
         xil_printf("%d dirs, %d files.\r\n", ndir, nfile);
     } else {
     	xil_printf("Failed to open \"%s\". (%u)\r\n", path, res);
+    }
+    return res;
+}
+
+int get_nesfile(FILINFO *fno, const char *path, int index)
+{
+    FRESULT res;
+    DIR dir;
+    int nfile, ndir;
+
+    res = f_opendir(&dir, path);                       /* Open the directory */
+    if (res == FR_OK) {
+        nfile = ndir = 0;
+        while (nfile<index) {
+            res = f_readdir(&dir, fno);                   /* Read a directory item */
+            if (res != FR_OK || fno->fname[0] == 0) {
+            	break;  /* Error or end of dir */
+            }
+            if (!(fno->fattrib & AM_DIR) && is_nes(fno->fname) ) nfile++;
+        }
+        f_closedir(&dir);
     }
     return res;
 }
@@ -94,7 +149,7 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 
 	rc = f_open(&fil, FileName, FA_READ);
 	if (rc) {
-		xil_printf(" ERROR : f_open returned %d\r\n", rc);
+		xil_printf(" ERROR : f_open(%s) returned %d\r\n", FileName, rc);
 		return XST_FAILURE;
 	}
 	rc = f_lseek(&fil, 0);
@@ -162,16 +217,13 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	// xil_printf("CHR_sz = %d, br= %d\r\n", CHR_sz, br);
 	// xil_printf("CHR[%d-1] = 0x%x?\r\n", br/4, CHR_addr[br/4-1]);
 
-	if (header[6] & 0x4) {
-		PRGRAM_sz = 8192;
-		cart_addr[3] = PRGRAM_sz-1;
-		cart_config |= MAPPER_PRGRAM;
-		xil_printf("Using 8kB PRG-RAM\r\n");
-	}
-	else {
-		cart_addr[3] = 0;
-	}
+	PRGRAM_sz = 8192 * header[8];
+	if (PRGRAM_sz == 0) PRGRAM_sz = 8192;
+	cart_addr[3] = PRGRAM_sz-1;
+	cart_config |= MAPPER_PRGRAM;
 
+	if (header[6] & 0x2) 
+		readSaveFile(FileName, PRGRAM_addr, PRGRAM_sz);
 
 	rc = f_close(&fil);
 	if (rc) {
@@ -179,19 +231,91 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 		return XST_FAILURE;
 	}
 
-	Xil_DCacheFlush();
-	// xil_printf("Press to boot NES...\r\n");
-	// getchar();
-	xil_printf("config reg 0x%x\r\n", cart_config);
-
-	xil_printf("Booting %s...\r\n", FileName);
-
 	// set config and disable reset.  NES should now boot
 	cart_addr[0] = cart_config;
+
+	xil_printf("Booting %s...\r\n", FileName);
 	Xil_DCacheFlush();
 
 	return XST_SUCCESS;
 }
+
+
+int readSaveFile(char *NESFileName, u32 *PRGRAM_addr, u32 sz)
+{
+	FIL fil;
+	FRESULT rc;
+	UINT br;
+
+	char savefilename[13];
+
+	strncpy(savefilename, NESFileName, 13);
+	strcpy(strrchr(savefilename, '.') , ".SAV");
+
+	xil_printf("Does save file exist at %s?\r\n", savefilename);
+
+	rc = f_open(&fil, savefilename, FA_READ);
+	if (rc != FR_OK) {
+		xil_printf("Save file not found, PRGRAM will be uninitialized\r\n");
+		return XST_FAILURE;
+	}
+
+	xil_printf("Loading PRGRAM from %s\r\n", savefilename);
+
+	if (rc) {
+		xil_printf("readSaveFile() ERROR : f_open returned %d\r\n", rc);
+		return XST_FAILURE;
+	}
+
+	rc = f_read(&fil, (void*) PRGRAM_addr, sz, &br);
+	if (rc || br!= sz) {
+		xil_printf("readSaveFile() ERROR : failed to read save file %s\r\n", savefilename);
+		return XST_FAILURE;
+	}
+
+	rc = f_close(&fil);
+	if (rc) {
+		xil_printf("readSaveFile() ERROR : f_close returned %d\r\n", rc);
+		return XST_FAILURE;
+	}
+
+	return XST_SUCCESS;
+}
+
+int writeSaveFile(char *NESFileName, u32 *PRGRAM_addr, u32 sz)
+{
+	FIL fil;
+	FRESULT rc;
+	UINT br;
+
+	char savefilename[13];
+
+	strncpy(savefilename, NESFileName, 13);
+	strcpy(strrchr(savefilename, '.') , ".SAV");
+
+	xil_printf("saving PRGRAM to %s\r\n", savefilename);
+
+	rc = f_open(&fil, savefilename, FA_CREATE_ALWAYS | FA_WRITE);
+	if (rc) {
+		xil_printf("writeSaveFile() ERROR : f_open returned %d\r\n", rc);
+		return XST_FAILURE;
+	}
+
+	rc = f_write(&fil, (const void*) PRGRAM_addr, sz, &br);
+	if (rc || br!= sz) {
+		xil_printf("writeSaveFile() ERROR : failed to write save file %s\r\n", savefilename);
+		return XST_FAILURE;
+	}
+
+	rc = f_close(&fil);
+	if (rc) {
+		xil_printf("writeSaveFile() ERROR : f_close returned %d\r\n", rc);
+		return XST_FAILURE;
+	}
+
+	return XST_SUCCESS;
+}
+
 
 //static int ReadFile(char *FileName, u32 addr, u32 offset, u32 sz)
 //{
