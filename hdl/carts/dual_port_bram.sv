@@ -11,7 +11,9 @@ parameter COL_WIDTH = 8,
 parameter ADDR_WIDTH = 10,
 // Addr Width in bits : 2 *ADDR_WIDTH = RAM Depth
 parameter DATA_WIDTH = NUM_COL*COL_WIDTH, // Data Width in bits
-parameter MEM_FILE=""
+parameter MEM_FILE="",
+parameter MEM_FILE_START=0,
+parameter MEM_FILE_STOP=0
 //----------------------------------------------------------------------
 ) (
 input clkA,
@@ -35,7 +37,10 @@ reg [DATA_WIDTH-1:0] ram_block [(2**ADDR_WIDTH)-1:0];
 initial begin
     if (MEM_FILE>"") begin
         $display("Loading memory from: %s", MEM_FILE);
-        $readmemh(MEM_FILE, ram_block);
+        if(MEM_FILE_STOP>MEM_FILE_START)
+            $readmemh(MEM_FILE, ram_block, MEM_FILE_START, MEM_FILE_STOP);
+        else
+            $readmemh(MEM_FILE, ram_block, MEM_FILE_START);
     end
 end
 

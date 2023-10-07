@@ -25,14 +25,14 @@ PROGRAM_TCL=$(SCRIPTS)/program.tcl
 
 default: bitfile
 
-BUILD_PATH=$(abspath build_$(GAME))
+BUILD_PATH=$(abspath build)
 BUILD_ENV=$(BUILD_PATH)/.build
 XDC_FILE=$(BUILD_PATH)/constraints.tcl
 SRC_FILE=$(BUILD_PATH)/sources.tcl
 BD_SRC_FILE=$(BUILD_PATH)/bd_sources.tcl
 
 
-$(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
+$(BUILD_ENV): prebuild $(HDL_SOURCE) $(CONSTRAINTS)
 	@mkdir -p $(BUILD_PATH);
 	@rm -f $(XDC_FILE) $(SRC_FILE) $(BD_SRC_FILE);
 	touch $(SRC_FILE)
@@ -117,29 +117,26 @@ vivado: $(SYNTH)
 
 
 # bitfile
-BITFILE_PATH=$(abspath bitfiles)
-BITFILE=$(BITFILE_PATH)/$(GAME).bit
+BITFILE=$(IMPL_PATH)/$(TOP).bit
 bitfile: $(BITFILE)
-
-$(BITFILE_PATH):
-	-@mkdir $(BITFILE_PATH)
 
 $(BITFILE):	$(IMPL) $(BITFILE_PATH)
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -log bitfile.log -source $(BITFILE_TCL) -tclargs $(TOP)
-	cp $(IMPL_PATH)/$(TOP).bit $(BITFILE)
+
+#	cp $(IMPL_PATH)/$(TOP).bit nes.bit
+#	cp $(IMPL_PATH)/$(TOP).xsa nes.xsa
 
 .PHONY: program
 program: $(BITFILE) force_program
 
 .PHONY: force_program
 force_program:
-	@echo "programming $(GAME) on device $(DEVICE_SHORT) with bitfile $(BITFILE)..."
 	cd $(IMPL_PATH) && \
 	vivado -m64 -mode batch -notrace -source $(PROGRAM_TCL) -tclargs $(BITFILE) $(DEVICE_SHORT)
 
 
-.PHONY: clean
+.PHONY: clean prebuild
 clean:
 	-rm -rf $(BUILD_PATH)
 	-rm $(BITFILE)

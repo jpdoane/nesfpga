@@ -12,18 +12,15 @@
 		parameter integer C_S_AXI_DATA_WIDTH	= 32,
 		// Width of S_AXI address bus
 		parameter integer C_S_AXI_ADDR_WIDTH	= 6,
-		parameter mapper_config_init = 32'h0,
-        parameter CHR_mask_init = 32'h0,
-        parameter PRG_mask_init = 32'h0,
-        parameter PRGRAM_mask_init = 32'h0
 
+        parameter logic [63:0] default_ines_header = 64'h08010102 // mapper 0, 32k PRG, 8k CHR, vmirror (SMB)
 	)
 	(
 		// Users to add ports here
-		output wire [31:0] mapper_config,
-		output wire [31:0] CHR_mask,
-		output wire [31:0] PRG_mask,
-		output wire [31:0] PRGRAM_mask,
+		output logic nes_reset,
+		output logic [63:0] ines_header,
+		input logic [7:0] ctrl1_state,
+		input logic [7:0] ctrl2_state,
 		// User ports ends
 		// Do not modify the ports beyond this line
 
@@ -89,6 +86,10 @@
 		input wire  S_AXI_RREADY
 	);
 
+	logic [31:0] ines_header1;
+	logic [31:0] ines_header2;
+	assign ines_header = {ines_header2, ines_header1};
+
 	// AXI4LITE signals
 	reg [C_S_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
 	reg  	axi_awready;
@@ -112,10 +113,10 @@
 	//-- Signals for user logic register space example
 	//------------------------------------------------
 	//-- Number of Slave Registers 16
-	reg [C_S_AXI_DATA_WIDTH-1:0]	mapper_config_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	CHR_mask_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	PRG_mask_reg;
-	reg [C_S_AXI_DATA_WIDTH-1:0]	PRGRAM_mask_reg;
+	// reg [C_S_AXI_DATA_WIDTH-1:0]	reset_reg;
+	// reg [C_S_AXI_DATA_WIDTH-1:0]	ines1_reg;
+	// reg [C_S_AXI_DATA_WIDTH-1:0]	ines2_reg;
+	// reg [C_S_AXI_DATA_WIDTH-1:0]	controller_reg;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg4;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg5;
 	// reg [C_S_AXI_DATA_WIDTH-1:0]	slv_reg6;
@@ -240,10 +241,9 @@
 	begin
 	  if ( S_AXI_ARESETN == 1'b0 )
 	    begin
-	      mapper_config_reg <= mapper_config_init;
-	      CHR_mask_reg <= CHR_mask_init;
-	      PRG_mask_reg <= PRG_mask_init;
-	      PRGRAM_mask_reg <= PRGRAM_mask_init;
+	      nes_reset <= 0;
+	      ines_header1 <= default_ines_header[31:0];
+	      ines_header2 <= default_ines_header[63:32];
 	    //   slv_reg4 <= 0;
 	    //   slv_reg5 <= 0;
 	    //   slv_reg6 <= 0;
@@ -262,135 +262,20 @@
 	      begin
 	        case ( axi_awaddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
 	          4'h0:
-	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 0
-	                mapper_config_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	              end  
+	              if (S_AXI_WSTRB[0]) nes_reset <= S_AXI_WDATA[0];
 	          4'h1:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 1
-	                CHR_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+
+	                ines_header1[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
 	          4'h2:
 	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
 	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 2
-	                PRG_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
+	                ines_header2[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
 	              end  
-	          4'h3:
-	            for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	              if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	                // Respective byte enables are asserted as per write strobes 
-	                // Slave register 3
-	                PRGRAM_mask_reg[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	              end  
-	        //   4'h4:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 4
-	        //         slv_reg4[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'h5:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 5
-	        //         slv_reg5[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'h6:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 6
-	        //         slv_reg6[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'h7:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 7
-	        //         slv_reg7[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'h8:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 8
-	        //         slv_reg8[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'h9:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 9
-	        //         slv_reg9[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hA:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 10
-	        //         slv_reg10[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hB:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 11
-	        //         slv_reg11[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hC:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 12
-	        //         slv_reg12[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hD:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 13
-	        //         slv_reg13[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hE:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 14
-	        //         slv_reg14[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	        //   4'hF:
-	        //     for ( byte_index = 0; byte_index <= (C_S_AXI_DATA_WIDTH/8)-1; byte_index = byte_index+1 )
-	        //       if ( S_AXI_WSTRB[byte_index] == 1 ) begin
-	        //         // Respective byte enables are asserted as per write strobes 
-	        //         // Slave register 15
-	        //         slv_reg15[(byte_index*8) +: 8] <= S_AXI_WDATA[(byte_index*8) +: 8];
-	        //       end  
-	          default : begin
-	                      mapper_config_reg <= mapper_config_reg;
-	                      CHR_mask_reg <= CHR_mask_reg;
-	                      PRG_mask_reg <= PRG_mask_reg;
-	                      PRGRAM_mask_reg <= PRGRAM_mask_reg;
-	                    //   slv_reg4 <= slv_reg4;
-	                    //   slv_reg5 <= slv_reg5;
-	                    //   slv_reg6 <= slv_reg6;
-	                    //   slv_reg7 <= slv_reg7;
-	                    //   slv_reg8 <= slv_reg8;
-	                    //   slv_reg9 <= slv_reg9;
-	                    //   slv_reg10 <= slv_reg10;
-	                    //   slv_reg11 <= slv_reg11;
-	                    //   slv_reg12 <= slv_reg12;
-	                    //   slv_reg13 <= slv_reg13;
-	                    //   slv_reg14 <= slv_reg14;
-	                    //   slv_reg15 <= slv_reg15;
-	                    end
+
+	          default : begin end
 	        endcase
 	      end
 	  end
@@ -498,22 +383,10 @@
 	begin
 	      // Address decoding for reading registers
 	      case ( axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
-	        4'h0   : reg_data_out = mapper_config_reg;
-	        4'h1   : reg_data_out = CHR_mask_reg;
-	        4'h2   : reg_data_out = PRG_mask_reg;
-	        4'h3   : reg_data_out = PRGRAM_mask_reg;
-	        // 4'h4   : reg_data_out = slv_reg4;
-	        // 4'h5   : reg_data_out = slv_reg5;
-	        // 4'h6   : reg_data_out = slv_reg6;
-	        // 4'h7   : reg_data_out = slv_reg7;
-	        // 4'h8   : reg_data_out = slv_reg8;
-	        // 4'h9   : reg_data_out = slv_reg9;
-	        // 4'hA   : reg_data_out = slv_reg10;
-	        // 4'hB   : reg_data_out = slv_reg11;
-	        // 4'hC   : reg_data_out = slv_reg12;
-	        // 4'hD   : reg_data_out = slv_reg13;
-	        // 4'hE   : reg_data_out = slv_reg14;
-	        // 4'hF   : reg_data_out = slv_reg15;
+	        4'h0   : reg_data_out = {31'b0, nes_reset};
+	        4'h1   : reg_data_out = ines_header1;
+	        4'h2   : reg_data_out = ines_header2;
+	        4'h3   : reg_data_out = {16'b0, ctrl2_state, ctrl1_state};
 	        default : reg_data_out = 0;
 	      endcase
 	end
@@ -538,12 +411,6 @@
 	end    
 
 	// Add user logic here
-
-	assign mapper_config = mapper_config_reg;
-	assign CHR_mask = CHR_mask_reg;
-	assign PRG_mask = PRG_mask_reg;
-	assign PRGRAM_mask = PRGRAM_mask_reg;
-
 	// User logic ends
 
 	endmodule

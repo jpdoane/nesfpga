@@ -19,12 +19,20 @@ module controller_sim
     );
 
     logic [7:0] sr;
+    logic strobe_r, rd_r;
+    wire strobe_re = strobe && !strobe_r;
+    wire rd_re = rd && !rd_r;
     always_ff @(posedge clk) begin
-        if(rst)
+        if(rst) begin
             sr <= 0;
-        else
-            sr <= strobe ? btns : rd ? sr >> 1 : sr;
+            strobe_r <= 0;
+            rd_r <= 0;
+        end else begin
+            strobe_r <= strobe;
+            rd_r <= rd;
+            sr <= strobe_re ? btns : rd_re ? sr >> 1 : sr;
+        end
     end
-    assign data = sr[0];
+    assign data = ~sr[0];
 
 endmodule

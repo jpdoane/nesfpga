@@ -16,7 +16,7 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 int readSaveFile(char *NESFileName, u32 *PRGRAM_addr, u32 sz);
 int writeSaveFile(char *NESFileName, u32 *PRGRAM_addr, u32 sz);
 int is_nes(const char* filename);
-int list_nesfiles (const char *path);
+int list_nesfiles (const char *path, int* num );
 int get_nesfile(FILINFO *fno, const char *path, int index);
 
 

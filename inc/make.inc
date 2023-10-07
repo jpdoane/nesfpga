@@ -31,10 +31,3 @@ SUCCEED = (echo $(GREEN)$(1) succeeded$(NC); $(2) && paplay $(BEEP_GOOD); exit 0
 #
 # final true/false indicates whether to play a sound
 
-GAME=$(shell cat current_game)
-
-_default: default
-
-GAMES=zelda smb tetris metroid
-$(GAMES):
-	@echo $@ > current_game

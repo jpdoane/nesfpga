@@ -111,37 +111,20 @@ module nes_tb
 
     );
 
+    `ifdef CART_INCL
+        `include `CART_INCL
+    `else 
+        `define NES_HEADER 0
+        `define NES_PRG_FILE ""
+        `define NES_CHR_FILE ""
+    `endif
+
     /* verilator lint_off PINMISSING */
-    cart_multimapper
-    #(
-        //SMB
-        // .CHR_FILE({`ROM_PATH,"/smb/CHR32.mem"}),
-        // .PRG_FILE({`ROM_PATH,"/smb/PRG32.mem"}),
-        // .PRGRAM_FILE(""),
-        // .DEFAULT_PRG_MASK(32'h7fff),
-        // .DEFAULT_CHR_MASK(32'h1fff),
-        // .DEFAULT_PRGRAM_MASK(0),
-        // .DEFAULT_MAPPER_CONFIG(32'h100) //map 0, mirrorV
-
-        //ZELDA
-        // .CHR_FILE(""),
-        // .PRG_FILE({`ROM_PATH,"/zelda/PRG32.mem"}),
-        // .PRGRAM_FILE(""),
-        // .DEFAULT_PRG_MASK(32'h1ffff),
-        // .DEFAULT_CHR_MASK(32'h1fff),
-        // .DEFAULT_PRGRAM_MASK(32'h1fff),
-        // .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, PRGRAM
-
-        //METROID
-        .CHR_FILE(""),
-        .PRG_FILE({`ROM_PATH,"/metroid/PRG32.mem"}),
-        .PRGRAM_FILE(""),
-        .DEFAULT_PRG_MASK(32'h1ffff),
-        .DEFAULT_CHR_MASK(32'h1fff),
-        .DEFAULT_PRGRAM_MASK(32'h1fff),
-        .DEFAULT_MAPPER_CONFIG(32'h601) // //map 1, CHRRAM, mirrorv
-    )
-    u_cart (
+    cart_multimapper  #(
+        .NES_HEADER(`NES_HEADER),
+        .NES_PRG_FILE(`NES_PRG_FILE),
+        .NES_CHR_FILE(`NES_CHR_FILE)
+    )  u_cart (
         // cart interface to NES
         .rst                     (rst_cpu),
         .clk_cpu                 (clk_cpu),
@@ -160,7 +143,9 @@ module nes_tb
         .ppu_rd                  (cart_ppu_rd),
         .ppu_wr                  (cart_ppu_wr),
         .irq                     (cart_irq),
-        .cart_init               (),
+        .ctrl1_state            (btns0),
+        .ctrl2_state            (btns1),
+        .nes_reset               (),
         .BRAM_CHR_addr           (0),
         .BRAM_CHR_clk            (0),
         .BRAM_CHR_wr           (0),
@@ -189,9 +174,26 @@ module nes_tb
 
     // always u_nes.u_cpu_bus.PRG[15'h0fdd] = 0; // no demo wait
 
+  logic ctrl_outA;
+  logic ctrl_strobeA;
+  logic [7:0] btns;
 
-    logic [7:0] btns0 = 0;
-    logic [7:0] btns1 = 0;
+  controller_monitor u_controller_monitor
+    (
+    .clk(clk_cpu),
+    .rst(rst_cpu),
+    .strobe_in(ctrl_strobe[0]),
+    .rd_in(ctrl_out[0]),
+    // test internal controller polling...
+    // .strobe_in(0),
+    // .rd_in(0),
+    .data_in(ctrl_data[0]),
+    .strobe_out(ctrl_strobeA),
+    .rd_out(ctrl_outA),
+    .btns(btns)
+    );
+
+
             // 0 - A
             // 1 - B
             // 2 - Select
@@ -200,20 +202,22 @@ module nes_tb
             // 5 - Down
             // 6 - Left
             // 7 - Right
-    
-    // press start...
-    // always_comb begin
-    //     if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
-    //     else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
-    //     else btns0 = 8'b00000000; //right
-    // end
 
+    logic [7:0] btns0 = 0;
+    logic [7:0] btns1 = 0;
+    
+    // press start then right...
+    always_comb begin
+        if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
+        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
+        else btns0 = 8'b10000000; //right
+    end
 
     controller_sim u_controller_sim0(
         .clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
-        .strobe (ctrl_strobe[0] ),
-        .rd     (ctrl_out[0]     ),
+        .strobe (ctrl_strobeA ),
+        .rd     (ctrl_outA     ),
         .btns   (btns0   ),
         .data   (ctrl_data[0]   )
     );

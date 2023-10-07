@@ -2,6 +2,7 @@
 #include "xil_printf.h"
 #include "xil_types.h"
 #include <stdio.h>
+#include <sleep.h>
 
 // Get device IDs from xparameters.h
 #define CART_ADDR XPAR_MCART_AXI_BASEADDR
@@ -46,34 +47,38 @@ int main() {
 	u32* cart_config;
 	cart_config = (u32*) CART_ADDR;
 
+
+	int num_games = 0;
+	res = list_nesfiles ("", &num_games);
+	int start_count = 0;
+	int current_game = 1;
+
+	get_nesfile(&fno, "", current_game);
+	ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+
 	while (1) {
-		xil_printf("NESFPGA\r\nSelect ROM:\r\n\r\n");
-		res = list_nesfiles ("");
-		if (res != FR_OK) {
-			xil_printf("Error reading SD Card\r\n");
-			break;
+
+		start_count = 0;
+		while( cart_config[3] & 0x4 ) {
+			usleep(1000);
+			start_count++;
+			if(start_count >= 3000){
+				xil_printf("Select button held down for 3 sec, switching games...\r\n");
+
+				//before switching, save game
+				if (cart_config[1] & 0x20000 )
+					writeSaveFile(fno.fname, (u32*) PRGRAM_ADDR, 0x2000);
+
+				current_game++;
+				if(current_game>num_games) current_game = 1;
+
+				get_nesfile(&fno, "", current_game);
+				ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+				break;
+			}
 		}
-
-		sel = get_user_selection(10);
-
-		// if (sel_old > 0 && (cart_config[0] & MAPPER_PRGRAM) )
-		// {
-		// 	//save last game
-		// 	get_nesfile(&fno, "", sel_old);
-		// 	writeSaveFile(fno.fname, (u32*) PRGRAM_ADDR, cart_config[3]+1);
-		// }
-		// sel_old = sel;
-
-
-		res = get_nesfile(&fno, "", sel);
-		if (res != FR_OK) {
-			xil_printf("Error reading file %s\r\n", fno.fname);
-			break;
-		}
-		xil_printf("Reading file %s\r\n", fno.fname);
-
-
-		ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+		usleep(100000);
+		// xil_printf("buttons: 0x%x\r\n",cart_config[3] & 0xff);
 	}
 
 

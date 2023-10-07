@@ -10,13 +10,10 @@ module cart_multimapper
     parameter integer CHR_WIDTH = 15,
     parameter integer PRG_WIDTH = 17,
     parameter integer PRGRAM_WIDTH = 13,
-    parameter CHR_FILE="",
-    parameter PRG_FILE="",
-    parameter PRGRAM_FILE="",
-    parameter DEFAULT_PRG_MASK=32'h7fff,
-    parameter DEFAULT_CHR_MASK=32'h1fff,
-    parameter DEFAULT_PRGRAM_MASK=32'h0,
-    parameter DEFAULT_MAPPER_CONFIG=32'h100 //map 0, mirrorV
+
+    parameter NES_HEADER = 64'h0,
+    parameter NES_PRG_FILE = "",
+    parameter NES_CHR_FILE = ""    
 )
 (
     // cart interface to NES
@@ -37,7 +34,9 @@ module cart_multimapper
     input logic ppu_wr,
     output logic irq,
 
-    output logic cart_init,
+    input logic [7:0] ctrl1_state,
+    input logic [7:0] ctrl2_state,
+    output logic nes_reset,
 
 // memory interface to AXI
   input [CHR_WIDTH-1:0] BRAM_CHR_addr,
@@ -129,29 +128,52 @@ module cart_multimapper
 
 );
 
-    (* mark_debug = "true" *)  logic [31:0] mapper_config;
-    (* mark_debug = "true" *)  logic [31:0] CHR_mask_reg;
-    (* mark_debug = "true" *)  logic [31:0] PRG_mask_reg;
-    (* mark_debug = "true" *)  logic [31:0] PRGRAM_mask_reg;
+    // cart/mapper config from ines header
+    (* mark_debug = "true" *)  logic [63:0] ines_header;
+    wire [7:0] prg_16k_chunks = ines_header[7:0];
+    wire [7:0] chr_8k_chunks = ines_header[15:8];
+    wire mirrorv = ines_header[16];
+    wire batt = ines_header[17];
+    wire [7:0] mapper = {ines_header[31:28], ines_header[23:20]};
+    wire  chr_ram = chr_8k_chunks==0;
+    wire  prg_ram = 1;
 
-    wire [CHR_WIDTH-1:0] CHR_mask = CHR_mask_reg[CHR_WIDTH-1:0];
-    wire [PRG_WIDTH-1:0] PRG_mask = PRG_mask_reg[PRG_WIDTH-1:0];
-    wire [PRGRAM_WIDTH-1:0] PRGRAM_mask = PRGRAM_mask_reg[PRGRAM_WIDTH-1:0];
+    (* mark_debug = "true" *)  logic [CHR_WIDTH-1:0] CHR_mask;
+    (* mark_debug = "true" *)  logic [PRG_WIDTH-1:0] PRG_mask;
+    always_comb begin
+        CHR_mask = CHR_WIDTH'( 13'h1fff ); // default 8k
+        // here we are assuming the memory will always be a power of 2
+        if(chr_8k_chunks[1]) CHR_mask = CHR_WIDTH'( {14{1'b1}} ); //chr_8k_chunks = 2
+        if(chr_8k_chunks[2]) CHR_mask = CHR_WIDTH'( {15{1'b1}} ); //chr_8k_chunks = 4
+        if(chr_8k_chunks[3]) CHR_mask = CHR_WIDTH'( {16{1'b1}} ); //chr_8k_chunks = 8
+        if(chr_8k_chunks[4]) CHR_mask = CHR_WIDTH'( {17{1'b1}} ); //chr_8k_chunks = 16
+        if(chr_8k_chunks[5]) CHR_mask = CHR_WIDTH'( {18{1'b1}} ); //chr_8k_chunks = 32
+        if(chr_8k_chunks[6]) CHR_mask = CHR_WIDTH'( {19{1'b1}} ); //chr_8k_chunks = 64
+        if(chr_8k_chunks[7]) CHR_mask = CHR_WIDTH'( {20{1'b1}} ); //chr_8k_chunks = 128
+
+        PRG_mask = PRG_WIDTH'( 14'h3fff ); // default 16k
+        // here we are assuming the memory will always be a power of 2
+        if(prg_16k_chunks[1]) PRG_mask = PRG_WIDTH'( {15{1'b1}} );
+        if(prg_16k_chunks[2]) PRG_mask = PRG_WIDTH'( {16{1'b1}} );
+        if(prg_16k_chunks[3]) PRG_mask = PRG_WIDTH'( {17{1'b1}} );
+        if(prg_16k_chunks[4]) PRG_mask = PRG_WIDTH'( {18{1'b1}} );
+        if(prg_16k_chunks[5]) PRG_mask = PRG_WIDTH'( {19{1'b1}} );
+        if(prg_16k_chunks[6]) PRG_mask = PRG_WIDTH'( {20{1'b1}} );
+        if(prg_16k_chunks[7]) PRG_mask = PRG_WIDTH'( {21{1'b1}} );
+    end
+    wire [PRGRAM_WIDTH-1:0] PRGRAM_mask = PRGRAM_WIDTH'(13'h1fff); // always 8k (for ines 1.0)
 
 	axi_cart_regs
 	#(
 		.C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
 		.C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH),
-        .mapper_config_init(DEFAULT_MAPPER_CONFIG),
-        .CHR_mask_init(DEFAULT_CHR_MASK),
-        .PRG_mask_init(DEFAULT_PRG_MASK),
-        .PRGRAM_mask_init(DEFAULT_PRGRAM_MASK)
+        .default_ines_header(NES_HEADER)
 	)
 	u_axi_cart_regs (
-		.mapper_config(mapper_config),
-		.CHR_mask(CHR_mask_reg),
-		.PRG_mask(PRG_mask_reg),
-		.PRGRAM_mask(PRGRAM_mask_reg),
+		.nes_reset(nes_reset),
+		.ines_header(ines_header),
+		.ctrl1_state(ctrl1_state),
+		.ctrl2_state(ctrl2_state),
        .S_AXI_ACLK(S_AXI_ACLK),
        .S_AXI_ARESETN(S_AXI_ARESETN),
        .S_AXI_AWADDR(S_AXI_AWADDR),
@@ -175,13 +197,6 @@ module cart_multimapper
        .S_AXI_RREADY(S_AXI_RREADY)
 	);
 
-
-    // mapper config
-    wire  [7:0] mapper = mapper_config[7:0];
-    wire  mirrorv = mapper_config[8];
-    wire  chr_ram = mapper_config[9];
-    wire  prg_ram = mapper_config[10];
-    assign  cart_init = mapper_config[31];
 
     // mapper ouputs
     logic [PRG_WIDTH-1:0] prg_addr;
@@ -215,17 +230,6 @@ module cart_multimapper
     logic [7:0] mapper_reg_o_map1;
 
     always_comb begin
-        ciram_ce = 0;
-        ciram_a10 = 0;
-        irq = 0;
-        prg_addr = 0;
-        chr_addr = 0;
-        prgram_addr = 0;
-        prg_cs = 0;
-        chr_cs = 0;
-        prgram_cs = 0;
-        mapper_reg_o = 0;
-
         case(mapper)
             8'h0:   begin
                     ciram_ce = ciram_ce_map0;
@@ -253,7 +257,18 @@ module cart_multimapper
                     mapper_reg_o = mapper_reg_o_map1;
                     end
 
-            default: begin end
+            default: begin
+                    ciram_ce = 0;
+                    ciram_a10 = 0;
+                    irq = 0;
+                    prg_addr = 0;
+                    chr_addr = 0;
+                    prgram_addr = 0;
+                    prg_cs = 0;
+                    chr_cs = 0;
+                    prgram_cs = 0;
+                    mapper_reg_o = 0;
+                    end
         endcase
     end
 
@@ -322,16 +337,16 @@ module cart_multimapper
     (* mark_debug = "true" *)  logic [7:0] PRGRAM_rd;
     (* mark_debug = "true" *)  logic [7:0] CHR_rd;
 
-    wire prg_en = prg_cs && !cart_init;
-    wire chr_en = chr_cs && !cart_init;
-    wire prgram_en = prg_ram && prgram_cs && !cart_init;
+    wire prg_en = prg_cs && !nes_reset;
+    wire chr_en = chr_cs && !nes_reset;
+    wire prgram_en = prg_ram && prgram_cs && !nes_reset;
 
     wire chr_wr = chr_en && ppu_wr && chr_ram;
     wire prgram_wr = prgram_en && !cpu_rw;
 
     cart_mem_dual #(
         .ADDR_WIDTHA(CHR_WIDTH),
-        .MEM_FILE(CHR_FILE)
+        .MEM_FILE(NES_CHR_FILE)
     ) u_chr
     (
     //NES
@@ -353,7 +368,7 @@ module cart_multimapper
 
     cart_mem_dual #(
         .ADDR_WIDTHA(PRG_WIDTH),
-        .MEM_FILE(PRG_FILE)
+        .MEM_FILE(NES_PRG_FILE)
     ) u_prg
     (
     //NES
@@ -373,8 +388,7 @@ module cart_multimapper
     );
 
     cart_mem_dual #(
-        .ADDR_WIDTHA(PRGRAM_WIDTH),
-        .MEM_FILE(PRGRAM_FILE)
+        .ADDR_WIDTHA(PRGRAM_WIDTH)
     ) u_prgram
     (
     //NES

@@ -6,3 +6,5 @@
 **/bitfiles
 current_game
 nes_zynq
+*.xsa
+*.bit

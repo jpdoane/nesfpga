@@ -64,6 +64,26 @@ logic dmc_clrint;
 logic framectr_clrint;
 
 
+wire pulse0_en = reg_apu_enable[0];
+wire pulse1_en = reg_apu_enable[1];
+wire triangle_en = reg_apu_enable[2];
+wire noise_en = reg_apu_enable[3];
+wire dmc_en = reg_apu_enable[4];
+
+wire frame_irq;
+wire dmc_irq = 0;
+wire dmc_active = 0;
+wire noise_active=0;
+wire triangle_active;
+wire pulse1_active, pulse0_active;
+wire [7:0] reg_apu_status_rd = {dmc_irq, frame_irq, 1'b0, dmc_active, noise_active, triangle_active, pulse1_active, pulse0_active};
+
+logic [7:0] data_from_cpu, data_to_cpu;
+logic [15:0] addr_from_cpu;
+logic dma_en, cpu_rw;
+
+
+
 logic [7:0] apu_data_rd;
 logic apu_cs_r;
 always_ff @(posedge clk) begin
@@ -257,23 +277,6 @@ always_ff @(posedge clk) begin
     end
 end
 
-wire pulse0_en = reg_apu_enable[0];
-wire pulse1_en = reg_apu_enable[1];
-wire triangle_en = reg_apu_enable[2];
-wire noise_en = reg_apu_enable[3];
-wire dmc_en = reg_apu_enable[4];
-
-wire frame_irq;
-wire dmc_irq = 0;
-wire dmc_active = 0;
-wire noise_active=0;
-wire triangle_active;
-wire pulse1_active, pulse0_active;
-wire [7:0] reg_apu_status_rd = {dmc_irq, frame_irq, 1'b0, dmc_active, noise_active, triangle_active, pulse1_active, pulse0_active};
-
-logic [7:0] data_from_cpu, data_to_cpu;
-logic [15:0] addr_from_cpu;
-logic dma_en, cpu_rw;
 
 // OAM dma
 // once enabled, this temporarily disables cpu and takes over the bus

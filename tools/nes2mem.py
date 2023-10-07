@@ -2,23 +2,19 @@
 
 import argparse, os
 import argparse
+import numpy as np
 
 def writemem(data, memfile):
+    data32 = np.frombuffer(data, dtype=np.dtype('<u4'))
     with open(memfile, 'w') as f_mem:
         f_mem.write("@0000\n")
-        for byte in data:
-            hex_repr = "{:02x}\n".format(byte)
+        for word in data32:
+            hex_repr = "{:08x}\n".format(word)
             f_mem.write(hex_repr)
 
-def writebin(data, binfile):
-    with open(binfile, 'wb') as f:
-        f.write(data)
-
-def nes2mem(nes_file):
+def nes2mem(nes_file, sv_file):
     with open(nes_file, 'rb') as fnes:
         header = fnes.read(16)
-        writemem(header, "INES.mem")
-
         f6 = header[6]
         f7 = header[7]
         ines2 = (f7 & 0xc) > 0
@@ -35,7 +31,6 @@ def nes2mem(nes_file):
             print(f"Mirroring PRG to 16kB")
             PRG = PRG+PRG #fill 16kb
         writemem(PRG, "PRG.mem")
-        writebin(PRG, "PRG.bin")
 
         NCHR = header[5]
         if NCHR == 0:
@@ -45,45 +40,23 @@ def nes2mem(nes_file):
             CHR = fnes.read(chr_sz)
             print(f"CHR size: {chr_sz} ({NCHR}x 8k blocks)")
             writemem(CHR, "CHR.mem")
-            writebin(CHR, "CHR.bin")
 
-        if f6 & 0x02:
-            NRAM = header[8]
-            if NRAM == 0:
-                NRAM = 1
-            ram_sz = NRAM*8192
-            print(f"PRG-RAM size: {ram_sz} ({NRAM}x 8k blocks)")
-
-        if f6 & 0x04:
-            print("contains trainer")
-
-        if f6 & 0x08:
-            print("4-screen mirroring")
-        else:
-            if f6 & 0x01:
-                print("V mirroring")
-            else:
-                print("H mirroring")
-
-
-        mapper = (f7 & 0xf0) + (f6 >> 4)
-        if mapper == 0:
-            print("no mapper")
-        else:
-            print(f"mapper {mapper}")
-
-
+        with open(sv_file, 'w') as f_sv:
+            header64 = ''.join(format(x, '02x') for x in reversed(header[4:12]))
+            f_sv.write("`define NES_HEADER 64\'h%s\n" % header64)
+            f_sv.write("`define NES_PRG_FILE \"%s\"\n" % os.path.abspath("PRG.mem"))
+            f_sv.write("`define NES_CHR_FILE \"%s\"\n" % os.path.abspath("CHR.mem"))
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert NES file to memory config files.")
     parser.add_argument("nes_file", help="Path to the nes file")
+    parser.add_argument("sv_file", help="Path to the sv file", nargs='?', default="cart_incl.sv")
 
     args = parser.parse_args()
-    nes_file = args.nes_file
 
     try:
-        nes2mem(nes_file)
+        nes2mem(args.nes_file,  args.sv_file)
         print("Conversion complete.")
     except FileNotFoundError:
         print("Error: Input file not found.")

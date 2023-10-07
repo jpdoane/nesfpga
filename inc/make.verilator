@@ -75,7 +75,7 @@ VERILATOR_INPUT = -f $(VERILATE_INCL) $(HDL_SOURCE) $(VERILATE_TOP)
 ######################################################################
 default: run
 
-run:
+run: prebuild
 	@echo
 	@echo "-- VERILATE ----------------"
 	$(VERILATOR) --version
@@ -105,3 +105,6 @@ genhtml:
 maintainer-copy::
 clean mostlyclean distclean maintainer-clean::
 	-rm -rf obj_dir logs *.log *.dmp *.vpd core
+	-rm -rf build
+
+.PHONY: prebuild

@@ -8,6 +8,8 @@ module cart_mem_dual
 //--------------------------------------------------------------------------
 parameter ADDR_WIDTHA,
 parameter MEM_FILE="",
+parameter MEM_FILE_START=0,
+parameter MEM_FILE_STOP=0,
 parameter ADDR_WIDTHB = ADDR_WIDTHA-2
 //----------------------------------------------------------------------
 ) (
@@ -53,7 +55,7 @@ always_comb begin
 end
 
 
-dual_port_bram #( .ADDR_WIDTH(ADDR_WIDTHB), .MEM_FILE(MEM_FILE))
+dual_port_bram #( .ADDR_WIDTH(ADDR_WIDTHB), .MEM_FILE(MEM_FILE), .MEM_FILE_START(MEM_FILE_START), .MEM_FILE_STOP(MEM_FILE_STOP))
 u_dual_port_bram
 (
     .clkA(clkA),

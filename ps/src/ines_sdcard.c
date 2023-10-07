@@ -9,7 +9,7 @@ int is_nes(const char* filename)
 	return strcmp(strrchr(filename, '.') , ".NES" )==0;
 }
 	
-int list_nesfiles (const char *path)
+int list_nesfiles (const char *path, int* num)
 {
     FRESULT res;
     DIR dir;
@@ -34,6 +34,7 @@ int list_nesfiles (const char *path)
     } else {
     	xil_printf("Failed to open \"%s\". (%u)\r\n", path, res);
     }
+	if(num) *num = nfile;
     return res;
 }
 
@@ -138,14 +139,9 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	FIL fil;
 	FRESULT rc;
 	UINT br;
-	u8 header[16];
-	u32 mapper;
+	u32 header[4];
 	u32 CHR_sz;
 	u32 PRG_sz;
-	u32 PRGRAM_sz;
-	u32 cart_config = 0;
-	// u32 n;
-	// u32 d;
 
 	rc = f_open(&fil, FileName, FA_READ);
 	if (rc) {
@@ -164,33 +160,22 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 		xil_printf(" ERROR : f_read returned %d\r\n", rc);
 		return XST_FAILURE;
 	}
-	if ( header[0] != 0x4e || header[1] != 0x45 || header[2] != 0x53 || header[3] != 0x1a ) {
+	if ( header[0] != 0x1a53454e) {
 		xil_printf(" ERROR : %s is not a valid INES file %d\r\n", FileName);
 		return XST_FAILURE;
 	}
 
 	xil_printf("Loading %s...\r\n", FileName);
-	mapper = header[6] >> 4;
-	if ( mapper > 1 ) {
-		xil_printf(" ERROR : mapper %d not supported\r\n", mapper);
-		return XST_FAILURE;
-	}
 
  	// reset system while we load new data
-	cart_addr[0] = 0xffffffff;
+	cart_addr[0] = 1;
 
-	cart_config = (0xff & mapper); // set mapper
-	if (header[6] & 0x1)
-		cart_config |= MAPPER_MIRRORV; // set mirrorv
+ 	// load header
+	cart_addr[1] = header[1];
+	cart_addr[2] = header[2];
 
-//	xil_printf("Header:\r\n");
-//	for (n=0;n<16;n++) {
-//		xil_printf("0x%x\r\n",header[n]);
-//	}
-
-	PRG_sz = 16384 * header[4];
-	cart_addr[2] = PRG_sz-1;	// PRG addr mask
-	xil_printf("Loading %dkB PRG ROM\r\n", header[4]*16);
+	PRG_sz = 16384 * (header[1] & 0xff);
+	xil_printf("Loading %dB PRG ROM\r\n", PRG_sz);
 	rc = f_read(&fil, (void*) PRG_addr, PRG_sz, &br);
 	if (rc) {
 		xil_printf(" ERROR : f_read returned %d\r\n", rc);
@@ -199,31 +184,16 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 	// xil_printf("PRG_sz = %d, br= %d\r\n", PRG_sz, br);
 	// xil_printf("PRG[%d-1] = 0x%x?\r\n", br/4, PRG_addr[br/4-1]);
 
-	CHR_sz = 8192 * header[5];
-	if (CHR_sz == 0) {
-		cart_addr[1] = 0x1fff;
-		cart_config |= MAPPER_CHRRAM;
-		xil_printf("Using 8k CHR-RAM\r\n");
+	CHR_sz = 8192 *  ((header[1] & 0xff00) >> 8);
+	xil_printf("Loading %dB CHR ROM\r\n", CHR_sz);
+	rc = f_read(&fil, (void*) CHR_addr, CHR_sz, &br);
+	if (rc) {
+		xil_printf(" ERROR : f_read returned %d\r\n", rc);
+		return XST_FAILURE;
 	}
-	else {
-		cart_addr[1] = CHR_sz-1;
-		xil_printf("Loading %dkB CHR-ROM\r\n", 8*header[5]);
-		rc = f_read(&fil, (void*) CHR_addr, CHR_sz, &br);
-		if (rc) {
-			xil_printf(" ERROR : f_read returned %d\r\n", rc);
-			return XST_FAILURE;
-		}
-	}
-	// xil_printf("CHR_sz = %d, br= %d\r\n", CHR_sz, br);
-	// xil_printf("CHR[%d-1] = 0x%x?\r\n", br/4, CHR_addr[br/4-1]);
 
-	PRGRAM_sz = 8192 * header[8];
-	if (PRGRAM_sz == 0) PRGRAM_sz = 8192;
-	cart_addr[3] = PRGRAM_sz-1;
-	cart_config |= MAPPER_PRGRAM;
-
-	if (header[6] & 0x2) 
-		readSaveFile(FileName, PRGRAM_addr, PRGRAM_sz);
+	if (header[1] & 0x20000)
+		readSaveFile(FileName, PRGRAM_addr, 0x2000);
 
 	rc = f_close(&fil);
 	if (rc) {
@@ -231,8 +201,8 @@ int ReadNESFile(char *FileName, u32 *cart_addr, u32 *CHR_addr, u32 *PRG_addr, u3
 		return XST_FAILURE;
 	}
 
-	// set config and disable reset.  NES should now boot
-	cart_addr[0] = cart_config;
+	// clear reset.  NES should now boot
+	cart_addr[0] = 0;
 
 	xil_printf("Booting %s...\r\n", FileName);
 	Xil_DCacheFlush();
