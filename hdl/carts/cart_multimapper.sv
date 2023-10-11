@@ -129,7 +129,7 @@ module cart_multimapper
 );
 
     // cart/mapper config from ines header
-    (* mark_debug = "true" *)  logic [63:0] ines_header;
+    logic [63:0] ines_header;
     wire [7:0] prg_16k_chunks = ines_header[7:0];
     wire [7:0] chr_8k_chunks = ines_header[15:8];
     wire mirrorv = ines_header[16];
@@ -138,8 +138,8 @@ module cart_multimapper
     wire  chr_ram = chr_8k_chunks==0;
     wire  prg_ram = 1;
 
-    (* mark_debug = "true" *)  logic [CHR_WIDTH-1:0] CHR_mask;
-    (* mark_debug = "true" *)  logic [PRG_WIDTH-1:0] PRG_mask;
+    logic [CHR_WIDTH-1:0] CHR_mask;
+    logic [PRG_WIDTH-1:0] PRG_mask;
     always_comb begin
         CHR_mask = CHR_WIDTH'( 13'h1fff ); // default 8k
         // here we are assuming the memory will always be a power of 2
@@ -201,7 +201,7 @@ module cart_multimapper
     // mapper ouputs
     logic [PRG_WIDTH-1:0] prg_addr;
     logic [CHR_WIDTH-1:0] chr_addr;
-    logic [PRGRAM_WIDTH-1:0] prgram_addr;
+    (* mark_debug = "true" *)  logic [PRGRAM_WIDTH-1:0] prgram_addr;
     logic prg_cs;
     logic chr_cs;
     logic prgram_cs;
@@ -339,7 +339,7 @@ module cart_multimapper
 
     wire prg_en = prg_cs && !nes_reset;
     wire chr_en = chr_cs && !nes_reset;
-    wire prgram_en = prg_ram && prgram_cs && !nes_reset;
+    (* mark_debug = "true" *)  wire prgram_en = prg_ram && prgram_cs && !nes_reset;
 
     wire chr_wr = chr_en && ppu_wr && chr_ram;
     wire prgram_wr = prgram_en && !cpu_rw;

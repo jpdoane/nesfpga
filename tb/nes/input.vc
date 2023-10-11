@@ -7,8 +7,4 @@
 -y ../../hdl/nes
 -y ../../hdl/carts
 --top-module nes_tb
--DROM_PATH='"../../roms"'
--DPALFILE='"../../roms/nes.mem"'
--DPULSE_TABLE_FILE='"../../roms/pulse_table.mem"'
--DTND_TABLE_FILE='"../../roms/tnd_table.mem"'
 -DRESET_RAM=1

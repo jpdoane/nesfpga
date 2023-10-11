@@ -1,28 +1,28 @@
-# CPU open issues:
-- ST IDY,Y take 5 cycles vs 6
+# 6502 open issues:
 - clean up state machines
+- illegal opcodes
 
 # PPU open issues:
 - screen masking 
 - not sure vblank timing is 100% correct...
 
-# games/mapper status
-- mapper 0, SMB: mostly works (w/o sound).
-- mapper 1, zelda: in progess, doesnt work yet
+# Games/mapper status
 ## SMB
 - Some minor sprite flicker/studder issues
 - elevators scanline 1 artifact
+## Zelda
+- vertical scrolling is not smooth
+- graphic artifacts on screen edge
+- can get stuck on a screen, all exits return to same screen
+## Pacman
+- Freeze on start
+## Support more mappers...
 
-
-# audio
-- Not stared other than basic pwm tone
+# Audio
+- Noise channel
+- DMC channel
 - HDMI audio
 
-# system
-- sd card for game load/save
-- PS tools, e.g. menu?
-- debug sidebar? (hmdi?)
+# System
 - resource optimization? target smaller device?
-
-# environment
-- better work flow for managing mappers/games
+- load new mappers via partial reconfiguration?

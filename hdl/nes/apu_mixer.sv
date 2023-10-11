@@ -19,7 +19,6 @@ logic [15:0] pulse_table[0:31] = '{
 16'h2838, 16'h2a4c, 16'h2c56, 16'h2e55, 16'h304a, 16'h3235, 16'h3416, 16'h35ef,
 16'h37be, 16'h3985, 16'h3b43, 16'h3cf9, 16'h3ea7, 16'h404d, 16'h404d, 16'h404d
 };
-// initial $readmemh(`PULSE_TABLE_FILE, pulse_table);
 
 logic [AUDIO_DEPTH-1:0] tnd_table[0:255] = '{
 16'h0000, 16'h01b7, 16'h036b, 16'h051b, 16'h06c7, 16'h0870, 16'h0a16, 16'h0bb8,

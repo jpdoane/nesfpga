@@ -1,5 +1,5 @@
 # Check if the correct number of arguments is provided
-if {[llength $argv] != 4} {
+if {[llength $argv] < 4} {
     puts "Usage: tclsh impl.tcl <top_module> <device> <synth_dcp> <proj_path>"
     exit 1
 }
@@ -7,6 +7,7 @@ set TOPMODULE [lindex $argv 0]
 set DEVICE [lindex $argv 1]
 set SYNTH_DCP [lindex $argv 2]
 set PROJ [lindex $argv 3]
+
 
 proc create_report { reportName command } {
   set status "."
@@ -91,7 +92,6 @@ set rc [catch {
   }
   close $fh
 
-
   link_design -top $TOPMODULE -part $DEVICE
   close_msg_db -file init_design.pb
 } RESULT]
@@ -102,6 +102,8 @@ if {$rc} {
   end_step init_design
   unset ACTIVE_STEP 
 }
+
+source "${PROJ}/debug.tcl"
 
 start_step opt_design
 set ACTIVE_STEP opt_design

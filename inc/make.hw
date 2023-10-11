@@ -21,6 +21,7 @@ SYNTH_TCL=$(SCRIPTS)/synth.tcl
 IMPL_TCL=$(SCRIPTS)/impl.tcl
 MEM_TCL=$(SCRIPTS)/mem.tcl
 BITFILE_TCL=$(SCRIPTS)/bitfile.tcl
+DEBUG_TCL=$(SCRIPTS)/debug.tcl
 PROGRAM_TCL=$(SCRIPTS)/program.tcl
 
 default: bitfile
@@ -32,7 +33,8 @@ SRC_FILE=$(BUILD_PATH)/sources.tcl
 BD_SRC_FILE=$(BUILD_PATH)/bd_sources.tcl
 
 
-$(BUILD_ENV): prebuild $(HDL_SOURCE) $(CONSTRAINTS)
+$(BUILD_ENV): $(HDL_SOURCE) $(CONSTRAINTS)
+	make prebuild
 	@mkdir -p $(BUILD_PATH);
 	@rm -f $(XDC_FILE) $(SRC_FILE) $(BD_SRC_FILE);
 	touch $(SRC_FILE)
@@ -47,6 +49,7 @@ $(BUILD_ENV): prebuild $(HDL_SOURCE) $(CONSTRAINTS)
 	@for s in $(abspath $(CONSTRAINTS)) ; do \
 		echo "$$s" >> $(XDC_FILE); \
 	done
+	@cp $(DEBUG_TCL) $(BUILD_PATH)
 	@touch $(BUILD_ENV)
 
 
@@ -63,11 +66,8 @@ $(SYNTH_ENV): $(BUILD_ENV) $(SYNTH_TCL)
 	@mkdir -p $(SYNTH_PATH);
 	@cp $(SYNTH_TCL) $(SYNTH_PATH);
 	@echo "-verilog_define CART=$(GAME)_cart" > $(CART_TCL)
-	@-cp synth_args.tcl $(SYNTH_PATH) || true;
-	@echo "-verilog_define ROM_PATH=\"$(ROM_PATH)\"" >> $(SYNTH_ARGS_TCL)
-	@echo "-verilog_define PALFILE=\"$(PALFILE)\"" >> $(SYNTH_ARGS_TCL)
-	@echo "-verilog_define PULSE_TABLE_FILE=\"$(ROM_PATH)/pulse_table.mem\"" >> $(SYNTH_ARGS_TCL)
-	@echo "-verilog_define TND_TABLE_FILE=\"$(ROM_PATH)/tnd_table.mem\"" >> $(SYNTH_ARGS_TCL)
+	-@cp synth_args.tcl $(SYNTH_PATH);
+	@touch $(SYNTH_PATH)/synth_args.tcl
 	@touch $(SYNTH_ENV)
 
 $(SYNTH): $(SYNTH_ENV)
@@ -87,21 +87,25 @@ IMPL_PATH=$(BUILD_PATH)/impl
 IMPL_ENV=$(IMPL_PATH)/.impl
 IMPL=$(IMPL_PATH)/$(TOP)_routed.dcp
 IMPL_ARGS_TCL=impl_args.tcl
+DEBUG_NETS_FILE=$(IMPL_PATH)/debug_nets.tcl
 
 impl: $(IMPL)
 
-$(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL)
+$(IMPL_ENV): $(BUILD_ENV) $(IMPL_TCL) $(BITFILE_TCL) $(PROGRAM_TCL) $(DEBUG_NETS)
+	echo "Setting up Implementation Environment"
 	@mkdir -p $(IMPL_PATH);
 	@cp $(IMPL_TCL) $(IMPL_PATH);
 	@cp $(BITFILE_TCL) $(IMPL_PATH);
 	@cp $(PROGRAM_TCL) $(IMPL_PATH);
-	@-cp $(IMPL_ARGS_TCL) $(IMPL_PATH) || true;
+	-@cp $(DEBUG_NETS) $(DEBUG_NETS_FILE)
+	touch $(DEBUG_NETS_FILE)
+	-@cp $(IMPL_ARGS_TCL) $(IMPL_PATH) || true;
 	@touch $(IMPL_PATH)/$(IMPL_ARGS_TCL)
 	@touch $(IMPL_ENV)
 
 $(IMPL): $(IMPL_ENV) $(SYNTH)
 	cd $(IMPL_PATH) && \
-	$(VIVADO) -source $(IMPL_TCL) -tclargs $(TOP) $(DEVICE) $(SYNTH) $(BUILD_PATH) \
+	$(VIVADO) -source $(IMPL_TCL) -tclargs $(TOP) $(DEVICE) $(SYNTH) $(BUILD_PATH)\
 	|| $(call FAIL, IMPLEMENTATION, true)
 	$(call SUCCEED, IMPLEMENTATION, true)
 

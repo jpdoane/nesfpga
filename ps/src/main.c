@@ -9,27 +9,16 @@
 #define CHR_ADDR XPAR_BRAM_0_BASEADDR
 #define PRG_ADDR XPAR_BRAM_1_BASEADDR
 #define PRGRAM_ADDR XPAR_BRAM_2_BASEADDR
+#define ROM_LOADER_ADDR 0x2000000
 
 #include "ines_sdcard.h"
 #include "nes_io.h"
 extern FATFS  fatfs;
 
 #define ASCII_ESC 27
+int loadROMLoader();
 
 int main() {
-
-
-//	u32 *reg = (u32 *) CART_ADDR;
-//
-//	u32 nn;
-//	for(nn=0;nn<4;nn++){
-//		reg[0] = nn;
-//		xil_printf("reg: 0x%x\r\n", nn);
-//		Xil_DCacheFlush();
-//		getchar();
-//	}
-
-//	xil_printf( "%c[2J", ASCII_ESC ); //clr screen
 
 	int Status;
     Status = SD_Init(&fatfs);
@@ -38,52 +27,97 @@ int main() {
     	 return XST_FAILURE;
     }
 
-	FRESULT res;
 	FILINFO fno;
-	int sel, sel_old;
-
-	sel_old = -1;
-
-	u32* cart_config;
-	cart_config = (u32*) CART_ADDR;
-
 
 	int num_games = 0;
-	res = list_nesfiles ("", &num_games);
 	int start_count = 0;
-	int current_game = 1;
+	int quit_game = 0;
+	int nn;
+	u8* wram = (u8*) PRGRAM_ADDR;
+	u32* cart_config = (u32*) CART_ADDR;
+	char* rom_table;
 
-	get_nesfile(&fno, "", current_game);
-	ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+	xil_printf("\n\n\n\n\n\n\n\nROMs found:\r\n");
+	list_nesfiles ("", &num_games);
 
 	while (1) {
+		// clear rom selection flag
+		wram[0x1fff] = 0;
+		wram[0x1ffe] = 0;
 
-		start_count = 0;
-		while( cart_config[3] & 0x4 ) {
-			usleep(1000);
-			start_count++;
-			if(start_count >= 3000){
-				xil_printf("Select button held down for 3 sec, switching games...\r\n");
-
-				//before switching, save game
-				if (cart_config[1] & 0x20000 )
-					writeSaveFile(fno.fname, (u32*) PRGRAM_ADDR, 0x2000);
-
-				current_game++;
-				if(current_game>num_games) current_game = 1;
-
-				get_nesfile(&fno, "", current_game);
-				ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
-				break;
-			}
+		// initialize WRAM with list of roms
+		rom_table = (char*) wram;
+		for (nn=1;nn<=num_games; nn++) {
+			get_nesfile(&fno, "", nn);
+			strcpy( (char*) rom_table, fno.fname);
+			rom_table += strlen(fno.fname)+1;
 		}
-		usleep(100000);
-		// xil_printf("buttons: 0x%x\r\n",cart_config[3] & 0xff);
-	}
+		*rom_table = 0; // end of table
 
+		// start loader rom
+		xil_printf("Starting loader ROM\r\n");
+		loadROMLoader();
+		xil_printf("running loader ROM\r\n");
+		// ReadNESFile("loader.nes", (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+
+		// poll selection flag
+		while ( wram[0x1fff]==0 ){
+			// xil_printf("sel: %d %d\r\n", wram[0x1fff], wram[0x1ffe]);
+			usleep(10000);
+		}
+
+		nn = wram[0x1ffe]+1;
+		get_nesfile(&fno, "", nn);
+		xil_printf("ROM number %d selected: %s\r\n", nn, fno.fname);
+
+		// load selected rom
+		xil_printf("Booting %s...\r\n", fno.fname);
+		ReadNESFile(fno.fname, (u32*) CART_ADDR, (u32*) CHR_ADDR, (u32*) PRG_ADDR, (u32*) PRGRAM_ADDR);
+
+    	// wait for long start press
+		quit_game=0;
+		while (!quit_game) {
+			start_count = 0;
+			while( cart_config[3] & 0xc ) { 
+				usleep(1000);
+				start_count++;
+				if(start_count >= 1000){
+					xil_printf("Select & Start button held down, switching games...\r\n");
+					if (cart_config[1] & 0x20000 )
+						writeSaveFile(fno.fname, (u32*) PRGRAM_ADDR, 0x2000);
+
+					quit_game = 1;
+					break;
+				}
+			}
+			usleep(100000);
+		}
+	}
 
 }
 
+int loadROMLoader()
+{
+	u32* loader = (u32*) ROM_LOADER_ADDR;
+	u32* cart_config = (u32*) CART_ADDR;
 
+ 	// reset system while we load new data
+	cart_config[0] = 1;
 
+ 	// load header
+	cart_config[1] = loader[1];
+	cart_config[2] = loader[2];
+	loader += 4;	// increment 16bytes, 4 words
 
+	// load prg
+	memcpy ( (void*) PRG_ADDR, (void*) loader, 0x8000 );
+	loader += 0x2000; // increment 32kB = 8kwords
+
+	// load chr
+	memcpy ( (void*) CHR_ADDR, (void*) loader, 0x2000 );
+
+	// boot
+	cart_config[0] = 0;
+
+	return XST_SUCCESS;
+}

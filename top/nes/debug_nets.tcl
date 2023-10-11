@@ -1,0 +1,9 @@
+u_nes_hdmi/u_nes/cpu_addr
+u_nes_hdmi/u_nes/cpu_bus_data
+u_cart_top/PRGRAM_rd
+u_cart_top/prgram_addr
+u_cart_top/prgram_en
+BRAM_PRGRAM_we
+BRAM_PRGRAM_en
+BRAM_PRGRAM_wr
+BRAM_PRGRAM_addr

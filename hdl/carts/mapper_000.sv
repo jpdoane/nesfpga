@@ -40,12 +40,11 @@ module mapper_000 #(
     assign prg_cs = romsel;
     assign prg_addr = prg_mask & PRG_ROM_DEPTH'(cpu_addr);
 
-
     assign chr_cs = ~ciram_ce;
     assign chr_addr = chr_mask & CHR_ROM_DEPTH'(ppu_addr);
 
-    assign prgram_cs = 0;
-    assign prgram_addr = 0;
+    assign prgram_cs = prg_ram && ~romsel && (cpu_addr[14:13] == 2'b11);
+    assign prgram_addr = prgram_mask & PRG_RAM_DEPTH'(cpu_addr);
 
     assign mapper_reg_o = 0;
 endmodule
