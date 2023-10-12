@@ -62,7 +62,6 @@ YCOORD                  = $4
 CONTROLLER_STATE        = $5
 BUTTON_PRESS            = $6    ;initial press (rising edge)
 
-
 ; zero page pointers (2 bytes)
 STRING_PTR           = $10
 
@@ -71,92 +70,18 @@ STRING_PTR           = $10
 Start:
              sei                          ;pretty standard 6502 type init here
              cld
-             lda #%00000000               ;init PPU control register 1 
+             lda #0                       ;init PPU control register 1 
              sta PPU_CTRL_REG1
              ldx #$ff                     ;reset stack pointer
              txs
-VBlank1:     lda PPU_STATUS               ;wait a frame
+VBlank1:     lda PPU_STATUS               ;wait 2 frames
              bpl VBlank1
-VBlank2:     lda PPU_STATUS               ;wait a frame
+VBlank2:     lda PPU_STATUS
              bpl VBlank2
+             jsr InitializeLoader         ; initialize ppu, list of roms, draw menu and pointer
+EndlessLoop: jmp EndlessLoop              ; sit here until interrupt
 
-             jsr InitializeLoader
-
-            jsr DrawMenu
-            lda NUMROMS
-            beq skip_ptr
-            jsr DrawPointer
-skip_ptr:            
-            jsr ResetNameTable
-
-             lda #%00001000               ;enable BG rendering
-              sta PPU_CTRL_REG2
-
-             lda #%10000000               ;enable NMIs
-              sta PPU_CTRL_REG1
-
-EndlessLoop: jmp EndlessLoop              ;endless loop, need I say more?
-
-
-InitializeLoader:
-
-            ; zero scroll
-            bit PPU_STATUS
-            lda #$0
-            sta SELECTION
-            sta PPU_SCROLL_REG
-            lda #$0
-            sta PPU_SCROLL_REG
-
-
-InitializePalette:
-            lda #$3f
-            sta PPU_ADDRESS
-            lda #$00
-            sta PPU_ADDRESS
-            lda #$11            ;blue
-            sta PPU_DATA
-            lda #$30            ;white
-            sta PPU_DATA
-            lda #$1d            ;black
-            sta PPU_DATA
-;            lda #$16            ;red
-            lda #$30            ;red
-            sta PPU_DATA
-
-InitializeNameTables:
-              lda PPU_STATUS            ;reset flip-flop
-              lda #0            ;use first pattern table
-              sta PPU_CTRL_REG1
-              lda #$24                  ;set vram address to start of name table 1
-              jsr WriteNTAddr
-              lda #$20                  ;and then set it to name table 0
-WriteNTAddr:  sta PPU_ADDRESS
-              lda #$00
-              sta PPU_ADDRESS
-              ldx #$04                  ;clear name table with blank tile #0
-              ldy #$c0
-              lda #$00
-InitNTLoop:   sta PPU_DATA              ;count out exactly 768 tiles (x*y)
-              dey
-              bne InitNTLoop
-              dex
-              bne InitNTLoop
-              ldy #64                   ;now to clear the attribute table (with zero this time)
-              txa
-;              sta VRAM_Buffer1_Offset   ;init vram buffer 1 offset
-;              sta VRAM_Buffer1          ;init vram buffer 1
-InitATLoop:   lda #$0
-              sta PPU_DATA
-              dey
-              bne InitATLoop
-
-              lda #$0
-                sta PPU_SCROLL_REG       
-               sta PPU_SCROLL_REG        
-
-               rts
-
+; interrupt handler, called each frame
 NonMaskableInterrupt:
                 lda NUMROMS
                 beq nmi_return
@@ -186,11 +111,63 @@ make_selection:
                 sta WRAM_COMPLETE     ; signal that we are done
                 jmp nmi_return
 
-ResetNameTable:
+
+InitializeLoader:
+            lda #$0
+            sta SELECTION       ; zero selection
+            sta NUMROMS         ; zero number of roms in table
+            sta PPU_SCROLL_REG  ; zero scroll reg
+            sta PPU_SCROLL_REG
+
+            ; initialize palette
+            lda #$3f
+            sta PPU_ADDRESS
+            lda #$00
+            sta PPU_ADDRESS
+            lda #$11            ;blue   (background color)
+            sta PPU_DATA
+            lda #$30            ;white  (text color)
+            sta PPU_DATA
+            lda #$1d            ;black  (unused)
+            sta PPU_DATA
+            lda #$30            ;white  (pointer color)
+            sta PPU_DATA
+
+            ; initialize nametable
+              lda PPU_STATUS            ;reset flip-flop
+              lda #$20                  ;init nametable at 0x2000
+              sta PPU_ADDRESS
+              lda #$00
+              sta PPU_ADDRESS
+              ldx #$20                  ;count 32x32=1kB entries in 1st table
+              ldy #$20
+              lda #$00                  ; init with zeros
+InitNTLoop:   sta PPU_DATA
+              dey
+              bne InitNTLoop
+              dex
+              bne InitNTLoop
+
+            ; draw menu
+            jsr DrawMenu
+
+            lda NUMROMS
+            beq NoPtr                   ; If no rom then dont draw the pointer
+            jsr DrawPointer
+NoPtr:      jsr ResetPPU
+            rts                             ; done with init
+
+
+; reset ppu address, enable rendering and NMI
+ResetPPU:
                 lda #$20
                 sta PPU_ADDRESS
                 lda #$00
                 sta PPU_ADDRESS
+                lda #%00001000               ;enable BG rendering
+                sta PPU_CTRL_REG2
+                lda #%10000000               ;enable NMIs
+                sta PPU_CTRL_REG1
                 rts
 
 title_string:
@@ -199,42 +176,41 @@ title_string:
 empty_string:
 .ASCIIZ "No ROMs Found :("
 
-DrawMenu:
-                lda #0
-                sta NUMROMS
-                LDA #<title_string
+
+
+DrawMenu:       LDA #<title_string  ; set STRING_PTR to title
                 STA STRING_PTR
                 LDA #>title_string
                 STA STRING_PTR + 1
-                lda #TITLE_X
+                lda #TITLE_X        ; load title coords
                 sta XCOORD
                 lda #TITLE_Y
                 sta YCOORD
+                jsr GotoXY          ; cursor to title
+                jsr WriteText       ; write title
+                inc YCOORD          ; drop down a line
                 jsr GotoXY
-                jsr WriteText       ;write title
-                inc YCOORD
-                jsr GotoXY
-                jsr WriteText       ;write instructions
-                lda #FILELIST_X
+                jsr WriteText       ; write instructions
+                lda #FILELIST_X     ; load list coords
                 sta XCOORD
                 lda #FILELIST_Y
                 sta YCOORD
                 lda WRAM_ROMTITLES      ; check for empty table
                 beq empty_table
-                LDA #<WRAM_ROMTITLES
+                LDA #<WRAM_ROMTITLES    ; set STRING_PTR to first rom
                 STA STRING_PTR
                 LDA #>WRAM_ROMTITLES
                 STA STRING_PTR + 1
 
-
-DrawMenuLoop:   jsr GotoXY
-                inc YCOORD
-                inc NUMROMS
-                jsr WriteText
-                bne DrawMenuLoop
+                ; print each rom in the list
+DrawMenuLoop:   jsr GotoXY              ; go to coords
+                inc YCOORD              ; drop down a line
+                inc NUMROMS             ; count number of roms
+                jsr WriteText           ; write name of rom, set A to first char of next string
+                bne DrawMenuLoop        ; done once we get a zero-length string
                 rts
 
-empty_table:    jsr GotoXY
+empty_table:    jsr GotoXY              ; print empty message and return
                 LDA #<empty_string
                 STA STRING_PTR
                 LDA #>empty_string
@@ -242,15 +218,16 @@ empty_table:    jsr GotoXY
                 jsr WriteText
                 rts
 
-PointerNext:    lda SELECTION
-                jsr ClearPointer 
-                inc SELECTION
-                lda SELECTION
+; move pointer to next rom
+PointerNext:    lda SELECTION           ; current rom
+                jsr ClearPointer        ; erase ptr
+                inc SELECTION           ; next selection
+                lda SELECTION           ; have we wrapped?
                 cmp NUMROMS
-                bne DrawPointer     
-                lda #0
+                bne DrawPointer
+                lda #0                  ; if wrapped then reset selection to 0
                 sta SELECTION
-                jmp DrawPointer
+                jmp DrawPointer         ; draw pointer
 
 PointerPrev:    lda SELECTION
                 jsr ClearPointer 
