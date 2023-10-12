@@ -95,7 +95,7 @@ NonMaskableInterrupt:
                 lda CONTROLLER_STATE ;
                 and #JOY_A
                 bne make_selection
-nmi_return:     jsr ResetNameTable
+nmi_return:     jsr ResetPPU
                 rti
 
 press_up:       jsr PointerPrev

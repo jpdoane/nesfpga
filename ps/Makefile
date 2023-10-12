@@ -21,7 +21,7 @@ BIT=$(abspath build/nes.bit)
 XSA=$(abspath build/nes.xsa)
 BIF=$(abspath workspace/output.bif)
 BOOT=$(abspath workspace/BOOT.bin)
-ROM_LOADER=$(PROJ_ROOT)/rom_loader/build/loader.nes
+ROM_LOADER=$(abspath ../rom_loader/build/loader.nes)
 
 PS_SOURCE = $(wildcard src/*.c) $(wildcard src/*.cpp)
 PS_OBJS = $(patsubst src/%.c,build/%.o,$(PS_SOURCE))
