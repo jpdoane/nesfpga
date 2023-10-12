@@ -207,16 +207,16 @@ module cart_multimapper
     logic prgram_cs;
     logic [7:0] mapper_reg_o;
 
-    logic ciram_ce_map0;
-    logic ciram_a10_map0;
-    logic irq_map0;
-    logic [PRG_WIDTH-1:0] prg_addr_map0;
-    logic [CHR_WIDTH-1:0] chr_addr_map0;
-    logic [PRGRAM_WIDTH-1:0] prgram_addr_map0;
-    logic prg_cs_map0;
-    logic chr_cs_map0;
-    logic prgram_cs_map0;
-    logic [7:0] mapper_reg_o_map0;
+    logic ciram_ce_mapbank;
+    logic ciram_a10_mapbank;
+    logic irq_mapbank;
+    logic [PRG_WIDTH-1:0] prg_addr_mapbank;
+    logic [CHR_WIDTH-1:0] chr_addr_mapbank;
+    logic [PRGRAM_WIDTH-1:0] prgram_addr_mapbank;
+    logic prg_cs_mapbank;
+    logic chr_cs_mapbank;
+    logic prgram_cs_mapbank;
+    logic [7:0] mapper_reg_o_mapbank;
 
     logic ciram_ce_map1;
     logic ciram_a10_map1;
@@ -229,21 +229,9 @@ module cart_multimapper
     logic prgram_cs_map1;
     logic [7:0] mapper_reg_o_map1;
 
+    /* verilator lint_off CASEOVERLAP */
     always_comb begin
-        case(mapper)
-            8'h0:   begin
-                    ciram_ce = ciram_ce_map0;
-                    ciram_a10 = ciram_a10_map0;
-                    irq = irq_map0;
-                    prg_addr = prg_addr_map0;
-                    chr_addr = chr_addr_map0;
-                    prgram_addr = prgram_addr_map0;
-                    prg_cs = prg_cs_map0;
-                    chr_cs = chr_cs_map0;
-                    prgram_cs = prgram_cs_map0;
-                    mapper_reg_o = mapper_reg_o_map0;
-                    end
-
+        casez(mapper)
             8'h1:   begin
                     ciram_ce = ciram_ce_map1;
                     ciram_a10 = ciram_a10_map1;
@@ -256,6 +244,19 @@ module cart_multimapper
                     prgram_cs = prgram_cs_map1;
                     mapper_reg_o = mapper_reg_o_map1;
                     end
+            8'b000000??:   begin //mapper 0,2,3 (not 1 which is handled above)
+                    ciram_ce = ciram_ce_mapbank;
+                    ciram_a10 = ciram_a10_mapbank;
+                    irq = irq_mapbank;
+                    prg_addr = prg_addr_mapbank;
+                    chr_addr = chr_addr_mapbank;
+                    prgram_addr = prgram_addr_mapbank;
+                    prg_cs = prg_cs_mapbank;
+                    chr_cs = chr_cs_mapbank;
+                    prgram_cs = prgram_cs_mapbank;
+                    mapper_reg_o = mapper_reg_o_mapbank;
+                    end
+
 
             default: begin
                     ciram_ce = 0;
@@ -271,14 +272,16 @@ module cart_multimapper
                     end
         endcase
     end
+    /* verilator lint_on CASEOVERLAP */
 
-    mapper_000 #(
+    mapper_bank #(
     .PRG_ROM_DEPTH(PRG_WIDTH),
     .CHR_ROM_DEPTH(CHR_WIDTH),
     .PRG_RAM_DEPTH(PRGRAM_WIDTH)
-    ) u_mapper_000 (
+    ) u_mapper_bank (
     .rst            (rst),
     .clk_cpu        (clk_cpu),
+    .mapper_id      (mapper),
     .cpu_addr       (cpu_addr),
     .cpu_data_i     (cpu_data_i),
     .ppu_addr       (ppu_addr),
@@ -290,16 +293,16 @@ module cart_multimapper
     .prg_mask       (PRG_mask),
     .chr_mask       (CHR_mask),
     .prgram_mask    (PRGRAM_mask),
-    .prg_addr       (prg_addr_map0),
-    .chr_addr       (chr_addr_map0),
-    .prgram_addr    (prgram_addr_map0),
-    .prg_cs         (prg_cs_map0),
-    .chr_cs         (chr_cs_map0),
-    .prgram_cs      (prgram_cs_map0),
-    .mapper_reg_o   (mapper_reg_o_map0),
-    .ciram_ce       (ciram_ce_map0),
-    .ciram_a10      (ciram_a10_map0),
-    .irq            (irq_map0)
+    .prg_addr       (prg_addr_mapbank),
+    .chr_addr       (chr_addr_mapbank),
+    .prgram_addr    (prgram_addr_mapbank),
+    .prg_cs         (prg_cs_mapbank),
+    .chr_cs         (chr_cs_mapbank),
+    .prgram_cs      (prgram_cs_mapbank),
+    .mapper_reg_o   (mapper_reg_o_mapbank),
+    .ciram_ce       (ciram_ce_mapbank),
+    .ciram_a10      (ciram_a10_mapbank),
+    .irq            (irq_mapbank)
     );
 
     mapper_001 #(

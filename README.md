@@ -4,16 +4,8 @@ Lets build a Nintedo from scratch! Uses my [6502 core](https://github.com/jpdoan
 
 Current status:
 - Core NES functionality is implemented
-- Mappers [0](https://nesdir.github.io/mapper0.html) and [1](https://nesdir.github.io/mapper1.html) are supported
+- [Mappers](https://nesdir.github.io/mapper0.html) 0-3 are currently implemented
 - ROMS load from SD card
-- Custom ROM loader utility, which is itself just a simple NES ROM.  (Hold Select+Start to return to menu)
-
-A limited number of games have been tested and (mostly) work
-- Super Mario Bros, 
-- The Legend of Zelda (some minro rendering artifacts)
-- Metroid
-- Tetris
-
-The only mapper 0-1 game known not to work yet is pacman (but no attempt to troubleshoot yet)
+- Custom ROM loader utility (which is itself just a simple custom ROM). Hold Select+Start for >2sec to return to loader screen
 
 See [here](TODO.md) for open issues

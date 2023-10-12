@@ -8,7 +8,9 @@ VERILATE_ARGS= --max_frames 50 --skip_frames 17
 
 include ../../inc/make.verilator
 
-NES_FILE=$(PROJ_ROOT)/roms/smb.nes
+# NES_FILE=$(PROJ_ROOT)/roms/smb.nes
+ROM_PATH=/home/jpdoane/nesroms
+NES_FILE=$(ROM_PATH)/contra.nes
 CART_INCL=$(abspath obj_dir/cart_incl.sv)
 $(CART_INCL): $(NES_FILE)
 	-@mkdir obj_dir
