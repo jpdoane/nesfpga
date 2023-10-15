@@ -333,6 +333,8 @@ module nes_top
 
     assign ctrl_out = {nes_ctrl_out[1], ctrl_outA};
     assign ctrl_strobe = {nes_ctrl_strobe[1], ctrl_strobeA};
-    assign  LED = btns[3:0]; 
+    
+    // LEDS show active audio channels
+    assign  LED = u_nes_hdmi.u_nes.u_apu.reg_apu_status_rd[3:0];
 
 endmodule

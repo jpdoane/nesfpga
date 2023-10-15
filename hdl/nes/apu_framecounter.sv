@@ -4,66 +4,119 @@ module apu_framecounter
     (
     input  logic clk, rst,
     input  logic mode,
-    input  logic interrupt_en,
+    input  logic noint,
     input logic update,
     input logic clrint,
     output logic apu_cycle, qtrframe, halfframe,
     output logic irq
     );
 
-logic [12:0] frame_counter;
-
-logic frame_tick = frame_counter == 13'd7456;
-
-logic [2:0] mode_ctr;
-logic interrupt_set;
+logic [15:0] frame_counter;
+logic reset_frame;
+logic interrupt_set, interrupt_set_r, interrupt_set_rr;
+logic update_r;
 always_ff @(posedge clk) begin
     if(rst) begin
         frame_counter <= 0;
         apu_cycle <= 0;
-        mode_ctr <= 0;
         irq <= 0;
+        interrupt_set_r <= 0;
+        interrupt_set_rr <= 0;
+        update_r <= 0;
     end else begin
-
+        interrupt_set_r <= interrupt_set;
+        interrupt_set_rr <= interrupt_set_r;
         apu_cycle <= ~apu_cycle;
-        irq <= (interrupt_set || irq) && !clrint;
-
-        if(update) begin
-            frame_counter <= 0;
-            mode_ctr <= 0;
-            irq <= 0;
-        end else begin
-            mode_ctr <= mode_ctr;
-
-            if (frame_tick) begin
-                frame_counter <= 0;
-                if (!mode && mode_ctr==3'd3) mode_ctr <= 0;
-                else if (mode && mode_ctr==3'd4) mode_ctr <= 0;
-                else mode_ctr <= mode_ctr+1;
-            end else begin
-                frame_counter <= frame_counter + 1;
-            end
-        end
+        update_r <= update;
+        if (clrint || noint) irq <= 0;
+        else if (interrupt_set || interrupt_set_r || interrupt_set_rr) irq <= 1;
+        frame_counter <= reset_frame ? 0 : frame_counter + 1;
     end
 end
+
+// logic [15:0] frame_counter;
+// logic reset_frame;
+// logic interrupt_set, interrupt_set_r, interrupt_set_rr;
+// logic update_r;
+// logic irq_reg;
+// always_ff @(posedge clk) begin
+//     if(rst) begin
+//         frame_counter <= 0;
+//         apu_cycle <= 0;
+//         irq_reg <= 0;
+//         interrupt_set_r <= 0;
+//         interrupt_set_rr <= 0;
+//         update_r <= 0;
+//     end else begin
+//         interrupt_set_r <= interrupt_set;
+//         interrupt_set_rr <= interrupt_set_r;
+//         apu_cycle <= ~apu_cycle;
+//         update_r <= update;
+//         irq_reg <= (interrupt_set || interrupt_set_r || interrupt_set_rr) ? 1 : irq;
+//         frame_counter <= reset_frame ? 0 : frame_counter + 1;
+//     end
+// end
+// assign irq = irq_reg && !(clrint || noint);
+
 
 always_comb begin
-    qtrframe =  update && mode; //clock qtrframe on mode 1 update
+    qtrframe =  0;
     halfframe = 0;
     interrupt_set = 0;
-
-    if(frame_tick) begin    
-        if(mode) begin
-            // 5-step
-            qtrframe = mode_ctr != 3'd3;
-            halfframe = (mode_ctr == 3'd1 || mode_ctr == 3'd4);
-        end else begin
-            // 4-step
-            qtrframe = 1;
-            halfframe = mode_ctr[0];
-            interrupt_set = &mode_ctr[1:0] && interrupt_en;
-        end
-    end
+    reset_frame = (update||update_r) && ~apu_cycle;
+    case(frame_counter)
+        16'd7456:   begin
+                    qtrframe = 1;
+                    end
+        16'd14913:   begin
+                    qtrframe = 1;
+                    halfframe = 1;
+                    end
+        16'd22371:   begin
+                    qtrframe = 1;
+                    end
+        16'd29828:   if (!mode) begin
+                        interrupt_set = 1;
+                    end
+        16'd29829:   if (!mode) begin
+                        qtrframe = 1;
+                        halfframe = 1;
+                        reset_frame = 1;
+                    end
+        16'd37281:   begin
+                    qtrframe = 1;
+                    halfframe = 1;
+                    reset_frame = 1;
+                    end
+        default:    begin
+                    //clock on mode 1 update
+                    qtrframe =  mode && reset_frame;
+                    halfframe = mode && reset_frame;
+                    interrupt_set = 0;
+                    end
+    endcase
 end
+
+
+
+
+// always_comb begin
+//     qtrframe =  update && mode; //clock on mode 1 update
+//     halfframe = update && mode;
+//     interrupt_set = 0;
+
+//     if(frame_tick) begin    
+//         if(mode) begin
+//             // 5-step
+//             qtrframe = mode_ctr != 3'd3;
+//             halfframe = (mode_ctr == 3'd1 || mode_ctr == 3'd4);
+//         end else begin
+//             // 4-step
+//             qtrframe = 1;
+//             halfframe = mode_ctr[0];
+//             interrupt_set = &mode_ctr[1:0];
+//         end
+//     end
+// end
 
 endmodule

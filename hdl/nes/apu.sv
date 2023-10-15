@@ -34,15 +34,15 @@ logic [7:0] reg_triangle_ctrl;
 logic [7:0] reg_triangle_timelow;
 logic [7:0] reg_triangle_timehigh;
 logic [7:0] reg_noise_ctrl;
-logic [7:0] reg_noise_timelow;
-logic [7:0] reg_noise_timehigh;
+logic [7:0] reg_noise_period;
+logic [7:0] reg_noise_length;
 logic [7:0] reg_dmc_ctrl;
 logic [7:0] reg_dmc_direct;
 logic [7:0] reg_dmc_addr;
 logic [7:0] reg_dmc_length;
 logic [7:0] reg_apu_enable;
 logic framectr_mode;
-logic framectr_int;
+logic framectr_noint;
 
 logic pulse0_ctrl_update;
 logic pulse0_sweep_update;
@@ -53,8 +53,8 @@ logic pulse1_length_update;
 logic triangle_ctrl_update;
 logic triangle_length_update;
 logic noise_ctrl_update;
-logic noise_timelow_update;
-logic noise_timehigh_update;
+logic noise_period_update;
+logic noise_length_update;
 logic dmc_ctrl_update;
 logic dmc_direct_update;
 logic dmc_addr_update;
@@ -73,7 +73,7 @@ wire dmc_en = reg_apu_enable[4];
 wire frame_irq;
 wire dmc_irq = 0;
 wire dmc_active = 0;
-wire noise_active=0;
+wire noise_active;
 wire triangle_active;
 wire pulse1_active, pulse0_active;
 wire [7:0] reg_apu_status_rd = {dmc_irq, frame_irq, 1'b0, dmc_active, noise_active, triangle_active, pulse1_active, pulse0_active};
@@ -97,8 +97,8 @@ always_ff @(posedge clk) begin
     triangle_ctrl_update <= 0;
     triangle_length_update <= 0;
     noise_ctrl_update <= 0;
-    noise_timelow_update <= 0;
-    noise_timehigh_update <= 0;
+    noise_period_update <= 0;
+    noise_length_update <= 0;
     dmc_ctrl_update <= 0;
     dmc_direct_update <= 0;
     dmc_addr_update <= 0;
@@ -124,15 +124,15 @@ always_ff @(posedge clk) begin
         reg_triangle_timelow <= 0;
         reg_triangle_timehigh <= 0;
         reg_noise_ctrl <= 0;
-        reg_noise_timelow <= 0;
-        reg_noise_timehigh <= 0;
+        reg_noise_period <= 0;
+        reg_noise_length <= 0;
         reg_dmc_ctrl <= 0;
         reg_dmc_direct <= 0;
         reg_dmc_addr <= 0;
         reg_dmc_length <= 0;
         reg_apu_enable <= 0;
         framectr_mode <= 0;
-        framectr_int <= 0;
+        framectr_noint <= 0;
 
         ctrl_strobe <= 0;
         apu_cs_r <= 0;
@@ -152,15 +152,15 @@ always_ff @(posedge clk) begin
         reg_triangle_timelow <= reg_triangle_timelow;
         reg_triangle_timehigh <= reg_triangle_timehigh;
         reg_noise_ctrl <= reg_noise_ctrl;
-        reg_noise_timelow <= reg_noise_timelow;
-        reg_noise_timehigh <= reg_noise_timehigh;
+        reg_noise_period <= reg_noise_period;
+        reg_noise_length <= reg_noise_length;
         reg_dmc_ctrl <= reg_dmc_ctrl;
         reg_dmc_direct <= reg_dmc_direct;
         reg_dmc_addr <= reg_dmc_addr;
         reg_dmc_length <= reg_dmc_length;
         reg_apu_enable <= reg_apu_enable;
         framectr_mode <= framectr_mode;
-        framectr_int <= framectr_int;
+        framectr_noint <= framectr_noint;
 
         ctrl_strobe <= ctrl_strobe;
         apu_cs_r <= apu_cs;
@@ -171,7 +171,7 @@ always_ff @(posedge clk) begin
                 case(apu_addr)
                 5'h15:  begin
                         apu_data_rd <= reg_apu_status_rd;
-                        framectr_clrint <= 0;
+                        framectr_clrint <= 1;
                         end
                 5'h16:  begin
                         ctrl_out[0] <= 1;
@@ -232,12 +232,12 @@ always_ff @(posedge clk) begin
                             noise_ctrl_update<=1;
                         end
                     5'he: begin     
-                            reg_noise_timelow <= data_from_cpu;    
-                            noise_timelow_update<=1;
+                            reg_noise_period <= data_from_cpu;    
+                            noise_period_update<=1;
                         end
                     5'hf: begin     
-                            reg_noise_timehigh <= data_from_cpu;   
-                            noise_timehigh_update<=1;
+                            reg_noise_length <= data_from_cpu;   
+                            noise_length_update<=1;
                         end
                     5'h10: begin    
                             reg_dmc_ctrl <= data_from_cpu;         
@@ -257,14 +257,14 @@ always_ff @(posedge clk) begin
                         end
                     5'h15: begin    
                             reg_apu_enable <= data_from_cpu;    
-                            dmc_clrint <= 0;
+                            dmc_clrint <= 1;
                         end
                     5'h16: begin    
                         ctrl_strobe <= data_from_cpu[2:0];
                         end
                     5'h17: begin    
                         framectr_mode <= data_from_cpu[7];
-                        framectr_int <= data_from_cpu[6];
+                        framectr_noint <= data_from_cpu[6];
                         framectr_update<=1;
                         end
                     default: begin end
@@ -317,7 +317,7 @@ apu_framecounter u_apu_framecounter(
     .clk          (clk          ),
     .rst          (rst          ),
     .mode       (framectr_mode ),
-    .interrupt_en       (framectr_int ),
+    .noint       (framectr_noint ),
     .update        (framectr_update),
     .clrint        (framectr_clrint),
     .apu_cycle    (apu_cycle    ),
@@ -365,7 +365,6 @@ apu_pulse #(.id (1)) u_apu_pulse1(
 );
 
 logic [3:0] triangle_sample;
-
 apu_triangle u_apu_triangle(
     .clk             (clk             ),
     .rst             (rst             ),
@@ -380,7 +379,23 @@ apu_triangle u_apu_triangle(
     .sample          (triangle_sample          )
 );
 
-wire [3:0] noise_sample = 4'h0;
+logic [3:0] noise_sample;
+apu_noise u_apu_noise(
+    .clk              (clk              ),
+    .rst              (rst              ),
+    .apu_cycle        (apu_cycle        ),
+    .qtrframe         (qtrframe         ),
+    .halfframe        (halfframe        ),
+    .en               (noise_en              ),
+    .reg_ctrl         (reg_noise_ctrl         ),
+    .reg_period       (reg_noise_period        ),
+    .reg_len          (reg_noise_length      ),
+    .reg_ctrl_update  (noise_ctrl_update  ),
+    .reg_len_update   (noise_length_update),
+    .active           (noise_active),
+    .sample           (noise_sample )
+);
+
 wire [6:0] dmc_sample = 7'h0;
 apu_mixer #(.AUDIO_DEPTH(AUDIO_DEPTH)) u_apu_mixer(
     .clk(clk),

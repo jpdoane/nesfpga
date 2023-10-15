@@ -9,7 +9,7 @@ module apu_triangle
     input  logic [7:0] reg_timelow,
     input  logic [7:0] reg_timehigh,
 
-    input  logic update,
+    input  logic update,                // write to $400b
     output logic active,
     output logic [3:0] sample
     );
@@ -29,19 +29,21 @@ always_ff @(posedge clk) begin
         linear_counter_reload_flag <= 0;
         linear_cnt <= 0;
     end else begin
-        
         if(update) linear_counter_reload_flag <= 1;
-        else if(qtrframe & !linear_ctrl_flag) linear_counter_reload_flag <= 0;
-        else linear_counter_reload_flag <= linear_counter_reload_flag;
 
-        if(linear_counter_reload_flag) linear_cnt <= linear_counter_reload;
-        else linear_cnt <= (linear_active && qtrframe) ? linear_cnt - 1 : linear_cnt;
+        // When the frame counter generates a linear counter clock, the following actions occur in order:
+        if(qtrframe) begin
+            // If the linear counter reload flag is set, the linear counter is reloaded with the counter reload value, otherwise if the linear counter is non-zero, it is decremented.
+            if(linear_counter_reload_flag || update) linear_cnt <= linear_counter_reload;
+            else if(linear_active) linear_cnt <= linear_cnt - 1;
 
+            //If the control flag is clear, the linear counter reload flag is cleared.
+            if(!linear_ctrl_flag) linear_counter_reload_flag <= 0;
+        end
     end
 end
 
 // length counter  (coarse note duration)
-logic length_active;
 apu_length u_apu_length(
     .clk       (clk       ),
     .rst       (rst       ),
@@ -50,17 +52,17 @@ apu_length u_apu_length(
     .halt      (length_halt      ),
     .update    (update),
     .len       (length       ),
-    .active    (length_active      )
+    .active    (active      )
 );
 
-assign active = length_active && linear_active;
+wire active_both = active && linear_active;
 
 // timer  (note pitch)
 logic sync;
 apu_divider #( .DEPTH(11) )u_apu_divider(
     .clk    (clk    ),
     .rst    (rst    ),
-    .en     (active     ),
+    .en     (active_both     ),
     .period (timer_len ),
     .reload (update ),
     .sync   (sync   )
@@ -77,7 +79,7 @@ always_ff @(posedge clk) begin
         count <= count;
         up <= up;
 
-        if(active && sync) begin
+        if(active_both && sync) begin
             if (up) begin
                 if (&count) up <= 0; // count == 15, ramp back down
                 else count <= count + 1;
