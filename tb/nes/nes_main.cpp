@@ -11,6 +11,7 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
+#include <filesystem>
 
 #include "Vnes_tb.h"
 
@@ -61,6 +62,15 @@ bool FrameRecorder::process(int vblank, int pixel_en, int pixel)
             std::cout << "done" << std::endl;
             f.close();
             active_frame = false;
+            try
+            {
+                std::filesystem::copy( "logs/frame.tmp", "logs/frame.ppm", std::filesystem::copy_options::overwrite_existing);
+            }
+            catch (std::filesystem::filesystem_error )
+            {
+                // std::cout << "logs/frame.tmp doesnt exist?" << std::endl;
+            }
+
             if(max_frames > 0 && frame_num >= max_frames) return false;
         }
     }
@@ -76,13 +86,15 @@ bool FrameRecorder::process(int vblank, int pixel_en, int pixel)
         }
         else
         {
-            std::ostringstream fname;
-            fname << "logs/frame" << std::setfill('0') << std::setw(4) << frame_num-skip_frames << ".ppm";
-            std::cout << "Recording frame " << frame_num << " of " << max_frames << " at " << fname.str() << " ... ";
-            f.open(fname.str(), std::ios::binary);
+            // std::ostringstream fname;
+            // fname << "logs/frame" << std::setfill('0') << std::setw(4) << frame_num-skip_frames << ".ppm";
+            // fname << "logs/frame.tmp";
+            // std::cout << "Recording frame " << frame_num << " of " << max_frames << " at " << fname.str() << " ... ";
+            std::cout << "Recording frame " << frame_num << " of " << max_frames << " ... ";
+            f.open("logs/frame.tmp", std::ios::binary);
             if(!f.is_open()) 
             {
-                std::cout << "Failed to open file " << fname.str() << "  Aborting" << std::endl;
+                std::cout << "Failed to open file " << "logs/frame.tmp" << "  Aborting" << std::endl;
                 return false;
             }
             f << "P6" << std::endl << w << " " << h << std::endl << 255 << std::endl;

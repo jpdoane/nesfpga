@@ -19,6 +19,9 @@ module apu
 
     // APU register space 0x4000-0x401f
     wire apu_cs               = (addr_from_cpu & 16'hffe0) == 16'h4000;
+    wire apu_rd = apu_cs && cpu_rw;
+    wire apu_wr = apu_cs && !cpu_rw;
+
     wire [4:0] apu_addr       = addr_from_cpu[4:0];
 
 
@@ -82,6 +85,9 @@ logic [7:0] data_from_cpu, data_to_cpu;
 logic [15:0] addr_from_cpu;
 logic dma_en, cpu_rw;
 
+
+
+wire status_sel = apu_cs && (apu_addr == 5'h15);
 
 
 logic [7:0] apu_data_rd;
@@ -316,10 +322,10 @@ logic apu_cycle, qtrframe, halfframe;
 apu_framecounter u_apu_framecounter(
     .clk          (clk          ),
     .rst          (rst          ),
-    .mode       (framectr_mode ),
-    .noint       (framectr_noint ),
-    .update        (framectr_update),
-    .clrint        (framectr_clrint),
+    .apu_addr       (apu_addr ),
+    .data_in       (data_from_cpu ),
+    .apu_rd        (apu_rd),
+    .apu_wr        (apu_wr),
     .apu_cycle    (apu_cycle    ),
     .qtrframe     (qtrframe     ),
     .halfframe    (halfframe    ),
@@ -334,13 +340,9 @@ apu_pulse #(.id (0)) u_apu_pulse0(
     .qtrframe         (qtrframe         ),
     .halfframe        (halfframe        ),
     .en               (pulse0_en               ),
-    .reg_ctrl         (reg_pulse0_ctrl         ),
-    .reg_sweep        (reg_pulse0_sweep        ),
-    .reg_timelow      (reg_pulse0_timelow      ),
-    .reg_timehigh     (reg_pulse0_timehigh     ),
-    .reg_ctrl_update  (pulse0_ctrl_update  ),
-    .reg_sweep_update (pulse0_sweep_update ),
-    .reg_len_update   (pulse0_length_update),
+    .apu_addr         (apu_addr         ),
+    .data_in          (data_from_cpu        ),
+    .apu_wr           (apu_wr      ),
     .active           (pulse0_active),
     .sample           (pulse0_sample )
 );
@@ -353,13 +355,9 @@ apu_pulse #(.id (1)) u_apu_pulse1(
     .qtrframe         (qtrframe         ),
     .halfframe        (halfframe        ),
     .en               (pulse1_en              ),
-    .reg_ctrl         (reg_pulse1_ctrl         ),
-    .reg_sweep        (reg_pulse1_sweep        ),
-    .reg_timelow      (reg_pulse1_timelow      ),
-    .reg_timehigh     (reg_pulse1_timehigh     ),
-    .reg_ctrl_update  (pulse1_ctrl_update  ),
-    .reg_sweep_update (pulse1_sweep_update ),
-    .reg_len_update   (pulse1_length_update),
+    .apu_addr         (apu_addr         ),
+    .data_in          (data_from_cpu        ),
+    .apu_wr           (apu_wr      ),
     .active           (pulse1_active),
     .sample           (pulse1_sample )
 );
