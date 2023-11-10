@@ -11,10 +11,10 @@ include ../../inc/make.verilator
 # NES_FILE=$(PROJ_ROOT)/roms/smb.nes
 ROM_PATH=/home/jpdoane/nesroms
 #NES_FILE=$(ROM_PATH)/castleva.nes
-# NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/2-len_table.nes
-# NES_FILE=/home/jpdoane/nes-test-roms/apu_test/apu_test.nes
+# NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/7-dmc_basics.nes
+NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/8-dmc_rates.nes
 # NES_FILE=/home/jpdoane/nesfpga/rom_loader/build/loader.nes
-NES_FILE=/home/jpdoane/nes-test-roms/apu_mixer/roms/square_sweep.nes
+# NES_FILE=/home/jpdoane/nes-test-roms/apu_mixer/roms/square_sweep.nes
 CART_INCL=$(abspath obj_dir/cart_incl.sv)
 $(CART_INCL): $(NES_FILE)
 	-@mkdir obj_dir
