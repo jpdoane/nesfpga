@@ -44,7 +44,7 @@ module apu_dmc
     wire irq_en = reg4010[7]; 
     wire loop = reg4010[6]; 
     wire [3:0] rate = reg4010[3:0]; 
-    logic [8:0] period[0:15] = '{428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106,  84,  72,  54};
+    logic [8:0] period[0:15] = '{427, 379, 339, 319, 285, 253, 225, 213, 189, 159, 141, 127, 105,  83,  71,  53};
 
     logic [7:0] sample_buffer;
     logic buffer_empty;
