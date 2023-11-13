@@ -42,51 +42,52 @@ module apu
 
     logic [7:0] apu_data_rd;
     logic apu_cs_r;
+
+    logic reg4012wr, reg4014wr, reg4015wr, reg4016wr;
+    logic reg4015rd, reg4016rd, reg4017rd;
+    always_comb begin
+        reg4012wr = 0;
+        reg4014wr = 0;
+        reg4015wr = 0;
+        reg4016wr = 0;
+        reg4015rd = 0;
+        reg4016rd = 0;
+        reg4017rd = 0;
+        case(apu_addr)
+            5'h12:  begin reg4012wr = apu_wr; end
+            5'h14:  begin reg4014wr = apu_wr; end
+            5'h15:  begin reg4015wr = apu_wr; reg4015rd = apu_rd; end
+            5'h16:  begin reg4016wr = apu_wr; reg4016rd = apu_rd; end
+            5'h17:  begin reg4017rd = apu_rd; end
+            default: begin end
+        endcase
+    end
+
     always_ff @(posedge clk) begin
-        ctrl_out <= 0;
-        apu_data_rd <= 0;
         if (rst) begin
+            apu_data_rd <= 0;
             reg_apu_enable <= 0;
             ctrl_strobe <= 0;
+            ctrl_out <= 0;
             apu_cs_r <= 0;
         end else begin
-            apu_cs_r <= apu_cs;        
-            if(apu_cs) begin
-                if (cpu_rw) begin
-                    // reg read
-                    case(apu_addr)
-                    5'h15:  begin
-                            apu_data_rd <= reg_apu_status_rd;
-                            end
-                    5'h16:  begin
-                            ctrl_out[0] <= 1;
-                            apu_data_rd <= {7'b0100000, ctrl_data[0]};
-                            end
-                    5'h17:  begin    
-                            ctrl_out[1] <= 1;
-                            apu_data_rd <= {7'b0100000, ctrl_data[1]};
-                            end
-                    default: begin end
-                    endcase
-                end else begin
-                    // reg write
-                    case(apu_addr)
-                        5'h15: reg_apu_enable <= data_from_cpu;    
-                        5'h16: ctrl_strobe <= data_from_cpu[2:0];
-                        default: begin end
-                    endcase
-                end
-            end
+            apu_data_rd <= 0;
+            
+            apu_cs_r <= apu_cs;
+            if(reg4015rd) apu_data_rd <= reg_apu_status_rd;    
+            if(reg4016rd) apu_data_rd <= {7'b0100000, ctrl_data[0]};
+            if(reg4017rd) apu_data_rd <= {7'b0100000, ctrl_data[1]};
+            
+            if(reg4015wr) reg_apu_enable <= data_from_cpu;
+            if(reg4016wr) ctrl_strobe <= data_from_cpu[2:0];
+            ctrl_out <= {reg4016rd, reg4017rd};
         end
     end
 
+    // dma code
+    // bus is routed through here to allow dma to take control
     logic dma_halt;
-    logic dmc_dma_req;
-    logic dmc_dma_active;
-    logic [15:0] dmc_dma_address;
-
-    // OAM dma
-    // once enabled, this temporarily disables cpu and takes over the bus
+    logic dmc_dma_init, dmc_dma_req, dmc_dma_read;
     apu_dma u_apu_dma(
         .clk    (clk        ),
         .rst    (rst        ),
@@ -95,13 +96,15 @@ module apu
         .cpu_addr_i (addr_from_cpu ),   // addr from cpu
         .cpu_data_i (data_from_cpu ),   // data from cpu
         .bus_data_i (data_i ),          // data from bus
-        .cpu_addr_o (addr_o ),          // cpu addr with dma ctrl
         .cpu_data_o (data_o ),          // cpu data with dma ctrl
+        .cpu_addr_o (addr_o ),          // cpu addr with dma ctrl
         .rw_o       (rw     ),
-        .halt       (dma_halt),
-        .dmc_dma_req    (dmc_dma_req),
-        .dmc_dma_active (dmc_dma_active),
-        .dmc_dma_address (dmc_dma_address)    
+        .halt       (dma_halt),         // halts cpu during dma transfer
+        .oam_init   (reg4014wr),
+        .dmc_addr_wr(reg4012wr),
+        .dmc_init   (dmc_dma_init),
+        .dmc_req    (dmc_dma_req),
+        .dmc_read   (dmc_dma_read)
     );
 
     wire cpu_rdy = rdy & !dma_halt;
@@ -207,9 +210,9 @@ module apu
         .active             (dmc_active),
         .sample             (dmc_sample),
         .irq                (dmc_irq),
-        .dma_req            (dmc_dma_req),
-        .dma_active         (dmc_dma_active),
-        .dma_address        (dmc_dma_address)
+        .dma_init            (dmc_dma_init),
+        .dma_req         (dmc_dma_req),
+        .dmc_read        (dmc_dma_read)
         );
 
 
