@@ -107,7 +107,7 @@ module apu_dmc
                 // When an output cycle ends, a new cycle is started as follows:
                 // The bits-remaining counter is loaded with 8.
                 // if the sample buffer is dma_empty, then the silence flag is set; otherwise, the silence flag is cleared and the sample buffer is emptied into the shift register.
-                silence <= buffer_full;
+                silence <= !buffer_full;
                 sr <= sample_buffer;
                 buffer_full <= 0;
                 bits_remaining <= 4'h8;

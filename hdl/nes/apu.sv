@@ -80,7 +80,7 @@ module apu
             
             if(reg4015wr) reg_apu_enable <= data_from_cpu;
             if(reg4016wr) ctrl_strobe <= data_from_cpu[2:0];
-            ctrl_out <= {reg4016rd, reg4017rd};
+            ctrl_out <= {reg4017rd, reg4016rd};
         end
     end
 

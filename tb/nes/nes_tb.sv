@@ -9,11 +9,10 @@ module nes_tb
     output logic vblank,
     output logic audio_pwm
 );
-
-    initial begin
-        $dumpfile("logs/nes_tb.fst");
-        $dumpvars(0, nes_tb);
-    end
+    // initial begin
+    //     $dumpfile("logs/nes_tb.fst");
+    //     $dumpvars(0, nes_tb);
+    // end
 
     logic clk_cpu, clk_ppu;
     logic rst_cpu, rst_ppu;
@@ -93,7 +92,7 @@ module nes_tb
         .vblank    (vblank    ),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
-        .ctrl_data       (ctrl_data),
+        .ctrl_data       (~ctrl_data),
         .cart_m2          (cart_m2),
         .cart_cpu_addr    (cart_cpu_addr),
         .cart_cpu_data_i  (data_cart2cpu),
@@ -184,9 +183,6 @@ module nes_tb
     .rst(rst_cpu),
     .strobe_in(ctrl_strobe[0]),
     .rd_in(ctrl_out[0]),
-    // test internal controller polling...
-    // .strobe_in(0),
-    // .rd_in(0),
     .data_in(ctrl_data[0]),
     .strobe_out(ctrl_strobeA),
     .rd_out(ctrl_outA),
@@ -203,21 +199,23 @@ module nes_tb
             // 6 - Left
             // 7 - Right
 
-    logic [7:0] btns0 = 0;
-    logic [7:0] btns1 = 0;
+    logic [7:0] btns0;
+    logic [7:0] btns1;
     
     // press start then right...
     always_comb begin
-        if(u_nes.u_apu.u_core_6502.cpu_cycle < 900_000) btns0 = 0;
-        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 8'b00001000; //start
-        else btns0 = 8'b10000000; //right
+        if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 0;
+        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_300_000) btns0 = 8'b00001000; //start
+        else btns0 = 8'b00000000;
+
+        btns1 = 0;
     end
 
     controller_sim u_controller_sim0(
         .clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
-        .strobe (ctrl_strobeA ),
-        .rd     (ctrl_outA     ),
+        .strobe (ctrl_strobe[0] ),
+        .rd     (ctrl_out[0]     ),
         .btns   (btns0   ),
         .data   (ctrl_data[0]   )
     );

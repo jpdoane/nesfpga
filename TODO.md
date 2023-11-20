@@ -1,27 +1,29 @@
+# Games/mapper
+Mappers 0-3 are implemented.  Following games have been tested
+- Super Mario Bros
+- Legend of Zelda
+- Metroid
+- Tetris
+- Pacman (freezes on load)
+- California Games (major grpahics issues)
+- Castlevania
+- Contra
+- Megaman
+- MLB
+- Paperboy
+
 # 6502 open issues:
-- clean up state machines
-- illegal opcodes
+- implement illegal opcodes
 
 # PPU open issues:
 - screen masking 
-- not sure vblank timing is 100% correct...
 
-# Games/mapper status
-## SMB
-- Some minor sprite flicker/studder issues
-- elevators scanline 1 artifact
-## Zelda
-- vertical scrolling is not smooth
-- graphic artifacts on screen edge
-- can get stuck on a screen, all exits return to same screen
-## Pacman
-- Freeze on start
-## Support more mappers...
+# APU open issues:
+- DMC implemented but not working well yet
+- DMC/OMA DMA comflicts cause some sprite flickering and artifacts
 
 # Audio
-- Noise channel
-- DMC channel
-- HDMI audio
+- add HDMI audio
 
 # System
 - resource optimization? target smaller device?

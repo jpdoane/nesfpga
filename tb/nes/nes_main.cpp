@@ -12,6 +12,7 @@
 #include <string>
 #include <iomanip>
 #include <filesystem>
+#include "verilated_fst_c.h"
 
 #include "Vnes_tb.h"
 
@@ -22,7 +23,6 @@ double sc_time_stamp() {
 
 class FrameRecorder
 {
-    int frame_num;
     int skip_frames;
     int max_frames;
     int w,h;
@@ -33,6 +33,7 @@ class FrameRecorder
     unsigned char pal_b[64] = {0x66,0x88,0xa7,0xa4,0x7e,0x40,0x00,0x00,0x00,0x00,0x00,0x08,0x4d,0x00,0x00,0x00,0xad,0xd9,0xff,0xfe,0xcc,0x7b,0x20,0x00,0x00,0x00,0x00,0x32,0x8d,0x00,0x00,0x00,0xff,0xff,0xff,0xff,0xff,0xcc,0x70,0x22,0x00,0x00,0x30,0x82,0xde,0x4f,0x00,0x00,0xff,0xff,0xff,0xff,0xff,0xea,0xc5,0xa5,0x94,0x96,0xab,0xcc,0xf2,0xb8,0x00,0x00};
 
 public:
+    int frame_num;
     FrameRecorder(int max_frames, int skip_frames, int w, int h);
     ~FrameRecorder() { if(f.is_open()) f.close(); };
     bool process(int vblank, int pixel_en, int pixel);
@@ -134,16 +135,19 @@ int main(int argc, char** argv) {
 
     Verilated::debug(0);
     Verilated::randReset(2);
-    Verilated::traceEverOn(true);
     Verilated::commandArgs(argc, argv);
     Verilated::mkdir("logs");
 
-
     Vnes_tb* top = new Vnes_tb;  // Or use a const unique_ptr, or the VL_UNIQUE_PTR wrapper
+
+    Verilated::traceEverOn(true);
+    VerilatedFstC* tfp = new VerilatedFstC;
+    top->trace (tfp, 99);
 
     FrameRecorder framerec(max_frames, skip_frames);
     
     top->clk = 0;
+    bool dumping = false;
     bool stillgoing = true;
     while (!Verilated::gotFinish() && stillgoing) {
         ++ppu_cycle;
@@ -156,6 +160,15 @@ int main(int argc, char** argv) {
         // }
         top->eval();
 
+        if(framerec.frame_num >= skip_frames)
+        {
+            if(!dumping) {
+                dumping = true;
+                tfp->open("logs/nes_tb.fst");
+            }
+            tfp->dump(Verilated::time());
+        }
+
         if(top->clk && top->pixel_clk)
         {
             stillgoing = stillgoing && framerec.process(top->vblank, top->pixel_en, top->pixel);
@@ -164,6 +177,7 @@ int main(int argc, char** argv) {
     }
 
     top->final();
+    tfp->close();
 
     //  Coverage analysis (since test passed)
 #if VM_COVERAGE
