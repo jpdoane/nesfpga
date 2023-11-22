@@ -24,7 +24,9 @@ module sprite #(parameter index=0)
     logic [7:0] x;
 
     wire sp_flip_x = at_i[6];
-    wire [7:0] pat_rev = {pat_i[0],pat_i[1],pat_i[2],pat_i[3],pat_i[4],pat_i[5],pat_i[6],pat_i[7]};
+    wire [7:0] pat = inscan ? pat_i : 8'h0;
+    wire [7:0] pat_rev = {pat[0],pat[1],pat[2],pat[3],pat[4],pat[5],pat[6],pat[7]};
+    wire [7:0] sp_pat = sp_flip_x ? pat_rev : pat;
 
     // save sprite data from oam2
     wire eval_this = eval && (cycle[5:3] == index);
@@ -37,19 +39,12 @@ module sprite #(parameter index=0)
         end else begin
 
             if(eval_this) begin
-                // if(inscan) begin
-                    if (save_pat0) pat0 <= sp_flip_x ? pat_rev : pat_i;
-                    if (save_pat1) begin
-                        pat1 <= sp_flip_x ? pat_rev : pat_i;
-                        at <= at_i;
-                        x <= x_i;
-                    end
-                // end else begin
-                //     pat0 <= 0;
-                //     pat1 <= 0;
-                //     at <= 0;
-                //     x <= x_i;
-                // end
+                if (save_pat0) pat0 <= sp_pat;
+                if (save_pat1) begin
+                    pat1 <= sp_pat;
+                    at <= at_i;
+                    x <= x_i;
+                end
             end
         end
     end
