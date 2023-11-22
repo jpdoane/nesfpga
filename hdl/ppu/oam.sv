@@ -16,7 +16,8 @@ module oam #(
     output logic [12:0] pattern_idx,
     output logic [7:0] attribute,
     output logic overflow, sp0,                  // OAM2[0] is sprite 0
-    output logic [7:0] x 
+    output logic [7:0] x,
+    output logic sp_inscan
     );
 
     initial $display("%s", OAM_INIT);
@@ -60,7 +61,7 @@ module oam #(
     wire [7:0] sp_yy = ysrc ? oam_dout : y;    // on copy use y coord from oam, otherwise use registered y coord
     wire [8:0] sp_yi = scan_r - {1'b0, sp_yy};
 
-    wire sp_inscan = ~(ppuctrl[PPUCTRL_H] ? |sp_yi[8:4] : |sp_yi[8:3]); //is this sprite in the current scan line?
+    assign sp_inscan = ~(ppuctrl[PPUCTRL_H] ? |sp_yi[8:4] : |sp_yi[8:3]); //is this sprite in the current scan line?
 
     // flip sprite y pattern index if needed
     wire [3:0] sp_yiflip = ~flip_y ? sp_yi[3:0] : 
@@ -220,8 +221,9 @@ module oam #(
 
 
     // OAM memory
+    wire [7:0] oam_din_byte2 = oam_din & 8'he3; // bits 2-4 in OAM byte 2 are not implemented
     always @(posedge clk) begin
-        if (oam_wr) OAM[oam_addr] <= oam_din;
+        if (oam_wr) OAM[oam_addr] <= oam_addr[1:0] == 2'h2 ? oam_din_byte2 : oam_din;
     end
     assign oam_dout = OAM[oam_addr];
 

@@ -11,6 +11,7 @@ module sprite #(parameter index=0)
     input logic load_sr,
     input logic [7:0] at_i,
     input logic [7:0] pat_i,
+    input logic inscan,
     input logic [7:0] x_i,
     output logic [3:0] px,
     output logic pri
@@ -35,17 +36,20 @@ module sprite #(parameter index=0)
             x <= 0;
         end else begin
 
-            pat0 <= pat0;
-            pat1 <= pat1;
-            at <= at;
-            x <= x;
-
-            if (eval_this && save_pat0)
-                pat0 <= sp_flip_x ? pat_rev : pat_i;
-            if (eval_this && save_pat1) begin
-                pat1 <= sp_flip_x ? pat_rev : pat_i;
-                at <= at_i;
-                x <= x_i;
+            if(eval_this) begin
+                // if(inscan) begin
+                    if (save_pat0) pat0 <= sp_flip_x ? pat_rev : pat_i;
+                    if (save_pat1) begin
+                        pat1 <= sp_flip_x ? pat_rev : pat_i;
+                        at <= at_i;
+                        x <= x_i;
+                    end
+                // end else begin
+                //     pat0 <= 0;
+                //     pat1 <= 0;
+                //     at <= 0;
+                //     x <= x_i;
+                // end
             end
         end
     end
@@ -61,15 +65,19 @@ module sprite #(parameter index=0)
             sr1 <= 0;
             xc <= 0;
         end else begin
-            sr0 <= load_sr ? pat0 : sr0;
-            sr1 <= load_sr ? pat1 : sr1;
 
-            xc <= px_en ? xc - 1 : x;
+            if(load_sr) begin
+                sr0 <= pat0;
+                sr1 <= pat1;
+            end
 
-            if (en) begin
+           if (en) begin
                 sr0 <= sr0 << 1;
                 sr1 <= sr1 << 1;
-                xc <= xc;
+            end else if(px_en) begin
+                xc <= xc - 1;
+            end else begin
+                xc <= x;
             end
         end
     end

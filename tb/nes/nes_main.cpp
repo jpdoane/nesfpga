@@ -144,7 +144,7 @@ int main(int argc, char** argv) {
     VerilatedFstC* tfp = new VerilatedFstC;
     top->trace (tfp, 99);
 
-    FrameRecorder framerec(max_frames, skip_frames);
+    FrameRecorder framerec(max_frames, 0); //skip_frames);
     
     top->clk = 0;
     bool dumping = false;

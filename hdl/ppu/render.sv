@@ -70,13 +70,8 @@ module render #(
         if (skip_cycle0) next_line = cycle == 9'd339;
         else             next_line = cycle == 9'd340;
 
-        if (EXTERNAL_FRAME_TRIGGER) begin
-            next_frame = trigger_frame;
-            cycle_next = (next_line || trigger_frame) ? 0 : cycle + 1;
-        end else begin
-            next_frame = next_line && (y==9'd260);
-            cycle_next = next_line ? 0 : cycle + 1;
-        end
+        next_frame = EXTERNAL_FRAME_TRIGGER ? trigger_frame : next_line && (y==9'd260);
+        cycle_next = (next_line || (trigger_frame && EXTERNAL_FRAME_TRIGGER)) ? 0 : cycle + 1;
 
         y_next = next_frame ? -1 :  // prerender line
                  next_line ? y + 1 :    // next line
@@ -282,6 +277,7 @@ module render #(
     
     
     wire sprite_rendering = rendering && render_sp;
+    logic sp_inscan;
     // sprite object memory
     oam u_oam(
         .clk         (clk         ),
@@ -299,7 +295,8 @@ module render #(
         .attribute   (sp_attribute   ),
         .overflow    (sp_of    ),
         .sp0         (sp0_line     ),
-        .x           (sp_x           )
+        .x           (sp_x           ),
+        .sp_inscan   (sp_inscan)
     );
 
     // sprite rendering
@@ -318,6 +315,7 @@ module render #(
                 .load_sr   (load_sp_sr  ),
                 .at_i      (sp_attribute ),
                 .pat_i     (data_i      ),
+                .inscan    (sp_inscan),
                 .x_i       (sp_x        ),
                 .px        (px   ),
                 .pri       (pri  )

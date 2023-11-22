@@ -12,7 +12,13 @@ def writemem(data, memfile):
             hex_repr = "{:08x}\n".format(word)
             f_mem.write(hex_repr)
 
-def nes2mem(nes_file, sv_file):
+def nes2mem(nes_file, sv_file, sav_file):
+
+    if len(sav_file) > 0:
+        with open(sav_file, 'rb') as fsav:
+            SAV = fsav.read()
+            writemem(SAV, "SAV.mem")
+
     with open(nes_file, 'rb') as fnes:
         header = fnes.read(16)
         f6 = header[6]
@@ -46,17 +52,22 @@ def nes2mem(nes_file, sv_file):
             f_sv.write("`define NES_HEADER 64\'h%s\n" % header64)
             f_sv.write("`define NES_PRG_FILE \"%s\"\n" % os.path.abspath("PRG.mem"))
             f_sv.write("`define NES_CHR_FILE \"%s\"\n" % os.path.abspath("CHR.mem"))
+            if len(sav_file) > 0:
+                f_sv.write("`define NES_SAV_FILE \"%s\"\n" % os.path.abspath("SAV.mem"))
+            else:
+                f_sv.write("`define NES_SAV_FILE \"\"\n")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Convert NES file to memory config files.")
     parser.add_argument("nes_file", help="Path to the nes file")
     parser.add_argument("sv_file", help="Path to the sv file", nargs='?', default="cart_incl.sv")
+    parser.add_argument("sav_file", help="Path to the sav file", nargs='?', default="")
 
     args = parser.parse_args()
 
     try:
-        nes2mem(args.nes_file,  args.sv_file)
+        nes2mem(args.nes_file,  args.sv_file,  args.sav_file)
         print("Conversion complete.")
     except FileNotFoundError:
         print("Error: Input file not found.")

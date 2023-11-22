@@ -4,7 +4,8 @@ module apu_dmc
     (
     input  logic clk, rst, apu_cycle,
     input  logic [4:0] apu_addr,
-    input  logic [7:0] data_in,
+    input  logic [7:0] data_from_cpu,
+    input  logic [7:0] data_from_ram,
     input  logic apu_wr,
     output logic active,
     output logic [6:0] sample,
@@ -29,8 +30,8 @@ module apu_dmc
             default: begin end
         endcase
     end
-    wire en_set = reg4015wr && data_in[4];
-    wire en_clr = reg4015wr && !data_in[4];
+    wire en_set = reg4015wr && data_from_cpu[4];
+    wire en_clr = reg4015wr && !data_from_cpu[4];
 
     logic [7:0] reg4010, reg4013;
     wire dmc_bit;
@@ -61,14 +62,14 @@ module apu_dmc
             load_sample <= 0;
         end else begin
 
-            if(reg4010wr) reg4010 <= data_in;
-            if(reg4013wr) reg4013 <= data_in;
+            if(reg4010wr) reg4010 <= data_from_cpu;
+            if(reg4013wr) reg4013 <= data_from_cpu;
 
             if( dma_init ) bytes_remaining <= {reg4013, 4'h1}; // (L * 16) + 1 bytes
             
             if(dmc_read) begin //read new sample into sample_buffer
                 bytes_remaining <= bytes_remaining-1;
-                sample_buffer <= data_in;
+                sample_buffer <= data_from_ram;
                 load_sample <= 1;
             end else begin
                 load_sample <= 0;
@@ -131,7 +132,7 @@ module apu_dmc
             end
 
             // direct load
-            if(reg4011wr) level_out <= data_in[6:0]; 
+            if(reg4011wr) level_out <= data_from_cpu[6:0]; 
         end
     end
 

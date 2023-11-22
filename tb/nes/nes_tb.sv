@@ -116,12 +116,14 @@ module nes_tb
         `define NES_HEADER 0
         `define NES_PRG_FILE ""
         `define NES_CHR_FILE ""
+        `define NES_SAV_FILE ""
     `endif
 
     /* verilator lint_off PINMISSING */
     cart_multimapper  #(
         .NES_HEADER(`NES_HEADER),
         .NES_PRG_FILE(`NES_PRG_FILE),
+        .NES_SAV_FILE(`NES_SAV_FILE),
         .NES_CHR_FILE(`NES_CHR_FILE)
     )  u_cart (
         // cart interface to NES
@@ -173,6 +175,20 @@ module nes_tb
 
     // always u_nes.u_cpu_bus.PRG[15'h0fdd] = 0; // no demo wait
 
+    logic vblank_reg;
+    int frame_cnt;
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            frame_cnt <= 0;
+            vblank_reg <= vblank;
+        end else begin
+            vblank_reg <= vblank;
+            if (vblank && !vblank_reg) frame_cnt <= frame_cnt+1;
+        end
+    end
+
+
+
   logic ctrl_outA;
   logic ctrl_strobeA;
   logic [7:0] btns;
@@ -189,24 +205,30 @@ module nes_tb
     .btns(btns)
     );
 
-
-            // 0 - A
-            // 1 - B
-            // 2 - Select
-            // 3 - Start
-            // 4 - Up
-            // 5 - Down
-            // 6 - Left
-            // 7 - Right
-
     logic [7:0] btns0;
     logic [7:0] btns1;
-    
+
+    localparam BTN_NONE    = 8'h00;
+    localparam BTN_A       = 8'h01;
+    localparam BTN_B       = 8'h02;
+    localparam BTN_SELECT  = 8'h04;
+    localparam BTN_START   = 8'h08;
+    localparam BTN_UP      = 8'h10;
+    localparam BTN_DOWN    = 8'h20;
+    localparam BTN_LEFT    = 8'h40;
+    localparam BTN_RIGHT   = 8'h80;
+
+   
     // press start then right...
     always_comb begin
-        if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_100_000) btns0 = 0;
-        else if(u_nes.u_apu.u_core_6502.cpu_cycle < 1_300_000) btns0 = 8'b00001000; //start
-        else btns0 = 8'b00000000;
+        if(frame_cnt < 40) btns0 = BTN_NONE;
+        // else if(frame_cnt < 45) btns0 = BTN_START;
+        // else if(frame_cnt < 70) btns0 = BTN_NONE;
+        // else if(frame_cnt < 75) btns0 = BTN_START;
+        // else if(frame_cnt < 200) btns0 = BTN_NONE;
+        // else if(frame_cnt < 205) btns0 = BTN_RIGHT;
+        // else if(frame_cnt < 210) btns0 = BTN_A;
+        else btns0 = BTN_NONE;
 
         btns1 = 0;
     end

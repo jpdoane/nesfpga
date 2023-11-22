@@ -130,7 +130,7 @@ module apu_dma
                     end
             COPY:   begin
                         oam_copy=1;
-                        oam_next = (oam_cnt==8'hff) ? IDLE :
+                        oam_next = (oam_cnt==8'h00) ? IDLE :
                                    dmc_block ? STALL : FETCH;
                     end
             default: begin end
@@ -138,7 +138,7 @@ module apu_dma
     end
 
     // dma control of bus
-    assign halt = dmc_active || oam_active; 
+    assign halt = rw_i && (dmc_active || oam_active); 
 
     assign cpu_addr_o = dmc_fetch ? dmc_address : 
                         oam_fetch ? oam_address : 

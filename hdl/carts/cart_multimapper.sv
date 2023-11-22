@@ -13,6 +13,7 @@ module cart_multimapper
 
     parameter NES_HEADER = 64'h0,
     parameter NES_PRG_FILE = "",
+    parameter NES_SAV_FILE = "",
     parameter NES_CHR_FILE = ""    
 )
 (
@@ -391,7 +392,8 @@ module cart_multimapper
     );
 
     cart_mem_dual #(
-        .ADDR_WIDTHA(PRGRAM_WIDTH)
+        .ADDR_WIDTHA(PRGRAM_WIDTH),
+        .MEM_FILE(NES_SAV_FILE)
     ) u_prgram
     (
     //NES
