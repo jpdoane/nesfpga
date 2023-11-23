@@ -1,30 +1,32 @@
 # Games/mapper
 Mappers 0-3 are implemented.  Following games have been tested
+## Mostly working games
 - Super Mario Bros
-- Legend of Zelda
+- Legend of Zelda (minor rendering issues)
 - Metroid
 - Tetris
-- Pacman (freezes on load)
-- California Games (major grpahics issues)
 - Castlevania
 - Contra
 - Megaman
 - MLB
 - Paperboy
+## Non-playable games
+- Pacman (freezes on load)
+- California Games (major graphics issues)
 
 # 6502 open issues:
 - implement illegal opcodes
 
 # PPU open issues:
-- screen masking 
+- screen masking
+- common artifacts on first scanline
 
 # APU open issues:
-- DMC implemented but not working well yet
-- DMC/OMA DMA comflicts cause some sprite flickering and artifacts
+- DMC implemented but not fully tested
 
 # Audio
-- add HDMI audio
+- HDMI audio not working
 
 # System
-- resource optimization? target smaller device?
-- load new mappers via partial reconfiguration?
+- Resource optimization? target smaller device?
+- Currently a few mappers are implemented in parallel with muxed logic, which isnt very scalable. Better approach: dynamically load each mapper via partial reconfiguration?

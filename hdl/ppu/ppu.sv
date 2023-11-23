@@ -299,8 +299,8 @@ module ppu  #(
     logic pal_wr, vpal;
     logic [4:0] pal_addr;
     logic [7:0] pal_data;
-    assign vpal = (v[13:8] == 6'h3f) && vblank;
-    assign pal_addr = vpal ? v[4:0] : palette_idx;
+    assign vpal = (v[13:8] == 6'h3f);
+    assign pal_addr = px_en ? palette_idx : v[4:0];
     
     palette u_palette(
         .clk    (clk    ),
@@ -313,7 +313,8 @@ module ppu  #(
 
     always @(posedge clk) px_en_r <= px_en;
 
-    assign px_data = pal_data;
+    localparam PIXEL_BLACK = 8'h3f;
+    assign px_data = px_en_r ? pal_data : PIXEL_BLACK;
     assign px_out = px_en_r;
 
 

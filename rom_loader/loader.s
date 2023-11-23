@@ -145,6 +145,7 @@ InitializeLoader:
 InitNTLoop:   sta PPU_DATA
               dey
               bne InitNTLoop
+              ldy #$20
               dex
               bne InitNTLoop
 

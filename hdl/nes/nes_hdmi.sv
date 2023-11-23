@@ -144,7 +144,7 @@ module nes_hdmi (
     logic [9:0] hx, hy;
     logic [5:0] pixel_h;
     logic pixel_on;
-    localparam PPU_LATENCY = 4;
+    localparam PPU_LATENCY = 3;
     hdmi_upscaler #(.IPIXEL_LATENCY (341 + PPU_LATENCY))
     u_hdmi_upscaler (
         .clk_p     (clk_ppu     ),
