@@ -179,7 +179,7 @@ module nes_tb
     int frame_cnt;
     always_ff @(posedge clk) begin
         if(rst) begin
-            frame_cnt <= 0;
+            frame_cnt <= 1;
             vblank_reg <= vblank;
         end else begin
             vblank_reg <= vblank;
@@ -259,5 +259,8 @@ module nes_tb
         .sample (audio ),
         .pdm    (audio_pwm    )
     );
+
+
+    `include "nes_logger.svi"
 
 endmodule

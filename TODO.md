@@ -9,9 +9,9 @@ Mappers 0-3 are implemented.  Following games have been tested
 - Contra
 - Megaman
 - MLB
+- Pacman
 - Paperboy
 ## Non-playable games
-- Pacman (freezes on load)
 - California Games (major graphics issues)
 
 # 6502 open issues:

@@ -175,5 +175,4 @@ module nes #(
     assign cart_ppu_wr = ppu_wr;
 
 
-    `include "nes_logger.svi"
 endmodule
