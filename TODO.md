@@ -2,7 +2,7 @@
 Mappers 0-3 are implemented.  Following games have been tested
 ## Mostly working games
 - Super Mario Bros
-- Legend of Zelda (minor rendering issues)
+- Legend of Zelda
 - Metroid
 - Tetris
 - Castlevania

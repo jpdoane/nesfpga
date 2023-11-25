@@ -121,22 +121,12 @@ module ppu  #(
             NMI_output <= 0;
             pal_wr <= 0;
         end else begin
-            ppuctrl <= ppuctrl;
-            ppumask <= ppumask;
             wr <= 0;
             pal_wr <= 0;
-
-            v <= v;
-            t <= t;
-            fine_x<= fine_x;
             inc_v <= 0;
             vblank_r <= vblank;
             NMI_occured <= (NMI_occured || vblank_re) & ~vblank_fe;
             NMI_output <= NMI_output;
-
-            cpu_data_io <= cpu_data_io;       // output data will be maintained, emulating ppu i/o latch
-                                            // input data is also copied to data_o on writes
-
             cpu_ppu_read <= 0;
             if(reg_re) begin    // cpu read (ppu write back to cpu)
                 case(cpu_addr)

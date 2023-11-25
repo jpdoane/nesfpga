@@ -4,14 +4,14 @@ TOP=nes_tb
 VERILATE_TOP=nes_main.cpp
 VERILATE_INCL=input.vc
 HDL_SOURCE = $(AUDIO_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
-VERILATE_ARGS= --max_frames 170 --skip_frames 160
+VERILATE_ARGS= --max_frames 218 --skip_frames 215
 
 include ../../inc/make.verilator
 
 ROM_PATH=/home/jpdoane/nesroms
-#NES_FILE=$(ROM_PATH)/smb.nes
-NES_FILE=$(ROM_PATH)/pacman.nes
-# NES_SAV_FILE=$(ROM_PATH)/zelda.sav
+NES_FILE=$(ROM_PATH)/zelda.nes
+# NES_FILE=$(ROM_PATH)/pacman.nes
+NES_SAV_FILE=$(ROM_PATH)/zelda.sav
 # NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/7-dmc_basics.nes
 # NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/8-dmc_rates.nes
 # NES_FILE=/home/jpdoane/nes-test-roms/apu_mixer/roms/square_sweep.nes

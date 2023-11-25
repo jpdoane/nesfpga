@@ -151,16 +151,17 @@ module render #(
         end
 
         case(state)
-            PRERENDER:
-            begin
-                px_en = 0;
-                v_resety = render_en && (cycle >= 279 && cycle <= 303);
-                state_next = next_line ? RENDER : PRERENDER;
-            end
+            PRERENDER: begin end
+            // PRERENDER:
+            // begin
+            //     px_en = 0;
+            //     v_resety = render_en && (cycle >= 279 && cycle <= 303);
+            //     state_next = next_line ? RENDER : PRERENDER;
+            // end
             RENDER:
             begin
-                sr_en = ~cycle0;
-                px_en = render_en && ~cycle0;
+                sr_en = ~cycle0 && ~prerender;
+                px_en = render_en && ~cycle0 && ~prerender;
                 state_next = fetch_sprites ? V_RESETX : RENDER;
             end
             V_RESETX:
@@ -173,6 +174,7 @@ module render #(
             begin
                 sp_eval = 1;
                 v_incx = 0;
+                v_resety = prerender && render_en && (cycle >= 279 && cycle <= 303);
                 load_sp_sr = fetch_nextline;
                 state_next = fetch_nextline ? PREP_NEXT_LINE : SPRITE_EVAL;
             end
@@ -203,7 +205,7 @@ module render #(
                 sr_en = 0;
                 v_incx = 0;
                 set_vblank = 1;
-                state_next = next_frame ? PRERENDER : VBLANK;
+                state_next = next_frame ? RENDER : VBLANK;
             end
         endcase
 
@@ -242,11 +244,6 @@ module render #(
                     tile_sr1[7:0] <= pat1;
                     pal_dat <= pal;
                 end
-            end else begin
-                tile_sr0 <= tile_sr0;
-                tile_sr1 <= tile_sr1;
-                pal_sr0 <=  pal_sr0;
-                pal_sr1 <=  pal_sr1;
             end
         end
     end

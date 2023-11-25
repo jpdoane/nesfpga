@@ -222,14 +222,14 @@ module nes_tb
     always_comb begin
         if(frame_cnt < 40) btns0 = BTN_NONE;
         else if(frame_cnt < 45) btns0 = BTN_START;
-        else if(frame_cnt < 160) btns0 = BTN_NONE;
-        else if(frame_cnt < 165) btns0 = BTN_START;
-        // else if(frame_cnt < 70) btns0 = BTN_NONE;
-        // else if(frame_cnt < 75) btns0 = BTN_START;
+        else if(frame_cnt < 60) btns0 = BTN_NONE;
+        else if(frame_cnt < 65) btns0 = BTN_START;
+        else if(frame_cnt < 210) btns0 = BTN_NONE;
+        else if(frame_cnt < 211) btns0 = BTN_START;
         // else if(frame_cnt < 200) btns0 = BTN_NONE;
         // else if(frame_cnt < 205) btns0 = BTN_RIGHT;
         // else if(frame_cnt < 210) btns0 = BTN_A;
-        else btns0 = BTN_RIGHT;
+        else btns0 = BTN_NONE;
 
         btns1 = 0;
     end
