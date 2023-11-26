@@ -22,7 +22,8 @@ module ppu  #(
     output logic [7:0] px_data,
     output logic px_out,
     input logic trigger_frame,
-    output logic vblank
+    output logic vblank,
+    output logic frame_extra
     );
 
     logic reg_re, reg_we, cs_r;
@@ -65,7 +66,7 @@ module ppu  #(
     logic render_incx, render_incy, resetx, resety;
     logic NMI_occured, NMI_output;
     logic sp0, sp_of;
-    logic px_en, px_en_r;
+    logic frame, render_en;
 
     assign nmi = NMI_occured && NMI_output;
 
@@ -100,7 +101,7 @@ module ppu  #(
     wire oam_addr_wr = reg_we && (cpu_addr == OAMADDR_ADDR);
     wire oam_data_wr = reg_we && (cpu_addr == OAMDATA_ADDR);
     wire [7:0] oam_data_o;
-
+    logic resetv;
     always @(posedge clk) begin
         if (rst) begin
             ppuctrl <= 0;
@@ -120,6 +121,7 @@ module ppu  #(
             NMI_occured <= 0;
             NMI_output <= 0;
             pal_wr <= 0;
+            resetv <= 0;
         end else begin
             wr <= 0;
             pal_wr <= 0;
@@ -128,6 +130,7 @@ module ppu  #(
             NMI_occured <= (NMI_occured || vblank_re) & ~vblank_fe;
             NMI_output <= NMI_output;
             cpu_ppu_read <= 0;
+            resetv <= 0;
             if(reg_re) begin    // cpu read (ppu write back to cpu)
                 case(cpu_addr)
                     PPUSTATUS_ADDR: begin
@@ -171,7 +174,7 @@ module ppu  #(
                                     end else begin
                                         // low addr
                                         t[7:0] <= cpu_data_i;
-                                        v <= {t[14:8], cpu_data_i};
+                                        resetv <= 1;
                                     end
                                     w <= ~w;
                                     end
@@ -218,14 +221,13 @@ module ppu  #(
             end
 
             // reset v horizontal info
-            if (resetx) begin
+            if (resetx || resetv) begin
                 v[10] <= t[10];
                 v[4:0] <= t[4:0];
             end
             // reset v vertical info
-            if (resety) begin
-                v[11] <= t[11];
-                v[14:12] <= t[14:12];
+            if (resety || resetv) begin
+                v[14:11] <= t[14:11];
                 v[9:5] <= t[9:5];
             end
 
@@ -273,8 +275,10 @@ module ppu  #(
         .fetch_chr     (fetch_chr     ),
         .pattern_idx   (pattern_idx   ),
         .palette_idx   (palette_idx   ),
-        .px_en         (px_en         ),
+        .frame_on      (frame         ),
+        .render_en     (render_en         ),
         .vblank        (vblank        ),
+        .frame_extra    (frame_extra),
         .v_incx        (render_incx        ),
         .v_incy        (render_incy        ),
         .v_resetx      (resetx      ),
@@ -290,7 +294,7 @@ module ppu  #(
     logic [4:0] pal_addr;
     logic [7:0] pal_data;
     assign vpal = (v[13:8] == 6'h3f);
-    assign pal_addr = px_en ? palette_idx : v[4:0];
+    assign pal_addr = frame ? palette_idx : v[4:0];
     
     palette u_palette(
         .clk    (clk    ),
@@ -301,11 +305,8 @@ module ppu  #(
         .data_o (pal_data )
     );
 
-    always @(posedge clk) px_en_r <= px_en;
-
     localparam PIXEL_BLACK = 8'h3f;
-    assign px_data = px_en_r ? pal_data : PIXEL_BLACK;
-    assign px_out = px_en_r;
-
+    always @(posedge clk) px_out <= frame;
+    assign px_data = (px_out && render_en) ? pal_data : PIXEL_BLACK;
 
 endmodule

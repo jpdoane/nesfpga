@@ -87,11 +87,13 @@ module nes #(
     // end
     // wire rst_cpu_delay = rst_cpu_sr[0];
 
+    logic frame_extra;
+    wire cpu_rdy = !frame_extra; //stop CPU during extra scanlines due to nonstandard frame timing
     apu #(.AUDIO_DEPTH(AUDIO_DEPTH)) u_apu(
     	.clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
         .data_i (cpu_bus_data ),
-        .rdy    (1'b1    ),
+        .rdy    (cpu_rdy    ),
         .nmi    (nmi    ),
         .irq    (cart_irq),
         .addr_o (cpu_addr ),
@@ -153,7 +155,8 @@ module nes #(
         .px_data    (pixel    ),
         .px_out    (pixel_en    ),
         .trigger_frame (frame_trigger ),
-        .vblank (vblank )
+        .vblank (vblank ),
+        .frame_extra (frame_extra)
     );
 
     ppu_bus u_ppu_bus(

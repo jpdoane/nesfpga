@@ -5,7 +5,7 @@ module sprite #(parameter index=0)
     input logic clk, rst,
     input logic [8:0] cycle,
     input logic eval,
-    input logic px_en,
+    input logic frame_on,
     input logic save_pat0,
     input logic save_pat1,
     input logic load_sr,
@@ -52,7 +52,7 @@ module sprite #(parameter index=0)
     // pixel shift registers and x counter
     logic [7:0] sr0, sr1, xc;
     // enable sprite once the counter reaches zero
-    wire en = px_en && (xc==0);
+    wire en = frame_on && (xc==0);
 
     always @(posedge clk) begin
         if (rst) begin
@@ -69,7 +69,7 @@ module sprite #(parameter index=0)
            if (en) begin
                 sr0 <= sr0 << 1;
                 sr1 <= sr1 << 1;
-            end else if(px_en) begin
+            end else if(frame_on) begin
                 xc <= xc - 1;
             end else begin
                 xc <= x;

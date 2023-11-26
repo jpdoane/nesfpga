@@ -10,7 +10,7 @@ module hdmi_trigger #(
     parameter  SUB_X = 2,
     parameter  SUB_Y = 2,
     parameter  OSCREEN_SHIFT = (OSCREEN_WIDTH - ISCREEN_WIDTH*SUB_X) >> 1,
-    parameter  IPIXEL_LATENCY = 4                 // first pixel of new frame will be IPIXEL_LATENCY clocks after new_frame is asserted
+    parameter  IPIXEL_LATENCY = 3                 // first pixel of new frame will be IPIXEL_LATENCY clocks after new_frame is asserted
     )
 (
   input logic clk_p,                // ppu pixel clock

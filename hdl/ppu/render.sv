@@ -24,7 +24,7 @@ module render #(
     output logic [12:0] pattern_idx,
     output logic [4:0] palette_idx,
 
-    output logic px_en, vblank,
+    output logic frame_on, render_en, vblank, frame_extra,
     output logic v_incx, v_incy, v_resetx, v_resety,
     output logic sp0, sp_of
     );
@@ -45,7 +45,7 @@ module render #(
     wire render_sp_left = ppumask[2];
     wire render_bg = ppumask[3] & ~vblank;
     wire render_sp = ppumask[4] & ~vblank;
-    wire render_en = render_bg | render_sp;
+    assign render_en = render_bg | render_sp;
             
     logic [7:0] nt, at, pat0, pat1;
     logic [8:0] y, cycle;
@@ -59,9 +59,11 @@ module render #(
     wire fetch_nextline = (cycle == 320);
     wire fetch_garbage = (cycle == 336);
 
-    logic prerender, skip_cycle0, next_line, next_frame;
+    logic prerender, skip_cycle0, next_line, new_frame;
     logic [8:0] y_next;
     logic [8:0] cycle_next;
+
+    wire nes_frame_over = next_line && (y==9'd260);
     always_comb begin
 
         prerender = &y; //y==-1
@@ -70,10 +72,11 @@ module render #(
         if (skip_cycle0) next_line = cycle == 9'd339;
         else             next_line = cycle == 9'd340;
 
-        next_frame = EXTERNAL_FRAME_TRIGGER ? trigger_frame : next_line && (y==9'd260);
+        
+        new_frame = EXTERNAL_FRAME_TRIGGER ? trigger_frame : nes_frame_over;
         cycle_next = (next_line || (trigger_frame && EXTERNAL_FRAME_TRIGGER)) ? 0 : cycle + 1;
 
-        y_next = next_frame ? -1 :  // prerender line
+        y_next = new_frame ? -1 :  // prerender line
                  next_line ? y + 1 :    // next line
                  y;                     // same line
     end
@@ -95,6 +98,7 @@ module render #(
             state <= RENDER;
             sp0 <= 0;
             odd_frame <= 1;
+            frame_extra <= 0;
         end
         else begin
             nt <=   save_nt ? data_i : nt;
@@ -108,7 +112,12 @@ module render #(
 
             sp0 <= prerender ? 0 : (sp0_opaque && bg_opaque && render_bg && render_sp) || sp0;
             vblank_r <= prerender ? 0 : set_vblank || vblank;
-            odd_frame <= next_frame ? ~odd_frame : odd_frame;
+            odd_frame <= new_frame ? ~odd_frame : odd_frame;
+
+            if(EXTERNAL_FRAME_TRIGGER) begin
+                if (nes_frame_over) frame_extra <= 1;
+                if (prerender) frame_extra <= 0;
+            end
         end
     end
 
@@ -122,7 +131,7 @@ module render #(
         v_resety = 0;
         set_vblank = 0;
         rendering = render_en;
-        px_en = 0;
+        frame_on = 0;
         sr_en = 1;
         sp_eval = 0;
         load_sp_sr = 0;
@@ -151,17 +160,10 @@ module render #(
         end
 
         case(state)
-            PRERENDER: begin end
-            // PRERENDER:
-            // begin
-            //     px_en = 0;
-            //     v_resety = render_en && (cycle >= 279 && cycle <= 303);
-            //     state_next = next_line ? RENDER : PRERENDER;
-            // end
             RENDER:
             begin
-                sr_en = ~cycle0 && ~prerender;
-                px_en = render_en && ~cycle0 && ~prerender;
+                frame_on = ~cycle0 && ~prerender;
+                sr_en = frame_on;
                 state_next = fetch_sprites ? V_RESETX : RENDER;
             end
             V_RESETX:
@@ -205,8 +207,9 @@ module render #(
                 sr_en = 0;
                 v_incx = 0;
                 set_vblank = 1;
-                state_next = next_frame ? RENDER : VBLANK;
+                state_next = new_frame ? RENDER : VBLANK;
             end
+            default: begin end
         endcase
 
         fetch_tile = render_en && !(fetch_attr || fetch_chr);
@@ -306,7 +309,7 @@ module render #(
                 .rst       (rst       ),
                 .cycle     (cycle     ),
                 .eval      (sp_eval   ),
-                .px_en      (px_en),
+                .frame_on      (frame_on),
                 .save_pat0 (save_pat0 ),
                 .save_pat1 (save_pat1 ),
                 .load_sr   (load_sp_sr  ),
@@ -343,6 +346,7 @@ module render #(
     wire bg_opaque = |bg_px && render_bg;
     wire sp_opaque = |sp_px[1:0] && render_sp;
     wire draw_sprite = sp_opaque && !(sp_pri && bg_opaque);
+    
     assign palette_idx = draw_sprite ? {1'b1, sp_px} : {1'b0, bg_pal & {2{bg_opaque}}, bg_px};   
 
     // final pixel color: PAL[palette_idx] (done elsewhere)

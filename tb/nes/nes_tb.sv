@@ -48,6 +48,14 @@ module nes_tb
     //     wire frame_trigger = odd_frame && |u_nes.u_ppu.ppumask[4:3] ? frame_trigger_odd : frame_trigger_even;
     // `endif 
 
+    logic frame_trigger;
+    hdmi_trigger u_hdmi_trigger 
+    (
+    .clk_p (clk_ppu),
+    .rst_p (rst_ppu),
+    .new_frame (frame_trigger)
+    );    
+
 
     logic [2:0] strobe;
     logic [1:0] ctrl_out, ctrl_data, ctrl_strobe;
@@ -74,8 +82,8 @@ module nes_tb
 
     nes
     #(
-        .EXTERNAL_FRAME_TRIGGER (0),
-        .SKIP_CYCLE_ODD_FRAMES (1)
+        .EXTERNAL_FRAME_TRIGGER (1),
+        .SKIP_CYCLE_ODD_FRAMES (0)
     )
     u_nes(
         .clk_master       (clk       ),
@@ -84,7 +92,7 @@ module nes_tb
         .rst_cpu       (rst_cpu       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .frame_trigger (1'b0 ),
+        .frame_trigger (frame_trigger ),
         .pixel         (pixel         ),
         .pixel_en      (pixel_en      ),
         .audio    (audio),
@@ -220,12 +228,23 @@ module nes_tb
 
    
     always_comb begin
-        if(frame_cnt < 40) btns0 = BTN_NONE;
-        else if(frame_cnt < 45) btns0 = BTN_START;
+        if(frame_cnt < 18) btns0 = BTN_NONE;
+        else if(frame_cnt < 20) btns0 = BTN_START;
+        else if(frame_cnt < 30) btns0 = BTN_NONE;
+        else if(frame_cnt < 32) btns0 = BTN_START;
+        else if(frame_cnt < 40) btns0 = BTN_NONE;
+        else if(frame_cnt < 45) btns0 = BTN_DOWN;
+        else if(frame_cnt < 50) btns0 = BTN_NONE;
+        else if(frame_cnt < 55) btns0 = BTN_DOWN;
         else if(frame_cnt < 60) btns0 = BTN_NONE;
-        else if(frame_cnt < 65) btns0 = BTN_START;
-        else if(frame_cnt < 210) btns0 = BTN_NONE;
-        else if(frame_cnt < 211) btns0 = BTN_START;
+        else if(frame_cnt < 65) btns0 = BTN_A;
+        else if(frame_cnt < 80) btns0 = BTN_DOWN;
+        else if(frame_cnt < 85) btns0 = BTN_NONE;
+        else if(frame_cnt < 90) btns0 = BTN_DOWN;
+        else if(frame_cnt < 95) btns0 = BTN_NONE;
+        else if(frame_cnt < 100) btns0 = BTN_A;
+        else if(frame_cnt < 300) btns0 = BTN_NONE;
+        else if(frame_cnt < 310) btns0 = BTN_A;
         // else if(frame_cnt < 200) btns0 = BTN_NONE;
         // else if(frame_cnt < 205) btns0 = BTN_RIGHT;
         // else if(frame_cnt < 210) btns0 = BTN_A;
