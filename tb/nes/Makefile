@@ -10,7 +10,7 @@ include ../../inc/make.verilator
 
 ROM_PATH=/home/jpdoane/nesroms
 # NES_FILE=$(ROM_PATH)/zelda.nes
-NES_FILE=$(ROM_PATH)/californ.nes
+NES_FILE=$(ROM_PATH)/smb3.nes
 # NES_FILE=$(ROM_PATH)/pacman.nes
 # NES_SAV_FILE=$(ROM_PATH)/zelda.sav
 # NES_FILE=/home/jpdoane/nes-test-roms/apu_test/roms/7-dmc_basics.nes

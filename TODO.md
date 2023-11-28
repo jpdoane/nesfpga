@@ -1,6 +1,5 @@
 # Games/mapper
-Mappers 0-3 are implemented.  Following games have been tested
-## Mostly working games
+Mappers 0-4 are implemented.  Following games have been tested and are functional
 - Super Mario Bros
 - Legend of Zelda
 - Metroid
@@ -11,18 +10,16 @@ Mappers 0-3 are implemented.  Following games have been tested
 - MLB
 - Pacman
 - Paperboy
-## Non-playable games
-- California Games (major graphics issues)
+- California Games
 
 # 6502 open issues:
 - implement illegal opcodes
 
 # PPU open issues:
 - screen masking
-- common artifacts on first scanline
 
 # APU open issues:
-- DMC implemented but not fully tested
+- DMC implemented (and largely functional I think?) but not passing all unti tests
 
 # Audio
 - HDMI audio not working

@@ -7,8 +7,8 @@ module cart_multimapper
     // Width of S_AXI address bus
     parameter integer C_S_AXI_ADDR_WIDTH	= 6,
 
-    parameter integer CHR_WIDTH = 15,
-    parameter integer PRG_WIDTH = 17,
+    parameter integer CHR_WIDTH = 17,       //128kb
+    parameter integer PRG_WIDTH = 18,       //256kb
     parameter integer PRGRAM_WIDTH = 13,
 
     parameter NES_HEADER = 64'h0,
@@ -133,7 +133,7 @@ module cart_multimapper
     logic [63:0] ines_header;
     wire [7:0] prg_16k_chunks = ines_header[7:0];
     wire [7:0] chr_8k_chunks = ines_header[15:8];
-    wire mirrorv = ines_header[16];
+    wire [1:0] mirroring = {ines_header[19], ines_header[16]};
     wire batt = ines_header[17];
     wire [7:0] mapper = {ines_header[31:28], ines_header[23:20]};
     wire  chr_ram = chr_8k_chunks==0;
@@ -230,6 +230,17 @@ module cart_multimapper
     logic prgram_cs_map1;
     logic [7:0] mapper_reg_o_map1;
 
+    logic ciram_ce_map4;
+    logic ciram_a10_map4;
+    logic irq_map4;
+    logic [PRG_WIDTH-1:0] prg_addr_map4;
+    logic [CHR_WIDTH-1:0] chr_addr_map4;
+    logic [PRGRAM_WIDTH-1:0] prgram_addr_map4;
+    logic prg_cs_map4;
+    logic chr_cs_map4;
+    logic prgram_cs_map4;
+    logic [7:0] mapper_reg_o_map4;
+
     /* verilator lint_off CASEOVERLAP */
     always_comb begin
         casez(mapper)
@@ -257,7 +268,18 @@ module cart_multimapper
                     prgram_cs = prgram_cs_mapbank;
                     mapper_reg_o = mapper_reg_o_mapbank;
                     end
-
+            8'b00000100:   begin //mapper 4
+                    ciram_ce = ciram_ce_map4;
+                    ciram_a10 = ciram_a10_map4;
+                    irq = irq_map4;
+                    prg_addr = prg_addr_map4;
+                    chr_addr = chr_addr_map4;
+                    prgram_addr = prgram_addr_map4;
+                    prg_cs = prg_cs_map4;
+                    chr_cs = chr_cs_map4;
+                    prgram_cs = prgram_cs_map4;
+                    mapper_reg_o = mapper_reg_o_map4;
+                    end
 
             default: begin
                     ciram_ce = 0;
@@ -288,7 +310,7 @@ module cart_multimapper
     .ppu_addr       (ppu_addr),
     .cpu_rw         (cpu_rw),
     .romsel         (romsel),
-    .mirrorv        (mirrorv),
+    .mirrorv        (mirroring[0]),
     .chr_ram        (chr_ram),
     .prg_ram        (prg_ram),
     .prg_mask       (PRG_mask),
@@ -318,7 +340,7 @@ module cart_multimapper
     .ppu_addr       (ppu_addr),
     .cpu_rw         (cpu_rw),
     .romsel         (romsel),
-    .mirrorv        (mirrorv),
+    .mirrorv        (mirroring[0]),
     .chr_ram        (chr_ram),
     .prg_ram        (prg_ram),
     .prg_mask       (PRG_mask),
@@ -336,6 +358,37 @@ module cart_multimapper
     .irq            (irq_map1)
     );
 
+    mapper_004 #(
+    .PRG_ROM_DEPTH(PRG_WIDTH),
+    .CHR_ROM_DEPTH(CHR_WIDTH),
+    .PRG_RAM_DEPTH(PRGRAM_WIDTH)
+    ) u_mapper_004 (
+    .rst            (rst),
+    .clk_cpu        (clk_cpu),
+    .m2             (m2),
+    .clk_ppu        (clk_ppu),
+    .cpu_addr       (cpu_addr),
+    .cpu_data_i     (cpu_data_i),
+    .ppu_addr       (ppu_addr),
+    .cpu_rw         (cpu_rw),
+    .romsel         (romsel),
+    .mirroring        (mirroring),
+    .chr_ram        (chr_ram),
+    .prg_ram        (prg_ram),
+    .prg_mask       (PRG_mask),
+    .chr_mask       (CHR_mask),
+    .prgram_mask    (PRGRAM_mask),
+    .prg_addr       (prg_addr_map4),
+    .chr_addr       (chr_addr_map4),
+    .prgram_addr    (prgram_addr_map4),
+    .prg_cs         (prg_cs_map4),
+    .chr_cs         (chr_cs_map4),
+    .prgram_cs      (prgram_cs_map4),
+    .mapper_reg_o   (mapper_reg_o_map4),
+    .ciram_ce       (ciram_ce_map4),
+    .ciram_a10      (ciram_a10_map4),
+    .irq            (irq_map4)
+    );
 
     (* mark_debug = "true" *)  logic [7:0] PRG_rd;
     (* mark_debug = "true" *)  logic [7:0] PRGRAM_rd;
