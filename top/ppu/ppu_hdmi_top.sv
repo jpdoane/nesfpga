@@ -85,10 +85,7 @@ clocks  u_clocks(
     logic [13:0] ppu_addr;
     logic [7:0] px_data;
     logic px_out, vblank, trigger_frame;
-    ppu #(
-        .EXTERNAL_FRAME_TRIGGER (1)
-        )
-    u_ppu(
+    ppu     u_ppu(
         .clk        (clk_ppu        ),
         .rst        (rst_ppu        ),
         .cpu_rw     (cpu_rw     ),

@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 module serializer
 #(
     parameter int NUM_CHANNELS = 3,

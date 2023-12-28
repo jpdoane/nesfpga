@@ -5,47 +5,52 @@ initial begin
     log_fd = $fopen(NES_LOG_FILE, "w");
 end
 
-int cpu_cycle_r=0;
-int frame_cnt_r=0;
-logic sync_r=0;
-logic sync_rr=0;
-logic not_ready = 0;
-logic now_ready = 0;
-reg signed [9:0] ppu_V, ppu_H; //extend bits so we can represent prerender line as -1 to match Mesen log format
+(* mark_debug = "true" *)  logic [31:0] cpu_cycle = 0;
 always @(posedge clk_cpu ) begin
+    if (rst_cpu) cpu_cycle <= 1;
+    else cpu_cycle <= cpu_cycle+1;
+end
 
-    ppu_V <= ppu_V;
-    ppu_H <= ppu_H;
-    sync_r <= 0;
-    if(u_nes.u_apu.u_core_6502.sync && u_nes.u_apu.u_core_6502.cpu_cycle>1 && u_nes.u_apu.u_core_6502.READY) begin
-        // grab snapshot of ppu counters at sync
+//extend bits so we can represent prerender line as -1 to match Mesen log format
+logic signed [9:0] ppu_V, ppu_H;
+int ppu_frame_cnt, cpu_cycle_r;
+
+// register signals on m2
+logic sync_r, sync_rr;
+wire gated_sync = u_nes.u_apu.u_core_6502.sync && u_nes.u_apu.u_core_6502.READY;
+always @(posedge u_nes.m2 ) begin
+    if(rst_ppu) begin
+        ppu_V <= 0;
+        ppu_H <= 0;
+        ppu_frame_cnt <= 0;
+        cpu_cycle_r <= 0;
+        sync_r <= 0;
+        sync_rr <= 0;
+    end else begin
         ppu_V <= &u_nes.u_ppu.u_render.y ? 10'(-1) : 10'(u_nes.u_ppu.u_render.y);
         ppu_H <= 10'(u_nes.u_ppu.u_render.cycle);
-        sync_r <= 1;
-    end
-    
-    // display instruction after 2 clocks to allow register update from prev op
-    sync_rr <= sync_r && u_nes.u_apu.u_core_6502.rdy;
-    not_ready <= (sync_r || not_ready ) && !u_nes.u_apu.u_core_6502.rdy; //delay if rdy is low
-    now_ready <= u_nes.u_apu.u_core_6502.rdy && not_ready;
+        ppu_frame_cnt <= frame_cnt;
+        cpu_cycle_r <= cpu_cycle;
+        sync_r <= gated_sync;
+        sync_rr <= sync_r;
 
-    cpu_cycle_r <= u_nes.u_apu.u_core_6502.cpu_cycle;
-    frame_cnt_r <= frame_cnt;
-    if ( (sync_rr || now_ready )&& u_nes.u_apu.u_core_6502.opcode != 0) begin
-        $fwrite( log_fd, "%4h  %s        A:%2h X:%2h Y:%2h S:%2h P:%2h V:%0d H:%0d Fr:%0d Cycle:%0d\n",
-                                            u_nes.u_apu.u_core_6502.ip,
-                                            op_name(u_nes.u_apu.u_core_6502.opcode),
-                                            u_nes.u_apu.u_core_6502.a,
-                                            u_nes.u_apu.u_core_6502.x,
-                                            u_nes.u_apu.u_core_6502.y,
-                                            u_nes.u_apu.u_core_6502.s,
-                                            u_nes.u_apu.u_core_6502.p&8'hdf,
-                                            ppu_V,
-                                            ppu_H,
-                                            frame_cnt_r,
-                                            cpu_cycle_r);
+        if(sync_rr && cpu_cycle>6 && u_nes.u_apu.u_core_6502.READY && |u_nes.u_apu.u_core_6502.opcode) begin
+            $fwrite( log_fd, "%4h  %s        A:%2h X:%2h Y:%2h S:%2h P:%2h V:%0d H:%0d Fr:%0d Cycle:%0d\n",
+                                                u_nes.u_apu.u_core_6502.ip,
+                                                op_name(u_nes.u_apu.u_core_6502.opcode),
+                                                u_nes.u_apu.u_core_6502.a,
+                                                u_nes.u_apu.u_core_6502.x,
+                                                u_nes.u_apu.u_core_6502.y,
+                                                u_nes.u_apu.u_core_6502.s,
+                                                u_nes.u_apu.u_core_6502.p&8'hdf,
+                                                ppu_V,
+                                                ppu_H,
+                                                ppu_frame_cnt,
+                                                cpu_cycle_r);
+
+        end
     end
-end    
+end
 
 final begin
     $fclose(log_fd);

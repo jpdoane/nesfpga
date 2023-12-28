@@ -268,7 +268,7 @@ module cart_multimapper
                     prgram_cs = prgram_cs_mapbank;
                     mapper_reg_o = mapper_reg_o_mapbank;
                     end
-            8'b00000100:   begin //mapper 4
+            8'h4:   begin //mapper 4
                     ciram_ce = ciram_ce_map4;
                     ciram_a10 = ciram_a10_map4;
                     irq = irq_map4;

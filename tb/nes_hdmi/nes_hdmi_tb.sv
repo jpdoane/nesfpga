@@ -1,61 +1,47 @@
 `timescale 1ns/1ps
 
-module nes_tb
+module nes_hdmi_tb
 (
-    input clk, rst,
-    output logic [7:0] pixel,
-    output logic pixel_clk,
-    output logic pixel_en,
-    output logic vblank,
+    input clk_nes,
+    input clk_hdmi,
+    input rst_global,
+    output logic [23:0] rgb,
+    output logic pixel_on,
+    output logic video_frame,
     output logic audio_pwm
 );
-    // initial begin
-    //     $dumpfile("logs/nes_tb.fst");
-    //     $dumpvars(0, nes_tb);
-    // end
+    
+    logic rst_hdmi_rr, rst_hdmi_r, rst_hdmi;
+    always_ff @(posedge clk_hdmi) begin
+        if(rst_global) begin
+            rst_hdmi_rr <= 1;
+            rst_hdmi_r <= 1;
+            rst_hdmi <= 1;
+        end else begin
+            rst_hdmi_rr <= 0;
+            rst_hdmi_r <= rst_hdmi_rr;
+            rst_hdmi <= rst_hdmi_r;
+        end
+    end
+
+
+    logic rst_nes_rr, rst_nes_r, rst_nes;
+    always_ff @(posedge clk_nes) begin
+        if(rst_global) begin
+            rst_nes_rr <= 1;
+            rst_nes_r <= 1;
+            rst_nes <= 1;
+        end else begin
+            rst_nes_rr <= 0;
+            rst_nes_r <= rst_nes_rr;
+            rst_nes <= rst_nes_r;
+        end
+    end    
+
 
     logic clk_cpu, clk_ppu;
     logic rst_cpu, rst_ppu;
-    assign pixel_clk=clk_ppu;
     
-    // logic odd_frame;
-    // logic [17:0] ppu_frame_cnt;
-    // always_ff @(posedge clk_ppu) begin
-    //     if (rst_ppu) begin
-    //         //frame_en initiates prescanline, but on boot we start at scanline 0, so startup 341 ticks into count...
-    //         ppu_frame_cnt<= 341;
-    //         odd_frame <= 1;
-    //     end else begin
-    //         ppu_frame_cnt <= frame_en ? 0 : ppu_frame_cnt + 1;
-    //         odd_frame <= frame_en ? ~odd_frame : odd_frame;
-    //     end
-    // end
-
-    // `ifdef HDMI_TIMING
-    //     // hdmi frame timing (extra 1/2 scanline)
-    //     localparam PPU_CYCLES_FRAME_EVEN = 89513;
-    //     localparam PPU_CYCLES_FRAME_ODD = 89512;
-    //     wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
-    //     wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
-    //     wire frame_en = odd_frame ? frame_trigger_odd : frame_trigger_even;
-
-    // `else
-    //     // nes frame timing
-    //     localparam PPU_CYCLES_FRAME_EVEN = 89342;
-    //     localparam PPU_CYCLES_FRAME_ODD = 89341;
-    //     wire frame_trigger_odd = ppu_frame_cnt == PPU_CYCLES_FRAME_ODD-1;
-    //     wire frame_trigger_even = ppu_frame_cnt == PPU_CYCLES_FRAME_EVEN-1;
-    //     wire frame_en = odd_frame && |u_nes.u_ppu.ppumask[4:3] ? frame_trigger_odd : frame_trigger_even;
-    // `endif 
-
-    // logic frame_en;
-    // hdmi_trigger u_hdmi_trigger 
-    // (
-    // .clk_p (clk_ppu),
-    // .rst_p (rst_ppu),
-    // .new_frame (frame_en)
-    // );    
-
 
     logic [2:0] strobe;
     logic [1:0] ctrl_out, ctrl_data, ctrl_strobe;
@@ -80,28 +66,31 @@ module nes_tb
     logic cart_ppu_wr;
     logic cart_irq;
 
-    logic new_frame;
-    logic [8:0] px,py;
+    logic ppu_frame;
+    wire nes_en = !ppu_frame || video_frame; 
+    wire [7:0] pixel_p;
+    wire [8:0] px, py;
+    wire pixel_en, vblank;
     nes
     #(
         .SKIP_CYCLE_ODD_FRAMES (1)
     )
     u_nes(
-        .clk_master       (clk       ),
-        .rst_master       (rst       ),
-        .nes_clk_en     (1'b1),
+        .clk_master       (clk_nes       ),
+        .rst_master       (rst_nes       ),
+        .nes_clk_en     (nes_en),
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .pixel         (pixel         ),
+        .pixel         (pixel_p         ),
         .px         (px),
         .py         (py),
         .pixel_en      (pixel_en      ),
         .audio    (audio),
         .audio_en    (audio_en),
         .vblank    (vblank    ),
-        .new_frame (new_frame),
+        .new_frame (ppu_frame),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
         .ctrl_data       (~ctrl_data),
@@ -121,6 +110,34 @@ module nes_tb
         .cart_irq         (cart_irq)
 
     );
+
+
+    // hdmi upscale
+    logic [9:0] hx, hy;
+    logic nes_on, hdmi_on;
+    logic [5:0] pixel_h;
+    localparam PPU_LATENCY = 2;
+    hdmi_upscaler #(.PPU_LATENCY(PPU_LATENCY)) u_hdmi_upscaler (
+        .clk_p     (clk_ppu     ),
+        .rst_p     (rst_ppu       ),
+        .clk_h     (clk_hdmi     ),
+        .rst_h     (rst_hdmi       ),
+        .px     (px     ),
+        .pixel_p     (pixel_p[5:0]     ),
+         .hx        (hx        ),
+        .hy        (hy        ),
+        .pixel_h     (pixel_h     ),
+        .nes_on   (nes_on),
+        .hdmi_on   (hdmi_on),
+        .new_frame (video_frame)
+    );
+
+    logic [23:0] pal [0:63] = '{ 24'h666666, 24'h002a88, 24'h1412a7, 24'h3b00a4, 24'h5c007e, 24'h6e0040, 24'h6c0600, 24'h561d00, 24'h333500, 24'h0b4800, 24'h005200, 24'h004f08, 24'h00404d, 24'h000000, 24'h000000, 24'h000000, 24'hadadad, 24'h155fd9, 24'h4240ff, 24'h7527fe, 24'ha01acc, 24'hb71e7b, 24'hb53120, 24'h994e00, 24'h6b6d00, 24'h388700, 24'h0c9300, 24'h008f32, 24'h007c8d, 24'h000000, 24'h000000, 24'h000000, 24'hfffeff, 24'h64b0ff, 24'h9290ff, 24'hc676ff, 24'hf36aff, 24'hfe6ecc, 24'hfe8170, 24'hea9e22, 24'hbcbe00, 24'h88d800, 24'h5ce430, 24'h45e082, 24'h48cdde, 24'h4f4f4f, 24'h000000, 24'h000000, 24'hfffeff, 24'hc0dfff, 24'hd3d2ff, 24'he8c8ff, 24'hfbc2ff, 24'hfec4ea, 24'hfeccc5, 24'hf7d8a5, 24'he4e594, 24'hcfef96, 24'hbdf4ab, 24'hb3f3cc, 24'hb5ebf2, 24'hb8b8b8, 24'h000000, 24'h000000 };
+    always @(posedge clk_hdmi) begin
+        rgb <= nes_on ? pal[pixel_h] : 0;
+        pixel_on <= hdmi_on;
+    end
+
 
     `ifdef CART_INCL
         `include `CART_INCL
@@ -180,8 +197,8 @@ module nes_tb
         .BRAM_PRGRAM_rst         (0),
         .BRAM_PRGRAM_we          (0),
         .BRAM_PRGRAM_rd         (),
-        .S_AXI_ACLK         (clk),
-        .S_AXI_ARESETN         (rst),
+        .S_AXI_ACLK         (clk_cpu),
+        .S_AXI_ARESETN         (rst_global),
     );
     /* verilator lint_on PINMISSING */
 
@@ -195,6 +212,7 @@ module nes_tb
             if (py==239 && px==340) frame_cnt <= frame_cnt+1;
         end
     end
+
 
 
 
@@ -274,8 +292,8 @@ module nes_tb
     );
 
     pdm #(.DEPTH (16 )) u_pdm(
-        .clk    (clk    ),
-        .rst    (rst    ),
+        .clk    (clk_nes    ),
+        .rst    (rst_nes    ),
         .en     (audio_en     ),
         .sample (audio ),
         .pdm    (audio_pwm    )

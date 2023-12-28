@@ -36,7 +36,7 @@ connect_debug_port u_ila_0/probe5 [get_nets [list {u_nes/data_to_cpu[0]} {u_nes/
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe6]
 set_property port_width 5 [get_debug_ports u_ila_0/probe6]
-connect_debug_port u_ila_0/probe6 [get_nets [list {u_nes/ppu8_phase[0]} {u_nes/ppu8_phase[1]} {u_nes/ppu8_phase[2]} {u_nes/ppu8_phase[3]} {u_nes/ppu8_phase[4]}]]
+connect_debug_port u_ila_0/probe6 [get_nets [list {u_nes/nes_phase[0]} {u_nes/nes_phase[1]} {u_nes/nes_phase[2]} {u_nes/nes_phase[3]} {u_nes/nes_phase[4]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe7]
 set_property port_width 14 [get_debug_ports u_ila_0/probe7]
@@ -64,4 +64,4 @@ connect_debug_port u_ila_0/probe12 [get_nets [list u_nes/ppu_rw]]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
-connect_debug_port dbg_hub/clk [get_nets u_ila_0_clk_ppu8]
+connect_debug_port dbg_hub/clk [get_nets u_ila_0_clk_nes]

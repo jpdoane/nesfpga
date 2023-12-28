@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 // Implementation of HDMI Spec v1.4a
 // By Sameer Puri https://github.com/sameer
 

@@ -1,39 +1,45 @@
 `timescale 1ns/1fs
 
+
+
 module nes_clocks
     (
-    input         clk_master,
-    input         rst_master,
-    output        clk_ppu8,
-    output        clk_ppu,     
-    output        clk_cpu,     
-    output        rst_ppu,
-    output   reg     rst_cpu,
-    output        m2
+    input    logic     clk_master,
+    input    logic     rst_master,
+    input    logic     en,
+    output   logic     clk_nes,
+    output   logic     clk_ppu,     
+    output   logic     clk_cpu,     
+    output   logic     rst_ppu,
+    output   logic     rst_cpu,
+    output   logic     m2
     );
 
 
 `ifdef SYNTHESIS
-    BUFG BUFG_ppu8 (
-    .O(clk_ppu8),
+    BUFG BUFG_nes (
+    .O(clk_nes),
     .I(clk_master)
     );
 `else
-    assign clk_ppu8 = clk_master;
+    assign clk_nes = clk_master;
 `endif 
 
 logic [4:0] cnt;   // 0-23 counter for clock divide
 logic [6:0] rst_ctr = 0;
 logic rst_ppu_r = 1;
 logic rst_cpu_r = 1;
-always_ff @(posedge clk_ppu8) begin
+
+
+always_ff @(posedge clk_nes) begin
     if (rst_master) begin
         cnt <= 0;
-        rst_ctr <= 7'h7f;
+        rst_ctr <= 7'h47;
         rst_ppu_r <= 1;
         rst_cpu_r <= 1;
     end else begin
-        cnt <= cnt == 5'd23 ? 0 : cnt + 1;
+        if (en) cnt <= cnt == 5'd23 ? 0 : cnt + 1;
+        // rst_ppu_r <= rst_ctr > 7'h27; //start ppu earlier than cpu (to match mesen counters...)
         rst_ppu_r <= rst_ctr > 7'h1f; //start ppu earlier than cpu (to match mesen counters...)
         if (rst_ctr == 0) begin
             rst_ctr <= 0;
@@ -54,8 +60,8 @@ logic ppu_en, cpu_en;
 
 `ifdef SYNTHESIS
 
-    assign ppu_en = (cnt[2:0] == 3'h7 );
-    assign cpu_en = (cnt == 5'h7 );
+    assign ppu_en = cnt[2:0] == 3'h7;
+    assign cpu_en = cnt == 5'h7;
 
     BUFGCE BUFGCE_ppu (
     .O(clk_ppu),
@@ -71,8 +77,8 @@ logic ppu_en, cpu_en;
 
 `else
 
-    always_ff @(negedge clk_ppu8) ppu_en <= (cnt[2:0] == 3'h7 );
-    always_ff @(negedge clk_ppu8) cpu_en <= (cnt == 5'h7 );
+    always_ff @(negedge clk_nes) ppu_en <= cnt[2:0] == 3'h7;
+    always_ff @(negedge clk_nes) cpu_en <= cnt == 5'h7;
 
     assign clk_ppu = ppu_en & clk_master; 
     assign clk_cpu = cpu_en & clk_master;

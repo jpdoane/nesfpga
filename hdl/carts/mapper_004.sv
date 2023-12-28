@@ -58,11 +58,11 @@ module mapper_004 #(
             irq_reload <= 0;
         end else begin
             irq_reload <= 0;
-            if(!cpu_rw) begin
+            if(romsel && !cpu_rw) begin
                 if(cpu_addr[0]) begin
                     //odd registers
                     case(cpu_addr[14:13])
-                        2'h0: bank_sel <= cpu_data_i;
+                        2'h0: Rbanks[reg_sel] <= cpu_data_i;
                         2'h1: {ram_en, ram_protect} <= cpu_data_i[7:6];
                         2'h2: irq_reload <= 1;
                         2'h3: irq_enable <= 1;
@@ -70,7 +70,7 @@ module mapper_004 #(
                 end else begin
                     //even registers
                     case(cpu_addr[14:13])
-                        2'h0: Rbanks[reg_sel] <= cpu_data_i;
+                        2'h0: bank_sel <= cpu_data_i;
                         2'h1: mirrorv <= cpu_data_i[0];
                         2'h2: irq_latch <= cpu_data_i;
                         2'h3: irq_enable <= 0;
@@ -121,14 +121,14 @@ module mapper_004 #(
     wire a12_re = a12 && ~|a12_reg;
     logic reload_flag;
 
-    always_ff @(posedge clk_ppu) begin
+    always_ff @(posedge clk_cpu) begin
         if (rst) begin
             irq <= 0;
             irq_cnt <= 0;
             a12_reg <= 0;
             reload_flag <= 0;
         end else begin
-            if (m2) a12_reg <= {a12_reg[1:0], a12};
+            a12_reg <= {a12_reg[1:0], a12};
 
             if(irq_reload) begin
                 irq_cnt <= 0;

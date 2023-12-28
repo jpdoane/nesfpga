@@ -1,0 +1,26 @@
+write splash screen upper left corner tile :
+
+
+init PPU addr to 1ec0
+8704 LDA a9 1e         A:00 X:07 Y:1a P:26 SP:f9 CYC:833893 (HW: 835104, +1211)
+8706 STA 8d 06 20      A:1e X:07 Y:1a P:24 SP:f9 CYC:833897
+8709 LDA a9 c0         A:1e X:07 Y:1a P:24 SP:f9 CYC:833899
+870b STA 8d 06 20      A:c0 X:07 Y:1a P:a4 SP:f9 CYC:833903
+
+Read 0x44 from PPU 0x1ed3 [CHR ROM]
+8719 LDA ad 07 20      A:03 X:07 Y:13 P:a4 SP:f9 CYC:834339 (HW: 835550)
+
+Write 0x44 to CPU 0x0313 (Mesen cycle 834276)
+871c STA 91 00         A:44 X:07 Y:13 P:24 SP:f9 CYC:834344
+
+Read 0x44 from CPU 0x0313
+8eb9 LDA b1 00         A:01 X:01 Y:03 P:24 SP:fa CYC:863941
+
+init PPU to 2085
+8e92 STA 8d 06 20      A:20 X:00 Y:00 P:24 SP:fa CYC:863864
+8e95 INY c8            A:20 X:00 Y:00 P:24 SP:fa CYC:863866
+8e96 LDA b1 00         A:20 X:00 Y:01 P:24 SP:fa CYC:863871
+8e98 STA 8d 06 20      A:85 X:00 Y:01 P:a4 SP:fa CYC:863875
+
+Write 0x44 to PPU 0x2085
+8ebb STA 8d 07 20      A:44 X:01 Y:03 P:24 SP:fa CYC:863945

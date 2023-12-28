@@ -1,20 +1,21 @@
 `timescale 1ns/1ps
 
 module nes #(
-    parameter EXTERNAL_FRAME_TRIGGER=0,
     parameter SKIP_CYCLE_ODD_FRAMES=1,
     parameter AUDIO_DEPTH=16
     )(
     // clocks
     input logic clk_master,rst_master,
+    input logic nes_clk_en,
     output logic clk_cpu, rst_cpu,
     output logic clk_ppu, rst_ppu,
 
     // video
-    input logic frame_trigger,
     output logic [7:0] pixel,
+    output logic [8:0] px, py,
     output logic pixel_en,
     output logic vblank,
+    output logic new_frame,
 
     // audio
     output logic [AUDIO_DEPTH-1:0] audio,
@@ -42,13 +43,13 @@ module nes #(
     input logic cart_irq
 );
 
-
-    logic clk_ppu8;
+    logic clk_nes;
     (* mark_debug = "true" *)  logic m2;
     nes_clocks u_nes_clocks(
         .clk_master (clk_master ),
         .rst_master (rst_master ),
-        .clk_ppu8    (clk_ppu8    ),
+        .en (nes_clk_en ),
+        .clk_nes    (clk_nes    ),
         .clk_ppu    (clk_ppu    ),
         .clk_cpu    (clk_cpu    ),
         .rst_ppu    (rst_ppu    ),
@@ -73,27 +74,11 @@ module nes #(
     
     assign cart_m2 = m2;
 
-    // (* mark_debug = "true" *)  logic [31:0] cpu_cycle=0;
-    // localparam RST_CPU_DELAY = 4;
-    // logic [RST_CPU_DELAY-1:0] rst_cpu_sr;
-    // always @(posedge clk_cpu ) begin
-    //     if (rst_cpu) begin
-    //         // cpu_cycle <= 0;
-    //         rst_cpu_sr <= 1;
-    //     end else begin
-    //         cpu_cycle <= cpu_cycle+1;
-    //         rst_cpu_sr <= {1'b0, rst_cpu_sr[RST_CPU_DELAY-1:1]};
-    //     end
-    // end
-    // wire rst_cpu_delay = rst_cpu_sr[0];
-
-    logic frame_extra;
-    wire cpu_rdy = !frame_extra; //stop CPU during extra scanlines due to nonstandard frame timing
     apu #(.AUDIO_DEPTH(AUDIO_DEPTH)) u_apu(
     	.clk    (clk_cpu    ),
         .rst    (rst_cpu    ),
         .data_i (cpu_bus_data ),
-        .rdy    (cpu_rdy    ),
+        .rdy    (1'b1    ),
         .nmi    (nmi    ),
         .irq    (cart_irq),
         .addr_o (cpu_addr ),
@@ -134,10 +119,7 @@ module nes #(
     (* mark_debug = "true" *)  logic ppu_wr;
     
     wire ppu_cs_m2 = ppu_cs & m2;
-    ppu #(
-        .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER),
-        .SKIP_CYCLE_ODD_FRAMES (SKIP_CYCLE_ODD_FRAMES)
-        )
+    ppu #(.SKIP_CYCLE_ODD_FRAMES (SKIP_CYCLE_ODD_FRAMES))
     u_ppu(
         .clk        (clk_ppu        ),
         .rst        (rst_ppu        ),
@@ -154,9 +136,10 @@ module nes #(
         .ppu_wr     (ppu_wr     ),
         .px_data    (pixel    ),
         .px_out    (pixel_en    ),
-        .trigger_frame (frame_trigger ),
         .vblank (vblank ),
-        .frame_extra (frame_extra)
+        .new_frame (new_frame),
+        .xpos (px),
+        .ypos (py)
     );
 
     ppu_bus u_ppu_bus(

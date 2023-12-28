@@ -1,9 +1,9 @@
 include ../../inc/make.inc
 
-TOP=nes_tb
+TOP=nes_hdmi_tb
 VERILATE_TOP=nes_main.cpp
 VERILATE_INCL=input.vc
-HDL_SOURCE = $(AUDIO_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) hdmi_trigger.sv $(TOP).sv
+HDL_SOURCE = $(AUDIO_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SOURCE) $(CART_SOURCE) $(TOP).sv
 VERILATE_ARGS= --max_frames 35 --skip_frames 0
 
 include ../../inc/make.verilator

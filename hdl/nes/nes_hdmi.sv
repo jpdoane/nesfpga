@@ -87,31 +87,36 @@ module nes_hdmi (
     wire rst_cpu, rst_ppu;
     assign cart_rst = rst_cpu;
     logic [7:0] pixel;
-    logic frame_trigger, vblank, pixel_en;
+    logic vblank, pixel_en;
+    logic [8:0] px, py;
     logic [2:0] strobe;
     assign ctrl_strobe = {strobe[0],strobe[0]};
 
-
+// pause nes clocks until next hdmi frame
+    logic video_frame, ppu_frame;
+    wire nes_en = !ppu_frame || video_frame; 
 
     logic [15:0] audio;
     nes
     #(
-    .EXTERNAL_FRAME_TRIGGER(1),
     .SKIP_CYCLE_ODD_FRAMES(0)
     )
     u_nes(
         .clk_master       (clk_nes       ),
         .rst_master       (rst_nes       ),
+        .nes_clk_en     (nes_en),
         .clk_cpu       (clk_cpu       ),
         .rst_cpu       (rst_cpu       ),
         .clk_ppu       (clk_ppu       ),
         .rst_ppu       (rst_ppu       ),
-        .frame_trigger (frame_trigger ),
         .pixel         (pixel         ),
+        .px         (px         ),
+        .py         (py         ),
         .pixel_en      (pixel_en      ),
         .audio    (audio),
         .audio_en    (audio_en),
         .vblank    (vblank    ),
+        .new_frame  (ppu_frame),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
         .ctrl_data       (~ctrl_data),
@@ -143,26 +148,27 @@ module nes_hdmi (
     // hdmi upscale
     logic [9:0] hx, hy;
     logic [5:0] pixel_h;
-    logic pixel_on;
-    localparam PPU_LATENCY = 3;
-    hdmi_upscaler #(.IPIXEL_LATENCY (341 + PPU_LATENCY))
-    u_hdmi_upscaler (
+    logic nes_on;
+    localparam PPU_LATENCY = 2;
+    hdmi_upscaler #(.PPU_LATENCY(PPU_LATENCY)) u_hdmi_upscaler (
         .clk_p     (clk_ppu     ),
         .rst_p     (rst_ppu       ),
         .clk_h     (clk_hdmi     ),
         .rst_h     (rst_hdmi       ),
+        .px     (px     ),
         .pixel_p     (pixel     ),
-       .new_frame (frame_trigger),
          .hx        (hx        ),
         .hy        (hy        ),
         .pixel_h     (pixel_h     ),
-        .pixel_on   (pixel_on)
+        .nes_on   (nes_on),
+        .hdmi_on   (),
+        .new_frame   (video_frame)
     );
 
     // rgb palette lookup
     logic [23:0] pal [0:63] = '{ 24'h666666, 24'h002a88, 24'h1412a7, 24'h3b00a4, 24'h5c007e, 24'h6e0040, 24'h6c0600, 24'h561d00, 24'h333500, 24'h0b4800, 24'h005200, 24'h004f08, 24'h00404d, 24'h000000, 24'h000000, 24'h000000, 24'hadadad, 24'h155fd9, 24'h4240ff, 24'h7527fe, 24'ha01acc, 24'hb71e7b, 24'hb53120, 24'h994e00, 24'h6b6d00, 24'h388700, 24'h0c9300, 24'h008f32, 24'h007c8d, 24'h000000, 24'h000000, 24'h000000, 24'hfffeff, 24'h64b0ff, 24'h9290ff, 24'hc676ff, 24'hf36aff, 24'hfe6ecc, 24'hfe8170, 24'hea9e22, 24'hbcbe00, 24'h88d800, 24'h5ce430, 24'h45e082, 24'h48cdde, 24'h4f4f4f, 24'h000000, 24'h000000, 24'hfffeff, 24'hc0dfff, 24'hd3d2ff, 24'he8c8ff, 24'hfbc2ff, 24'hfec4ea, 24'hfeccc5, 24'hf7d8a5, 24'he4e594, 24'hcfef96, 24'hbdf4ab, 24'hb3f3cc, 24'hb5ebf2, 24'hb8b8b8, 24'h000000, 24'h000000 };
     logic [23:0] rgb;
-    always @(posedge clk_hdmi) rgb <= pixel_on ? pal[pixel_h] : 0;
+    always @(posedge clk_hdmi) rgb <= nes_on ? pal[pixel_h] : 0;
 
 
     /// hmdi

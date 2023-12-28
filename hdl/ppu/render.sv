@@ -1,12 +1,8 @@
 `timescale 1ns/1ps
 
-module render #(
-    parameter EXTERNAL_FRAME_TRIGGER=0,
-    parameter SKIP_CYCLE_ODD_FRAMES=1
-    )
+module render #(parameter SKIP_CYCLE_ODD_FRAMES=1)
     (
     input logic clk, rst,
-    input logic trigger_frame,
     input logic [2:0] fine_x,fine_y,
     input logic [7:0] ppuctrl,
     input logic [7:0] ppumask,
@@ -24,9 +20,10 @@ module render #(
     output logic [12:0] pattern_idx,
     output logic [4:0] palette_idx,
 
-    output logic frame_on, render_en, vblank, frame_extra,
+    output logic frame_on, render_en, vblank, new_frame,
     output logic v_incx, v_incy, v_resetx, v_resety,
-    output logic sp0, sp_of
+    output logic sp0, sp_of,
+    output logic [8:0] y, cycle
     );
 
 
@@ -48,33 +45,27 @@ module render #(
     assign render_en = render_bg | render_sp;
             
     logic [7:0] nt, at, pat0, pat1;
-    logic [8:0] y, cycle;
     logic [1:0] pal;
 
     wire [2:0] cycle8 = cycle[2:0];
     // cycle specific triggers
     wire cycle0 = (cycle == 0);
     assign v_incy = render_en && cycle == 255;
-    wire fetch_sprites = (cycle == 256);
-    wire fetch_nextline = (cycle == 320);
-    wire fetch_garbage = (cycle == 336);
+    wire fetch_sprites = cycle == 256;
+    wire fetch_nextline = cycle == 320;
+    wire fetch_garbage = cycle == 336;
+    wire next_line = cycle == 340;
 
-    logic prerender, skip_cycle0, next_line, new_frame;
+    logic prerender;
     logic [8:0] y_next;
     logic [8:0] cycle_next;
 
-    wire nes_frame_over = next_line && (y==9'd260);
+    wire skip_cycle0 = prerender && odd_frame && ppumask[3] && SKIP_CYCLE_ODD_FRAMES;
     always_comb begin
-
         prerender = &y; //y==-1
+        new_frame = next_line && (y==9'd260);
 
-        skip_cycle0 = SKIP_CYCLE_ODD_FRAMES && render_en && odd_frame && prerender;
-        if (skip_cycle0) next_line = cycle == 9'd339;
-        else             next_line = cycle == 9'd340;
-
-        
-        new_frame = EXTERNAL_FRAME_TRIGGER ? trigger_frame : nes_frame_over;
-        cycle_next = (next_line || (trigger_frame && EXTERNAL_FRAME_TRIGGER)) ? 0 : cycle + 1;
+        cycle_next = next_line ? (skip_cycle0 ? 1 : 0) : cycle + 1;
 
         y_next = new_frame ? -1 :  // prerender line
                  next_line ? y + 1 :    // next line
@@ -85,6 +76,13 @@ module render #(
     assign vblank = vblank_r;
 
     logic [2:0] state, state_next;
+    
+    // make some dummy signals for fetch stage, so that we can output correct address
+    // on both the fetch and save cycles.  This is important for proper MMC3 behavior
+    logic _fetch_tile, _fetch_attr, _fetch_chr;
+    assign fetch_tile = _fetch_tile || save_nt;
+    assign fetch_attr = _fetch_attr || save_attr;
+    assign fetch_chr = _fetch_chr || save_pat0 || save_pat1;
 
     always @(posedge clk) begin
         if (rst) begin
@@ -98,7 +96,6 @@ module render #(
             state <= RENDER;
             sp0 <= 0;
             odd_frame <= 1;
-            frame_extra <= 0;
         end
         else begin
             nt <=   save_nt ? data_i : nt;
@@ -112,12 +109,8 @@ module render #(
 
             sp0 <= prerender ? 0 : (sp0_opaque && bg_opaque && render_bg && render_sp) || sp0;
             vblank_r <= prerender ? 0 : set_vblank || vblank;
-            odd_frame <= new_frame ? ~odd_frame : odd_frame;
 
-            if(EXTERNAL_FRAME_TRIGGER) begin
-                if (nes_frame_over) frame_extra <= 1;
-                if (prerender) frame_extra <= 0;
-            end
+            if(new_frame) odd_frame <=  ~odd_frame;
         end
     end
 
@@ -141,8 +134,8 @@ module render #(
         // tile fetch cycle
         load_sr = 0;
         save_nt = 0;
-        fetch_attr = 0;
-        fetch_chr = 0;
+        _fetch_attr = 0;
+        _fetch_chr = 0;
         save_attr = 0;
         save_pat0 = 0;
         save_pat1 = 0;
@@ -150,11 +143,11 @@ module render #(
             case(cycle8)
                 3'h0:   load_sr = 1;
                 3'h1:   save_nt = 1;
-                3'h2:   fetch_attr = 1;
+                3'h2:   _fetch_attr = 1;
                 3'h3:   save_attr = 1;
-                3'h4:   fetch_chr = 1;
+                3'h4:   _fetch_chr = 1;
                 3'h5:   save_pat0 = 1;
-                3'h6:   fetch_chr = 1;
+                3'h6:   _fetch_chr = 1;
                 3'h7:   save_pat1 = ~cycle0;
             endcase
         end
@@ -187,7 +180,7 @@ module render #(
             GARBAGE_FETCH:
             begin
                 sr_en = 0;
-                fetch_attr = 0;
+                _fetch_attr = 0;
                 save_nt = 0;
                 save_attr = 0;
                 state_next = !next_line ? GARBAGE_FETCH :
@@ -212,8 +205,7 @@ module render #(
             default: begin end
         endcase
 
-        fetch_tile = render_en && !(fetch_attr || fetch_chr);
-
+        _fetch_tile = render_en && !(fetch_attr || fetch_chr);
     end
 
 

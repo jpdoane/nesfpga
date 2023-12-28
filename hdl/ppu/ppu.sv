@@ -3,7 +3,6 @@
 
 
 module ppu  #(
-    parameter EXTERNAL_FRAME_TRIGGER=0,
     parameter SKIP_CYCLE_ODD_FRAMES=1
     )
     (
@@ -21,9 +20,9 @@ module ppu  #(
 
     output logic [7:0] px_data,
     output logic px_out,
-    input logic trigger_frame,
     output logic vblank,
-    output logic frame_extra
+    output logic new_frame,
+    output logic [8:0] xpos, ypos
     );
 
     logic reg_re, reg_we, cs_r;
@@ -68,7 +67,7 @@ module ppu  #(
     logic sp0, sp_of;
     logic frame, render_en;
 
-    assign nmi = NMI_occured && NMI_output;
+    // assign nmi = NMI_occured && NMI_output;
 
     wire vblank_re = vblank & ~vblank_r;
     wire vblank_fe = vblank_r & ~vblank;
@@ -102,6 +101,7 @@ module ppu  #(
     wire oam_data_wr = reg_we && (cpu_addr == OAMDATA_ADDR);
     wire [7:0] oam_data_o;
     logic resetv;
+    logic nmi_r;
     always @(posedge clk) begin
         if (rst) begin
             ppuctrl <= 0;
@@ -122,7 +122,14 @@ module ppu  #(
             NMI_output <= 0;
             pal_wr <= 0;
             resetv <= 0;
+            nmi <= 0;
+            nmi_r <= 0;
         end else begin
+
+            //register nmi to match MESEN timing...
+            nmi_r <= NMI_occured && NMI_output;
+            nmi <= nmi_r;
+
             wr <= 0;
             pal_wr <= 0;
             inc_v <= 0;
@@ -252,13 +259,11 @@ module ppu  #(
 
     render 
     #(
-        .EXTERNAL_FRAME_TRIGGER (EXTERNAL_FRAME_TRIGGER ),
         .SKIP_CYCLE_ODD_FRAMES (SKIP_CYCLE_ODD_FRAMES)
     )
     u_render(
         .clk           (clk           ),
         .rst           (rst           ),
-        .trigger_frame (trigger_frame ),
         .fine_x        (fine_x        ),
         .fine_y        (fine_y        ),
         .ppuctrl       (ppuctrl       ),
@@ -278,13 +283,15 @@ module ppu  #(
         .frame_on      (frame         ),
         .render_en     (render_en         ),
         .vblank        (vblank        ),
-        .frame_extra    (frame_extra),
+        .new_frame    (new_frame),
         .v_incx        (render_incx        ),
         .v_incy        (render_incy        ),
         .v_resetx      (resetx      ),
         .v_resety      (resety      ),
         .sp0           (sp0           ),
-        .sp_of         (sp_of         )
+        .sp_of         (sp_of         ),
+        .y              (ypos),
+        .cycle          (xpos)
     );
 
 

@@ -1,0 +1,11 @@
+// This file typically lists flags required by a large project, e.g. include directories
++libext+.v+.sv+.vh+.svh
+-y . 
+-y ../../modules/6502/hdl/
+-y ../../modules/6502/hdl/debug
+-y ../../hdl/ppu
+-y ../../hdl/nes
+-y ../../hdl/carts
+-y ../../hdl/hdmi
+--top-module nes_hdmi_tb
+-DRESET_RAM=1

@@ -1,8 +1,6 @@
 `timescale 1ns/1ps
 
 module ppu_tb #(
-    parameter EXTERNAL_FRAME_TRIGGER=1,
-
     // sim timing
     parameter real FRAME_TIME = 1e9/60.0,
     parameter SIM_LENGTH = 2.1*FRAME_TIME

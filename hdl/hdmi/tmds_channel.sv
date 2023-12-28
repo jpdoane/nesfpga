@@ -1,3 +1,5 @@
+`timescale 1ns/1ps
+
 // Implementation of HDMI Spec v1.4a Section 5.4: Encoding, Section 5.2.2.1: Video Guard Band, Section 5.2.3.3: Data Island Guard Bands.
 // By Sameer Puri https://github.com/sameer
 

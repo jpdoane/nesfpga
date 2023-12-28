@@ -10,7 +10,7 @@ create_generated_clock -name clk_cpu -source [get_pins -hierarchical mmcm_nes_fr
 set_multicycle_path -setup -from [get_clocks clk_ppu] -to [get_clocks clk_hdmi] 3
 set_multicycle_path -hold -from [get_clocks clk_ppu] -to [get_clocks clk_hdmi] 2
 
-# relax timing between faster ppu8 clock and slow ppu/cpu
+# relax timing between faster nes clock and slow ppu/cpu
 set_multicycle_path -setup -from [get_clocks clk_cpu] -to [get_clocks clk_nes] 3
 set_multicycle_path -hold -from [get_clocks clk_cpu] -to [get_clocks clk_nes] 2
 set_multicycle_path -setup -from [get_clocks clk_cpu] -to [get_clocks clk_ppu] 3

@@ -28,7 +28,7 @@ module apu_framecounter
     wire update_timer_cycle = apu_cycle && update_timer;
     always_ff @(posedge clk) begin
         if(rst) begin
-            apu_cycle <= 0;
+            apu_cycle <= 1;
             update_timer <= 0;
             frame_counter <= 0;
             irq <= 0;
