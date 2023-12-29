@@ -54,18 +54,19 @@ module render #(parameter SKIP_CYCLE_ODD_FRAMES=1)
     wire fetch_sprites = cycle == 256;
     wire fetch_nextline = cycle == 320;
     wire fetch_garbage = cycle == 336;
-    wire next_line = cycle == 340;
 
     logic prerender;
+    logic next_line;
     logic [8:0] y_next;
     logic [8:0] cycle_next;
 
     wire skip_cycle0 = prerender && odd_frame && ppumask[3] && SKIP_CYCLE_ODD_FRAMES;
     always_comb begin
         prerender = &y; //y==-1
-        new_frame = next_line && (y==9'd260);
 
-        cycle_next = next_line ? (skip_cycle0 ? 1 : 0) : cycle + 1;
+        next_line = skip_cycle0 ? cycle == 339 : cycle == 340;
+        cycle_next = next_line ? 0 : cycle + 1;
+        new_frame = next_line && (y==9'd260);
 
         y_next = new_frame ? -1 :  // prerender line
                  next_line ? y + 1 :    // next line

@@ -101,7 +101,9 @@ module ppu  #(
     wire oam_data_wr = reg_we && (cpu_addr == OAMDATA_ADDR);
     wire [7:0] oam_data_o;
     logic resetv;
+
     logic nmi_r;
+
     always @(posedge clk) begin
         if (rst) begin
             ppuctrl <= 0;
@@ -122,20 +124,20 @@ module ppu  #(
             NMI_output <= 0;
             pal_wr <= 0;
             resetv <= 0;
-            nmi <= 0;
-            nmi_r <= 0;
+
+            nmi_r <=0;
+            nmi <=0;
         end else begin
-
-            //register nmi to match MESEN timing...
-            nmi_r <= NMI_occured && NMI_output;
-            nmi <= nmi_r;
-
             wr <= 0;
             pal_wr <= 0;
             inc_v <= 0;
             vblank_r <= vblank;
             NMI_occured <= (NMI_occured || vblank_re) & ~vblank_fe;
-            NMI_output <= NMI_output;
+
+            // register nmi for 2 ppu clocks to match timing
+            nmi_r <= NMI_occured && NMI_output;
+            nmi <= nmi_r;
+
             cpu_ppu_read <= 0;
             resetv <= 0;
             if(reg_re) begin    // cpu read (ppu write back to cpu)

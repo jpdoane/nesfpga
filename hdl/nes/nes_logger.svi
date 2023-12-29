@@ -7,31 +7,41 @@ end
 
 (* mark_debug = "true" *)  logic [31:0] cpu_cycle = 0;
 always @(posedge clk_cpu ) begin
-    if (rst_cpu) cpu_cycle <= 1;
+    if (rst_cpu) cpu_cycle <= 2;
     else cpu_cycle <= cpu_cycle+1;
 end
 
 //extend bits so we can represent prerender line as -1 to match Mesen log format
-logic signed [9:0] ppu_V, ppu_H;
-int ppu_frame_cnt, cpu_cycle_r;
+wire signed [9:0] ppu_V = &u_nes.u_ppu.u_render.y ? 10'(-1) : 10'(u_nes.u_ppu.u_render.y);
+wire signed [9:0] ppu_H = 10'(u_nes.u_ppu.u_render.cycle);
+logic signed [9:0] ppu_V_r, ppu_H_r,ppu_V_rr, ppu_H_rr;
+int frame_cnt_r, cpu_cycle_r, frame_cnt_rr, cpu_cycle_rr;
 
 // register signals on m2
 logic sync_r, sync_rr;
 wire gated_sync = u_nes.u_apu.u_core_6502.sync && u_nes.u_apu.u_core_6502.READY;
 always @(posedge u_nes.m2 ) begin
     if(rst_ppu) begin
-        ppu_V <= 0;
-        ppu_H <= 0;
-        ppu_frame_cnt <= 0;
+        ppu_V_r <= 0;
+        ppu_H_r <= 0;
+        frame_cnt_r <= 0;
         cpu_cycle_r <= 0;
         sync_r <= 0;
+        ppu_V_rr <= 0;
+        ppu_H_rr <= 0;
+        frame_cnt_rr <= 0;
+        cpu_cycle_rr <= 0;
         sync_rr <= 0;
     end else begin
-        ppu_V <= &u_nes.u_ppu.u_render.y ? 10'(-1) : 10'(u_nes.u_ppu.u_render.y);
-        ppu_H <= 10'(u_nes.u_ppu.u_render.cycle);
-        ppu_frame_cnt <= frame_cnt;
+        ppu_V_r <= ppu_V;
+        ppu_H_r <= ppu_H;
+        frame_cnt_r <= frame_cnt;
         cpu_cycle_r <= cpu_cycle;
         sync_r <= gated_sync;
+        ppu_V_rr <= ppu_V_r;
+        ppu_H_rr <= ppu_H_r;
+        frame_cnt_rr <= frame_cnt_r;
+        cpu_cycle_rr <= cpu_cycle_r;
         sync_rr <= sync_r;
 
         if(sync_rr && cpu_cycle>6 && u_nes.u_apu.u_core_6502.READY && |u_nes.u_apu.u_core_6502.opcode) begin
@@ -43,10 +53,10 @@ always @(posedge u_nes.m2 ) begin
                                                 u_nes.u_apu.u_core_6502.y,
                                                 u_nes.u_apu.u_core_6502.s,
                                                 u_nes.u_apu.u_core_6502.p&8'hdf,
-                                                ppu_V,
-                                                ppu_H,
-                                                ppu_frame_cnt,
-                                                cpu_cycle_r);
+                                                ppu_V_rr,
+                                                ppu_H_rr,
+                                                frame_cnt_rr,
+                                                cpu_cycle_rr);
 
         end
     end

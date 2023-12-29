@@ -40,7 +40,7 @@ always_ff @(posedge clk_nes) begin
     end else begin
         if (en) cnt <= cnt == 5'd23 ? 0 : cnt + 1;
         // rst_ppu_r <= rst_ctr > 7'h27; //start ppu earlier than cpu (to match mesen counters...)
-        rst_ppu_r <= rst_ctr > 7'h1f; //start ppu earlier than cpu (to match mesen counters...)
+        rst_ppu_r <= rst_ctr > 7'h37; //start ppu earlier than cpu (to match mesen counters...)
         if (rst_ctr == 0) begin
             rst_ctr <= 0;
             rst_cpu_r <= 0;

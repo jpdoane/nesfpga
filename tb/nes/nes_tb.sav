@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Tue Nov 28 03:17:49 2023
+[*] Thu Dec 28 15:25:19 2023
 [*]
 [dumpfile] "/home/jpdoane/nesfpga/tb/nes/logs/nes_tb.fst"
-[dumpfile_mtime] "Tue Nov 28 03:12:38 2023"
-[dumpfile_size] 45989675
+[dumpfile_mtime] "Thu Dec 28 04:53:25 2023"
+[dumpfile_size] 35854067
 [savefile] "/home/jpdoane/nesfpga/tb/nes/nes_tb.sav"
-[timestart] 2767092
+[timestart] 2634010
 [size] 2560 1332
 [pos] -1 -1
-*-7.969990 2768310 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-11.969990 2638940 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] TOP.
 [treeopen] TOP.nes_tb.
 [treeopen] TOP.nes_tb.u_nes.
@@ -22,8 +22,6 @@
 [signals_width] 265
 [sst_expanded] 1
 [sst_vpaned_height] 542
-@24
-TOP.nes_tb.u_nes.u_apu.u_core_6502.cpu_cycle[31:0]
 @28
 TOP.nes_tb.u_nes.u_apu.u_core_6502.NMI
 TOP.nes_tb.u_nes.u_apu.u_core_6502.IRQ
@@ -32,6 +30,8 @@ TOP.nes_tb.u_nes.u_apu.u_core_6502.ip[15:0]
 @2022
 ^1 /home/jpdoane/nesfpga/modules/6502/inc/wavefilters/6502_opcodes.txt
 TOP.nes_tb.u_nes.u_apu.u_core_6502.opcode[7:0]
+@25
+TOP.nes_tb.cpu_cycle[31:0]
 @420
 TOP.nes_tb.frame_cnt
 @c00200
@@ -59,8 +59,6 @@ TOP.nes_tb.u_nes.u_nes_clocks.rst_ctr[6:0]
 -clocks
 @c00200
 -cpu
-@24
-TOP.nes_tb.u_nes.u_apu.u_core_6502.cpu_cycle[31:0]
 @28
 TOP.nes_tb.u_nes.u_apu.u_core_6502.sync
 @22
@@ -108,7 +106,6 @@ TOP.nes_tb.u_nes.u_ppu.cpu_data_io[7:0]
 TOP.nes_tb.u_nes.u_ppu.u_render.render_en
 TOP.nes_tb.u_nes.u_ppu.u_render.render_bg
 TOP.nes_tb.u_nes.u_ppu.u_render.render_sp
-TOP.nes_tb.u_nes.u_ppu.trigger_frame
 TOP.nes_tb.u_nes.u_ppu.vblank
 @22
 TOP.nes_tb.u_nes.u_ppu.cpu_data_i[7:0]

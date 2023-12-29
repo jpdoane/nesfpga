@@ -8,3 +8,4 @@ current_game
 nes_zynq
 *.xsa
 *.bit
+debug/*

@@ -80,7 +80,7 @@ module nes_tb
     logic cart_ppu_wr;
     logic cart_irq;
 
-    logic new_frame;
+    // logic new_frame;
     logic [8:0] px,py;
     nes
     #(
@@ -101,7 +101,7 @@ module nes_tb
         .audio    (audio),
         .audio_en    (audio_en),
         .vblank    (vblank    ),
-        .new_frame (new_frame),
+        .new_frame (),
         .ctrl_strobe   (strobe),
         .ctrl_out       (ctrl_out),
         .ctrl_data       (~ctrl_data),
