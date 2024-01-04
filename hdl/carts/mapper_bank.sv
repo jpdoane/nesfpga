@@ -47,12 +47,13 @@ module mapper_bank #(
         end
     end
 
+    wire prg_bank_size_32kb = mapper_id == 8'h7;
     wire prg_banking = mapper_id == 8'h2;
     wire chr_banking = mapper_id == 8'h3;
 
     assign prg_cs = romsel;
     wire [PRG_ROM_DEPTH-15:0] prg_bank = cpu_addr[14] ? {(PRG_ROM_DEPTH-14){1'b1}} : bank[PRG_ROM_DEPTH-15:0];
-    wire [PRG_ROM_DEPTH-1:0] prg_addr_full = prg_banking ? PRG_ROM_DEPTH'({prg_bank, cpu_addr[13:0]}) : PRG_ROM_DEPTH'(cpu_addr);
+    wire [PRG_ROM_DEPTH-1:0] prg_addr_full = !prg_bank_size_32kb ? (prg_banking ? PRG_ROM_DEPTH'({prg_bank, cpu_addr[13:0]}) : PRG_ROM_DEPTH'(cpu_addr)) : PRG_ROM_DEPTH'({bank[2:0], cpu_addr[14:0]});
     assign prg_addr = prg_mask & prg_addr_full;
 
     assign chr_cs = ~ciram_ce;
