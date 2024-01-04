@@ -7,8 +7,8 @@ module cart_multimapper
     // Width of S_AXI address bus
     parameter integer C_S_AXI_ADDR_WIDTH	= 6,
 
-    parameter integer CHR_WIDTH = 15,
-    parameter integer PRG_WIDTH = 17,
+    parameter integer CHR_WIDTH = 18,
+    parameter integer PRG_WIDTH = 18,
     parameter integer PRGRAM_WIDTH = 13,
 
     parameter NES_HEADER = 64'h0,
@@ -245,7 +245,8 @@ module cart_multimapper
                     prgram_cs = prgram_cs_map1;
                     mapper_reg_o = mapper_reg_o_map1;
                     end
-            8'b000000??:   begin //mapper 0,2,3 (not 1 which is handled above)
+
+            8'h0, 8'h2, 8'h3, 8'h7:   begin //mapper 0,2,3,7 (not 1 which is handled above)
                     ciram_ce = ciram_ce_mapbank;
                     ciram_a10 = ciram_a10_mapbank;
                     irq = irq_mapbank;
@@ -335,7 +336,6 @@ module cart_multimapper
     .ciram_a10      (ciram_a10_map1),
     .irq            (irq_map1)
     );
-
 
     (* mark_debug = "true" *)  logic [7:0] PRG_rd;
     (* mark_debug = "true" *)  logic [7:0] PRGRAM_rd;

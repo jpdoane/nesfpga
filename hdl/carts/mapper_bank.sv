@@ -34,10 +34,6 @@ module mapper_bank #(
 
 );
 
-    assign ciram_ce = ppu_addr[13];
-    assign ciram_a10 = mirrorv ? ppu_addr[10] : ppu_addr[11];
-    assign irq = 0;
-
     logic [7:0] bank;
     always_ff @(posedge clk_cpu) begin
         if (rst) begin
@@ -47,16 +43,21 @@ module mapper_bank #(
         end
     end
 
+    wire prg_bank_size_32kb = mapper_id == 8'h7;
     wire prg_banking = mapper_id == 8'h2;
     wire chr_banking = mapper_id == 8'h3;
 
+    assign ciram_ce = ppu_addr[13];
+    assign ciram_a10 = !prg_bank_size_32kb ? (mirrorv ? ppu_addr[10] : ppu_addr[11]) : (bank[4] ? ppu_addr[11] : ppu_addr[10]);
+    assign irq = 0;
+
     assign prg_cs = romsel;
     wire [PRG_ROM_DEPTH-15:0] prg_bank = cpu_addr[14] ? {(PRG_ROM_DEPTH-14){1'b1}} : bank[PRG_ROM_DEPTH-15:0];
-    wire [PRG_ROM_DEPTH-1:0] prg_addr_full = prg_banking ? PRG_ROM_DEPTH'({prg_bank, cpu_addr[13:0]}) : PRG_ROM_DEPTH'(cpu_addr);
+    wire [PRG_ROM_DEPTH-1:0] prg_addr_full = !prg_bank_size_32kb ? (prg_banking ? PRG_ROM_DEPTH'({prg_bank, cpu_addr[13:0]}) : PRG_ROM_DEPTH'(cpu_addr)) : PRG_ROM_DEPTH'({bank[2:0], cpu_addr[14:0]});
     assign prg_addr = prg_mask & prg_addr_full;
 
     assign chr_cs = ~ciram_ce;
-    wire [CHR_ROM_DEPTH-1:0] chr_addr_full = chr_banking ? CHR_ROM_DEPTH'({bank, ppu_addr[12:0]}) : CHR_ROM_DEPTH'(ppu_addr[12:0]);
+    wire [CHR_ROM_DEPTH-1:0] chr_addr_full = !prg_bank_size_32kb ? (chr_banking ? CHR_ROM_DEPTH'({bank, ppu_addr[12:0]}) : CHR_ROM_DEPTH'(ppu_addr[12:0])) : CHR_ROM_DEPTH'({ppu_addr[12:0]});
     assign chr_addr = chr_mask & CHR_ROM_DEPTH'(chr_addr_full);
 
     assign prgram_cs = prg_ram && ~romsel && (cpu_addr[14:13] == 2'b11);
