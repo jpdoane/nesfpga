@@ -7,9 +7,9 @@ module cart_multimapper
     // Width of S_AXI address bus
     parameter integer C_S_AXI_ADDR_WIDTH	= 6,
 
-    parameter integer CHR_WIDTH = 17,       //128kb
-    parameter integer PRG_WIDTH = 18,       //256kb
-    parameter integer PRGRAM_WIDTH = 13,
+    parameter integer CHR_WIDTH = 19,       //256kb
+    parameter integer PRG_WIDTH = 20,       //512kb
+    parameter integer PRGRAM_WIDTH = 13,    //8kb
 
     parameter NES_HEADER = 64'h0,
     parameter NES_PRG_FILE = "",
@@ -241,13 +241,28 @@ module cart_multimapper
     logic prgram_cs_map4;
     logic [7:0] mapper_reg_o_map4;
 
+    // hack to get irq timings to match MESEN.
+    // still not quite sure why this is needed...
+    logic irq_mapper, irq_mapper_r, irq_mapper_r2;
+    always_ff @(posedge clk_ppu) begin
+        if(rst) begin
+            irq_mapper_r <= 0;
+            irq_mapper_r2 <= 0;
+            irq <= 0;
+        end else begin
+            irq_mapper_r <= irq_mapper;
+            irq_mapper_r2 <= irq_mapper_r;
+            if(m2) irq <= irq_mapper_r2;
+        end
+    end
+
     /* verilator lint_off CASEOVERLAP */
     always_comb begin
         casez(mapper)
             8'h1:   begin
                     ciram_ce = ciram_ce_map1;
                     ciram_a10 = ciram_a10_map1;
-                    irq = irq_map1;
+                    irq_mapper = irq_map1;
                     prg_addr = prg_addr_map1;
                     chr_addr = chr_addr_map1;
                     prgram_addr = prgram_addr_map1;
@@ -259,7 +274,7 @@ module cart_multimapper
             8'b000000??:   begin //mapper 0,2,3 (not 1 which is handled above)
                     ciram_ce = ciram_ce_mapbank;
                     ciram_a10 = ciram_a10_mapbank;
-                    irq = irq_mapbank;
+                    irq_mapper = irq_mapbank;
                     prg_addr = prg_addr_mapbank;
                     chr_addr = chr_addr_mapbank;
                     prgram_addr = prgram_addr_mapbank;
@@ -271,7 +286,7 @@ module cart_multimapper
             8'h4:   begin //mapper 4
                     ciram_ce = ciram_ce_map4;
                     ciram_a10 = ciram_a10_map4;
-                    irq = irq_map4;
+                    irq_mapper = irq_map4;
                     prg_addr = prg_addr_map4;
                     chr_addr = chr_addr_map4;
                     prgram_addr = prgram_addr_map4;
@@ -284,7 +299,7 @@ module cart_multimapper
             default: begin
                     ciram_ce = 0;
                     ciram_a10 = 0;
-                    irq = 0;
+                    irq_mapper = 0;
                     prg_addr = 0;
                     chr_addr = 0;
                     prgram_addr = 0;
@@ -296,6 +311,7 @@ module cart_multimapper
         endcase
     end
     /* verilator lint_on CASEOVERLAP */
+
 
     mapper_bank #(
     .PRG_ROM_DEPTH(PRG_WIDTH),

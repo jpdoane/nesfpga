@@ -9,8 +9,12 @@ HDL_SOURCE = $(AUDIO_SOURCE) $(HDMI_SOURCE) $(PPU_SOURCE) $(CPU_SOURCE) $(NES_SO
 # BD_SOURCE = test_bd.tcl
 # LOCAL_SRC = $(TOP).sv $(abspath axi_regs.v)
 # HDL_SOURCE = $(LOCAL_SRC)
-DEVICE=xc7z010clg400-1
-DEVICE_SHORT=xc7z010_1
+
+# DEVICE=xc7z010clg400-1
+# DEVICE_SHORT=xc7z010_1
+
+DEVICE=xc7z020clg400-1
+DEVICE_SHORT=xc7z020_1
 
 DEBUG_NETS = debug_nets.tcl
 

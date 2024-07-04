@@ -140,7 +140,7 @@ module oam #(
 
         if (rend) begin
             case(cycle)
-                9'd0:       begin
+                9'd1:       begin
                             oam2_rst = 1;
                             new_scan = 1;
                             next_state = OAM_CLEAR;

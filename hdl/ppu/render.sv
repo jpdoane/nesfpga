@@ -156,7 +156,7 @@ module render #(parameter SKIP_CYCLE_ODD_FRAMES=1)
         case(state)
             RENDER:
             begin
-                frame_on = ~cycle0 && ~prerender;
+                frame_on = ~cycle0 && ~prerender && render_en;
                 sr_en = frame_on;
                 state_next = fetch_sprites ? V_RESETX : RENDER;
             end

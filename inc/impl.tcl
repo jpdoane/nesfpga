@@ -74,7 +74,7 @@ start_step init_design
 set ACTIVE_STEP init_design
 set rc [catch {
   create_msg_db init_design.pb
-  create_project -in_memory -part xc7z010clg400-1
+  create_project -in_memory -part $DEVICE
   set_property design_mode GateLvl [current_fileset]
   set_param project.singleFileAddWarning.threshold 0
   set_property webtalk.parent_dir ${PROJ}/cache/wt [current_project]

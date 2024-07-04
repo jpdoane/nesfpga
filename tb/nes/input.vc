@@ -8,3 +8,4 @@
 -y ../../hdl/carts
 --top-module nes_tb
 -DRESET_RAM=1
+-DSAVERAMS=1

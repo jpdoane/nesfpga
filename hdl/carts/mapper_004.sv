@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 
 module mapper_004 #(
-    parameter PRG_ROM_DEPTH=17,
-    parameter CHR_ROM_DEPTH=15,
+    parameter PRG_ROM_DEPTH=20,
+    parameter CHR_ROM_DEPTH=19,
     parameter PRG_RAM_DEPTH=13
     )(
     input logic rst,
@@ -48,9 +48,17 @@ module mapper_004 #(
     logic [7:0] Rbanks[0:7];
     always_ff @(posedge clk_cpu) begin
         if (rst) begin
-            for (int i=0; i<8; i++) Rbanks[i] <= 0;
+            // for (int i=0; i<8; i++) Rbanks[i] <= 0;
+            Rbanks[0] <= 0;
+            Rbanks[1] <= 2;
+            Rbanks[2] <= 4;
+            Rbanks[3] <= 5;
+            Rbanks[4] <= 6;
+            Rbanks[5] <= 7;
+            Rbanks[6] <= 0;
+            Rbanks[7] <= 1;
             bank_sel <= 0;
-            mirrorv <= 0;
+            mirrorv <= 1;
             ram_en <= 0;
             ram_protect <= 0;
             irq_latch <= 0;
@@ -117,27 +125,29 @@ module mapper_004 #(
     logic [7:0] irq_cnt;
     wire irq_cnt0 = irq_cnt == 0;
     wire a12 = ppu_addr[12];
-    logic [2:0] a12_reg;
+    logic [15:0] a12_reg;
     wire a12_re = a12 && ~|a12_reg;
     logic reload_flag;
 
-    always_ff @(posedge clk_cpu) begin
+    assign irq = irq_cnt0 && irq_enable && !reload_flag;
+
+    always_ff @(posedge clk_ppu) begin
         if (rst) begin
-            irq <= 0;
+            // irq <= 0;
             irq_cnt <= 0;
             a12_reg <= 0;
             reload_flag <= 0;
         end else begin
-            a12_reg <= {a12_reg[1:0], a12};
+            a12_reg <= {a12_reg[14:0], a12};
 
             if(irq_reload) begin
                 irq_cnt <= 0;
                 reload_flag <= 1;
             end
 
-            if(irq_enable)
-                if ( irq_cnt0 && !reload_flag ) irq <= 1;
-            else irq <= 0;
+            // if(irq_enable)
+            //     if ( irq_cnt0 && !reload_flag ) irq <= 1;
+            // else irq <= 0;
 
             if(a12_re) begin
                 if ( irq_cnt0 ) begin

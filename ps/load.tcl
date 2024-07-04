@@ -2,7 +2,8 @@ connect -url tcp:127.0.0.1:3121
 targets -set -nocase -filter {name =~"APU*"}
 rst -system
 after 1000
-targets -set -filter {jtag_cable_name =~ "Digilent Arty Z7 003017A6B59CA" && level==0 && jtag_device_ctx=="jsn-Arty Z7-003017A6B59CA-13722093-0"}
+# targets -set -filter {jtag_cable_name =~ "Digilent Arty Z7*" && level==0 && jtag_device_ctx=="jsn-Arty Z7*"}
+# targets -set -filter {jtag_cable_name =~ "Digilent Arty Z7*" && level==0 && jtag_device_ctx=="jsn-Arty Z7*"}
 fpga -file build/nes.bit
 targets -set -nocase -filter {name =~"APU*"}
 loadhw -hw build/nes.xsa -mem-ranges [list {0x40000000 0xbfffffff}] -regs

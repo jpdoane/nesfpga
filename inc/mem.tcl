@@ -73,7 +73,7 @@ start_step write_mem
 set ACTIVE_STEP write_mem
 set rc [catch {
   create_msg_db write_mem.pb
-  create_project -in_memory -part xc7z010clg400-1
+  create_project -in_memory -part $DEVICE
   set_property design_mode GateLvl [current_fileset]
 
   add_files -quiet $IMPL_DCP
